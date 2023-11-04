@@ -1,0 +1,60 @@
+<.header class="mb-4">
+  Listing Tournaments
+  <:actions>
+    <%= if @current_user do %>
+      <.link patch={~p"/tournaments/new"}>
+        <.button>New Tournament</.button>
+      </.link>
+    <% end %>
+  </:actions>
+</.header>
+
+<%!-- More than 1 tournament active, render some stuff --%>
+<%= if length(@streams.tournaments.inserts) > 0 do %>
+<.table
+  id="tournaments"
+  rows={@streams.tournaments}
+  row_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end}
+>
+  <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
+  <:col :let={{_id, tournament}} label="Location"><%= tournament.location %></:col>
+  <:col :let={{_id, tournament}} label="Date"><%= tournament.date %></:col>
+  <:col :let={{_id, tournament}} label="Active"><%= tournament.active %></:col>
+  <:action :let={{_id, tournament}}>
+    <%= if @current_user && @current_user.id == tournament.user_id do %>
+      <div class="sr-only">
+        <.link navigate={~p"/tournaments/#{tournament}"}>Show</.link>
+      </div>
+      <.link patch={~p"/tournaments/#{tournament}/edit"}>Edit</.link>
+    <% end %>
+  </:action>
+  <:action :let={{id, tournament}}>
+    <%= if @current_user && @current_user.id == tournament.user_id do %>
+      <.link
+        phx-click={JS.push("delete", value: %{id: tournament.id}) |> hide("##{id}")}
+        data-confirm="Are you sure?"
+      >
+        Delete
+      </.link>
+    <% end %>
+  </:action>
+</.table>
+<% else %>
+  <p class="text-2xl text-red-600">
+    Woops! There are no tournaments at the moment.
+    <br/>
+    <.link href={~p"/users/log_in"} class="text-white bg-red-500 border-2 rounded-md border-red-500 px-1 hover:underline">Log in</.link> to create your own.
+  </p>
+<% end %>
+
+<.modal :if={@live_action in [:new, :edit]} id="tournament-modal" show on_cancel={JS.patch(~p"/tournaments")}>
+  <.live_component
+    module={MtgFriendsWeb.TournamentLive.FormComponent}
+    current_user={@current_user}
+    id={@tournament.id || :new}
+    title={@page_title}
+    action={@live_action}
+    tournament={@tournament}
+    patch={~p"/tournaments"}
+  />
+</.modal>
