@@ -11,9 +11,6 @@
     <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
       <ul class="relative z-10 flex items-center gap-5 px-4 sm:px-6 lg:px-8 justify-end">
         <%= if @current_user do %>
-          <li class="text-[0.8125rem] leading-6 text-zinc-900">
-            <%= @current_user.email %>
-          </li>
           <li>
             <.link
               href={~p"/users/settings"}
@@ -50,8 +47,8 @@
           </li>
         <% end %>
         <li>
-          <a href="https://github.com/phoenixframework/phoenix" class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700">
-            Support us on GitHub
+          <a href="https://github.com/timrodz/mtg-friends" class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700">
+            GitHub
           </a>
         </li>
       </ul>

@@ -15,14 +15,15 @@
   <:item title="Location"><%= @tournament.location %></:item>
   <:item title="Date"><%= @tournament.date %></:item>
   <:item title="Active"><%= @tournament.active %></:item>
-  <:item title="Description"><%= @tournament.description %></:item>
+  <:item title="Description">
+    <%= if @tournament.description do %>
+      <%= raw String.replace(@tournament.description, "\n", "<br/>") %>
+    <% end %>
+  </:item>
   <:item title="Standings">
     <%= if @tournament.standings_raw do %>
       <%= raw String.replace(@tournament.standings_raw, "\n", "<br/>") %>
     <% end %>
-    <%!-- <%= for participant <- @tournament.participants do %>
-      <p>- <%= participant.name %>: <%= participant.points %></p>
-    <% end %> --%>
   </:item>
 </.list>
 
