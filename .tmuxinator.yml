@@ -5,6 +5,6 @@ windows:
   - shell:
       layout: even-vertical
       panes:
-        - git status
+        - code ~/src/elixir-phoenix.code-workspace
         - psql -h localhost -p 5432 -d "mtg_friends_dev"
   - server: mix phx.server
