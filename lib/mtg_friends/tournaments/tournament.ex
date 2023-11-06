@@ -19,8 +19,6 @@ defmodule MtgFriends.Tournaments.Tournament do
 
   @doc false
   def changeset(tournament, attrs) do
-    IO.inspect(attrs, label: "changeset attributes")
-
     tournament
     |> cast(attrs, [:user_id, :name, :location, :date, :active, :description, :standings_raw])
     |> allow_empty_strings()
