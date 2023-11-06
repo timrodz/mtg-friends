@@ -56,6 +56,7 @@ defmodule MtgFriends.Tournaments do
   def create_tournament(attrs \\ %{}) do
     %Tournament{}
     |> Tournament.changeset(attrs)
+    |> Ecto.Changeset.put_change(:description_html, validate_description(attrs))
     |> Repo.insert()
   end
 
@@ -74,6 +75,7 @@ defmodule MtgFriends.Tournaments do
   def update_tournament(%Tournament{} = tournament, attrs) do
     tournament
     |> Tournament.changeset(attrs)
+    |> Ecto.Changeset.put_change(:description_html, validate_description(attrs))
     |> Repo.update()
   end
 
@@ -104,5 +106,62 @@ defmodule MtgFriends.Tournaments do
   """
   def change_tournament(%Tournament{} = tournament, attrs \\ %{}) do
     Tournament.changeset(tournament, attrs)
+  end
+
+  defp validate_description(attrs) do
+    IO.inspect(attrs, label: "attrs")
+    description = Map.get(attrs, "description")
+    IO.inspect(description, label: "validate description")
+
+    HTTPoison.start()
+
+    cards_to_search =
+      Regex.scan(~r/\[\[(.*?)\]\]/, description)
+      |> Enum.map(&hd/1)
+      |> IO.inspect(label: "list")
+      |> then(
+        &for(
+          card <- &1,
+          do:
+            case HTTPoison.get(
+                   "https://api.scryfall.com/cards/named?fuzzy=#{card |> String.replace("[[", "") |> String.replace("]]", "")}"
+                 ) do
+              {:ok, response} ->
+                expected_fields = ~w(image_uris name scryfall_uri)
+
+                body =
+                  response.body
+                  |> Poison.decode!()
+                  |> Map.take(expected_fields)
+                  # |> Enum.map(fn {k, v} -> {String.to_atom(k), v} end)
+                  |> IO.inspect(label: "parsed body for #{card}")
+
+                image_uris = Map.get(body, "image_uris")
+                img_large = Map.get(image_uris, "large")
+                name = Map.get(body, "name")
+                %{image_uri: img_large, name: name, og_name: "[[#{name}]]"}
+
+              _ ->
+                {:error, "woops"}
+            end
+        )
+      )
+      |> IO.inspect(label: "cards to search?")
+
+    cards_names_to_search =
+      for card <- cards_to_search, do: card.og_name |> IO.inspect(label: "card names to search")
+
+    String.replace(
+      String.replace(description, "\n", "</br>"),
+      cards_names_to_search,
+      fn og_name ->
+        IO.inspect(og_name, label: "current card name")
+        metadata = Enum.find(cards_to_search, fn card -> card.og_name == og_name end)
+        IO.inspect(metadata, label: "metadata")
+
+        "<a class=\"underline\" target=\"_blank\" href=\"#{metadata.image_uri}\">#{metadata.name}</a>"
+      end
+    )
+    |> IO.inspect(label: "new description")
   end
 end

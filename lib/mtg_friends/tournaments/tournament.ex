@@ -9,6 +9,7 @@ defmodule MtgFriends.Tournaments.Tournament do
     field :date, :date
     field :active, :boolean, default: false
     field :description, :string
+    field :description_html, :string
     field :standings_raw, :string
     belongs_to :user, MtgFriends.Accounts.User
     # has_many :participants, MtgFriends.Participants.Participant

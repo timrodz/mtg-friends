@@ -16,8 +16,8 @@
   <:item title="Date"><%= @tournament.date %></:item>
   <:item title="Active"><%= @tournament.active %></:item>
   <:item title="Description">
-    <%= if @tournament.description do %>
-      <%= raw String.replace(@tournament.description, "\n", "<br/>") %>
+    <%= if @tournament.description_html do %>
+      <%= raw @tournament.description_html %>
     <% end %>
   </:item>
   <:item title="Standings">
