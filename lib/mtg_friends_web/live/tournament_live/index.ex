@@ -8,7 +8,12 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :tournaments, Tournaments.list_tournaments())}
+    form_fields = %{"filter_by" => ""}
+
+    {:ok,
+     socket
+     |> stream(:tournaments, Tournaments.list_tournaments())
+     |> assign(form: to_form(form_fields))}
   end
 
   @impl true
@@ -45,5 +50,28 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
     {:ok, _} = Tournaments.delete_tournament(tournament)
 
     {:noreply, stream_delete(socket, :tournaments, tournament)}
+  end
+
+  def handle_event("validate", %{"filter_by" => form}, socket) do
+    IO.inspect(form, label: "form")
+    {:noreply, assign(socket, form: to_form(form))}
+  end
+
+  @impl true
+  def handle_event(event, _, socket) do
+    case event do
+      "filter-inactive" ->
+        {:noreply,
+         stream(socket, :tournaments, Tournaments.list_tournaments("filter-inactive"),
+           reset: true
+         )}
+
+      "filter-active" ->
+        {:noreply,
+         stream(socket, :tournaments, Tournaments.list_tournaments("filter-active"), reset: true)}
+
+      "filter-none" ->
+        {:noreply, stream(socket, :tournaments, Tournaments.list_tournaments(), reset: true)}
+    end
   end
 end

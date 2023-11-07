@@ -17,8 +17,19 @@ defmodule MtgFriends.Tournaments do
       [%Tournament{}, ...]
 
   """
-  def list_tournaments do
-    Repo.all(Tournament)
+  def list_tournaments(params \\ {}) do
+    IO.inspect(params, label: "list_tournaments params")
+
+    case params do
+      "filter-inactive" ->
+        Repo.all(from(t in Tournament, where: [active: false], select: t))
+
+      "filter-active" ->
+        Repo.all(from(t in Tournament, where: [active: true], select: t))
+
+      _ ->
+        Repo.all(Tournament)
+    end
   end
 
   @doc """

@@ -3,3 +3,43 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
+body {
+  @apply antialiased relative bg-slate-200 font-sans;
+}
+
+nav {
+  @apply py-3 px-6 flex justify-end;
+}
+nav ul {
+  @apply flex items-center justify-between gap-4;
+}
+nav ul li {
+  @apply text-base text-slate-700;
+}
+nav ul li a:hover {
+  @apply underline;
+}
+
+main {
+  @apply max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8;
+}
+
+h1 {
+  @apply text-center text-slate-900 font-extrabold text-3xl;
+}
+
+h2 {
+  @apply text-center text-slate-800 font-extrabold text-2xl;
+}
+
+h3 {
+  @apply text-center text-slate-800 font-bold text-xl;
+}
+
+#controls {
+  @apply mt-4 max-w-xl mx-auto text-center;
+}
+
+#controls button {
+  @apply bg-transparent mx-1 py-1 px-2.5 border-slate-400 border-2 font-medium rounded-lg shadow-sm transition ease-in-out duration-150 outline-none hover:bg-slate-300 disabled:opacity-50 disabled:cursor-not-allowed;
+}
