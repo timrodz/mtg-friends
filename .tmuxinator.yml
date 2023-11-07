@@ -3,8 +3,7 @@ root: ~/src/personal-projects/mtg-friends
 
 windows:
   - shell:
-      layout: even-vertical
+      layout: even-horizontal
       panes:
         - code ~/src/elixir-phoenix.code-workspace
-        - psql -h localhost -p 5432 -d "mtg_friends_dev"
-  - server: mix phx.server
+        - mix phx.server
