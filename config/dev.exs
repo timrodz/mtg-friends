@@ -2,10 +2,10 @@ import Config
 
 # Configure your database
 config :mtg_friends, MtgFriends.Repo,
-  username: "<TODO>",
-  password: "<TODO>",
-  hostname: "<TODO>",
-  database: "<TODO>",
+  username: System.get_env("DB_USERNAME"),
+  password: System.get_env("DB_PASSWORD"),
+  hostname: System.get_env("DB_HOSTNAME"),
+  database: System.get_env("DB_NAME"),
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
   pool_size: 10
@@ -23,7 +23,7 @@ config :mtg_friends, MtgFriendsWeb.Endpoint,
   check_origin: false,
   code_reloader: true,
   debug_errors: true,
-  secret_key_base: "<TODO>",
+  secret_key_base: System.get_env("SECRET_KEY_BASE"),
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
     tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
