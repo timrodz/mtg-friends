@@ -5,5 +5,5 @@ windows:
   - shell:
       layout: even-horizontal
       panes:
-        - code ~/src/elixir-phoenix.code-workspace
-        - mix phx.server
+        - source .env; code ~/src/elixir-phoenix.code-workspace
+        - source .env; mix phx.server
