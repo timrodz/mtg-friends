@@ -22,8 +22,8 @@ defmodule MtgFriendsWeb.TournamentLive.FormComponent do
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:location]} type="text" label="Location" />
         <.input field={@form[:date]} type="date" label="Date" />
-        <.input field={@form[:description]} type="textarea" label="Description" />
-        <.input field={@form[:standings_raw]} type="textarea" label="Standings" />
+        <.input field={@form[:description_raw]} type="textarea" label="Description" />
+        <%!-- <.input field={@form[:standings_raw]} type="textarea" label="Standings" /> --%>
         <.input field={@form[:active]} type="checkbox" label="Active" checked />
         <:actions>
           <.button phx-disable-with="Saving...">Submit Tournament</.button>
@@ -35,7 +35,7 @@ defmodule MtgFriendsWeb.TournamentLive.FormComponent do
 
   @impl true
   def update(%{tournament: tournament} = assigns, socket) do
-    changeset = Tournaments.change_tournament(tournament)
+    changeset = Tournaments.change_tournament(tournament, %{date: Date.utc_today()})
 
     {:ok,
      socket

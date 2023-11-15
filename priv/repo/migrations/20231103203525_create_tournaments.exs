@@ -6,7 +6,8 @@ defmodule MtgFriends.Repo.Migrations.CreateTournaments do
       add :date, :date
       add :name, :string
       add :location, :string
-      add :description, :text
+      add :description_raw, :text
+      add :description_html, :text
       add :standings_raw, :text
       add :active, :boolean, default: true, null: false
       add :user_id, references(:users, on_delete: :delete_all), null: false

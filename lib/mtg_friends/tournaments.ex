@@ -66,8 +66,8 @@ defmodule MtgFriends.Tournaments do
   """
   def create_tournament(attrs \\ %{}) do
     %Tournament{}
-    |> Tournament.changeset(attrs)
-    |> Ecto.Changeset.put_change(:description_html, validate_description(attrs))
+    |> Tournament.changeset(Map.put(attrs, "description_html", validate_description(attrs)))
+    |> IO.inspect(label: "create_tournament")
     |> Repo.insert()
   end
 
@@ -120,46 +120,53 @@ defmodule MtgFriends.Tournaments do
   end
 
   defp validate_description(attrs) do
-    description = Map.get(attrs, "description")
+    Map.get(attrs, "description_raw") |> IO.inspect(label: "description_raw")
 
-    HTTPoison.start()
+    with description_raw <- Map.get(attrs, "description_raw"),
+         true <- String.length(description_raw) > 0 do
+      IO.puts("leshgo")
+      HTTPoison.start()
 
-    cards_to_search =
-      Regex.scan(~r/\[\[(.*?)\]\]/, description)
-      |> Enum.map(&hd/1)
-      |> then(
-        &for(
-          card <- &1,
-          do:
-            case HTTPoison.get(
-                   "https://api.scryfall.com/cards/named?fuzzy=#{card |> String.replace("[[", "") |> String.replace("]]", "")}"
-                 ) do
-              {:ok, response} ->
-                expected_fields = ~w(image_uris name scryfall_uri)
+      cards_to_search =
+        Regex.scan(~r/\[\[(.*?)\]\]/, description_raw)
+        |> Enum.map(&hd/1)
+        |> then(
+          &for(
+            card <- &1,
+            do:
+              case HTTPoison.get(
+                     "https://api.scryfall.com/cards/named?fuzzy=#{card |> String.replace("[[", "") |> String.replace("]]", "")}"
+                   ) do
+                {:ok, response} ->
+                  expected_fields = ~w(image_uris name scryfall_uri)
 
-                body =
-                  response.body
-                  |> Poison.decode!()
-                  |> Map.take(expected_fields)
+                  body =
+                    response.body
+                    |> Poison.decode!()
+                    |> Map.take(expected_fields)
 
-                image_uris = Map.get(body, "image_uris")
-                img_large = Map.get(image_uris, "large")
-                name = Map.get(body, "name")
-                %{image_uri: img_large, name: name, og_name: "[[#{name}]]"}
-            end
+                  image_uris = Map.get(body, "image_uris")
+                  img_large = Map.get(image_uris, "large")
+                  name = Map.get(body, "name")
+                  %{image_uri: img_large, name: name, og_name: "[[#{name}]]"}
+              end
+          )
         )
+
+      cards_names_to_search = for card <- cards_to_search, do: card.og_name
+
+      String.replace(
+        String.replace(description_raw, "\n", "</br>"),
+        cards_names_to_search,
+        fn og_name ->
+          metadata = Enum.find(cards_to_search, fn card -> card.og_name == og_name end)
+
+          "<a class=\"underline\" target=\"_blank\" href=\"#{metadata.image_uri}\">#{metadata.name}</a>"
+        end
       )
-
-    cards_names_to_search = for card <- cards_to_search, do: card.og_name
-
-    String.replace(
-      String.replace(description, "\n", "</br>"),
-      cards_names_to_search,
-      fn og_name ->
-        metadata = Enum.find(cards_to_search, fn card -> card.og_name == og_name end)
-
-        "<a class=\"underline\" target=\"_blank\" href=\"#{metadata.image_uri}\">#{metadata.name}</a>"
-      end
-    )
+      |> IO.inspect(label: "results")
+    else
+      _ -> ""
+    end
   end
 end
