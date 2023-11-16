@@ -47,9 +47,10 @@ defmodule MtgFriends.Tournaments do
 
   """
   def get_tournament!(id),
-    do: Repo.get!(Tournament, id)
+    do:
+      Repo.get!(Tournament, id)
+      |> Repo.preload([:participants])
 
-  # |> Repo.preload([:participants])
   # |> IO.inspect(label: "tournament")
 
   @doc """

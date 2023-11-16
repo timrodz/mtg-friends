@@ -64,7 +64,7 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
       on_cancel={JS.patch(~p"/tournaments")}
     >
       <.live_component
-        module={MtgFriendsWeb.TournamentLive.FormComponent}
+        module={MtgFriendsWeb.TournamentLive.TournamentEditFormComponent}
         current_user={@current_user}
         id={@tournament.id || :new}
         title={@page_title}
@@ -110,7 +110,10 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
   end
 
   @impl true
-  def handle_info({MtgFriendsWeb.TournamentLive.FormComponent, {:saved, tournament}}, socket) do
+  def handle_info(
+        {MtgFriendsWeb.TournamentLive.TournamentEditFormComponent, {:saved, tournament}},
+        socket
+      ) do
     {:noreply, stream_insert(socket, :tournaments, tournament)}
   end
 

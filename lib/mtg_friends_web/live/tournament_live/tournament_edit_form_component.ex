@@ -1,4 +1,4 @@
-defmodule MtgFriendsWeb.TournamentLive.FormComponent do
+defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
   use MtgFriendsWeb, :live_component
 
   alias MtgFriends.Tournaments

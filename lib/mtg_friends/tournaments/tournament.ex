@@ -12,7 +12,8 @@ defmodule MtgFriends.Tournaments.Tournament do
     field :description_html, :string
     field :standings_raw, :string
     belongs_to :user, MtgFriends.Accounts.User
-    # has_many :participants, MtgFriends.Participants.Participant
+
+    has_many :participants, MtgFriends.Participants.Participant
 
     timestamps()
   end
