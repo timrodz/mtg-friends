@@ -1,0 +1,116 @@
+<.header>
+  Tournament: <%= @tournament.name %>
+  <:subtitle>This is a tournament record from your database.</:subtitle>
+  <:actions>
+    <%= if @current_user && @current_user.id == @tournament.user_id do %>
+      <.link patch={~p"/tournaments/#{@tournament}/show/edit"} phx-click={JS.push_focus()}>
+        <.button>Edit tournament</.button>
+      </.link>
+    <% end %>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name"><%= @tournament.name %></:item>
+  <:item title="Location"><%= @tournament.location %></:item>
+  <:item title="Date"><%= @tournament.date %></:item>
+  <:item title="Active"><%= @tournament.active %></:item>
+  <:item title="Description">
+    <%= if @tournament.description_html do %>
+      <p id="description"><%= raw(@tournament.description_html) %></p>
+    <% end %>
+  </:item>
+  <%!-- <:item title="Standings">
+        <%= if @tournament.standings_raw do %>
+          <%= raw(String.replace(@tournament.standings_raw, "\n", "<br/>")) %>
+        <% end %>
+      </:item> --%>
+</.list>
+
+<div id="participants" class="mt-8">
+  <h2>Participants</h2>
+  <%= if @current_user && @current_user.id == @tournament.user_id do %>
+    <div class="mt-4 flex justify-around">
+      <p>NAME</p>
+      <p>Points</p>
+      <p>Decklist</p>
+      <p></p>
+    </div>
+    <div
+      :for={form <- @participant_forms}
+      id={"tournament#{@tournament.id}-participant#{form.data.id}"}
+    >
+      <.simple_form
+        for={form}
+        phx-value-id={form.data.id}
+        class="min-w-0 flex-1 drag-ghost:opacity-0 flex justify-around"
+      >
+        <.input phx-change="update-name" type="text" field={form[:name]} />
+        <div class="flex justify-center items-center">
+          <button
+            :if={form.data.id}
+            phx-click={JS.push("decrease-points")}
+            phx-value-id={form.data.id}
+            type="button"
+          >
+            <.icon name="hero-minus" class="w-5 h-5" />
+          </button>
+          <p class="font-mono w-8 text-center"><%= form.data.points %></p>
+          <button
+            :if={form.data.id}
+            phx-click={JS.push("add-points")}
+            phx-value-id={form.data.id}
+            type="button"
+          >
+            <.icon name="hero-plus" class="w-5 h-5" />
+          </button>
+        </div>
+        <.input phx-change="update-decklist" type="url" field={form[:decklist]} />
+        <.link
+          phx-click={
+            JS.push("delete-participant", value: %{id: form.data.id})
+            |> hide("##{form.data.id}")
+          }
+          data-confirm="Are you sure?"
+        >
+          Delete
+        </.link>
+      </.simple_form>
+    </div>
+    <div id="save" class="mt-4">
+      <.button_secondary
+        phx-click="add-participant"
+        data-confirm="Are you sure? If you have changes you haven't saved, they will be discarded"
+      >
+        <.icon name="hero-plus" class="w-5 h-5" /> Add participant
+      </.button_secondary>
+      <.button phx-click="save-tournament">Save changes</.button>
+    </div>
+  <% else %>
+    <.table id="tournaments" rows={@participant_forms}>
+      <:col :let={form} label="Standing">1</:col>
+      <:col :let={form} label="Name"><%= form.data.name %></:col>
+      <:col :let={form} label="Points"><%= form.data.points %></:col>
+      <:col :let={form} label="Decklist"><%= form.data.decklist %></:col>
+    </.table>
+  <% end %>
+</div>
+
+<.back navigate={~p"/tournaments"}>Back to tournaments</.back>
+
+<.modal
+  :if={@live_action == :edit}
+  id="tournament-modal"
+  show
+  on_cancel={JS.patch(~p"/tournaments/#{@tournament}")}
+>
+  <.live_component
+    module={MtgFriendsWeb.TournamentLive.TournamentEditFormComponent}
+    current_user={@current_user}
+    id={@tournament.id}
+    title={@page_title}
+    action={@live_action}
+    tournament={@tournament}
+    patch={~p"/tournaments/#{@tournament}"}
+  />
+</.modal>

@@ -47,3 +47,7 @@ h3 {
 #participants button {
   @apply font-bold;
 }
+
+#description a {
+  @apply mx-1 font-bold underline;
+}

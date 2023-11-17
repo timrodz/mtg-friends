@@ -28,7 +28,7 @@ defmodule MtgFriends.Tournaments do
         Repo.all(from(t in Tournament, where: [active: true], select: t))
 
       _ ->
-        Repo.all(Tournament)
+        Repo.all(Tournament, order_by: [desc: :date]) |> IO.inspect(label: "all tournaments")
     end
   end
 
@@ -46,12 +46,27 @@ defmodule MtgFriends.Tournaments do
       ** (Ecto.NoResultsError)
 
   """
-  def get_tournament!(id),
-    do:
-      Repo.get!(Tournament, id)
-      |> Repo.preload([:participants])
 
-  # |> IO.inspect(label: "tournament")
+  # def get_tournament!(id),
+  #   do:
+  #     Repo.get!(Tournament, id)
+  #     |> Repo.preload([:participants])
+
+  def get_tournament!(id) do
+    alias MtgFriends.Participants.Participant
+
+    query =
+      from(
+        t in Tournament,
+        where: t.id == ^id,
+        select: t,
+        preload: [
+          participants: ^from(p in Participant, order_by: [asc: p.id])
+        ]
+      )
+
+    Repo.one!(query)
+  end
 
   @doc """
   Creates a tournament.

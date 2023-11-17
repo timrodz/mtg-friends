@@ -15,9 +15,8 @@ defmodule MtgFriends.Participants.Participant do
   @doc false
   def changeset(participant, attrs) do
     participant
-    |> cast(attrs, [:name, :points, :decklist])
+    |> cast(attrs, [:name, :points, :decklist, :tournament_id])
     |> allow_empty_strings()
-
-    # |> validate_required([:name, :points, :decklist])
+    |> validate_required([:tournament_id])
   end
 end

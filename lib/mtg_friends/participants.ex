@@ -55,7 +55,22 @@ defmodule MtgFriends.Participants do
     |> Repo.insert()
   end
 
-  def create_participants(tournament_id, participant_count) do
+  def create_empty_participant(tournament_id) do
+    tournament_id |> IO.inspect(label: "a")
+    now = NaiveDateTime.local_now()
+
+    create_participant(%{
+      inserted_at: now,
+      updated_at: now,
+      name: "",
+      points: 0,
+      decklist: "",
+      tournament_id: tournament_id
+    })
+    |> IO.inspect(label: "create empty")
+  end
+
+  def create_x_participants(tournament_id, participant_count) do
     now = NaiveDateTime.local_now() |> IO.inspect(label: "naive datetime")
 
     new_participants =
@@ -93,6 +108,27 @@ defmodule MtgFriends.Participants do
     |> Participant.changeset(attrs)
     |> Repo.update()
   end
+
+  # def update_participants(participant_forms) do
+  #   now = NaiveDateTime.local_now() |> IO.inspect(label: "naive datetime")
+
+  #   new_participants =
+  #     Enum.to_list(1..participant_count)
+  #     |> Enum.map(fn _ ->
+  #       %{
+  #         inserted_at: now,
+  #         updated_at: now,
+  #         name: "",
+  #         points: 0,
+  #         decklist: "",
+  #         tournament_id: tournament_id
+  #       }
+  #     end)
+
+  #   Ecto.Multi.new()
+  #   |> Ecto.Multi.insert_all(:insert_all, Participant, new_participants)
+  #   |> Repo.transaction()
+  # end
 
   @doc """
   Deletes a participant.

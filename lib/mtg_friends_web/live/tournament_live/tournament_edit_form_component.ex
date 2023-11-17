@@ -73,7 +73,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
   end
 
   defp save_tournament(socket, :new, tournament_params) do
-    tournament_params = Map.put(tournament_params, "user_id", socket.assigns.current_user.id)
+    tournament_params =
+      Map.put(tournament_params, "user_id", socket.assigns.current_user.id)
 
     case Tournaments.create_tournament(tournament_params) do
       {:ok, tournament} ->
