@@ -6,7 +6,7 @@ defmodule MtgFriends.Repo.Migrations.CreateParticipants do
       add :name, :string
       add :points, :integer
       add :decklist, :string
-      add :tournament_id, references(:tournaments, on_delete: :nothing)
+      add :tournament_id, references(:tournaments, on_delete: :delete_all)
 
       timestamps()
     end

@@ -11,9 +11,11 @@ defmodule MtgFriends.Tournaments.Tournament do
     field :description_raw, :string
     field :description_html, :string
     field :standings_raw, :string
+
     belongs_to :user, MtgFriends.Accounts.User
 
     has_many :participants, MtgFriends.Participants.Participant
+    has_many :rounds, MtgFriends.Rounds.Round
 
     timestamps()
   end

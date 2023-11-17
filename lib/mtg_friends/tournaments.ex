@@ -4,9 +4,12 @@ defmodule MtgFriends.Tournaments do
   """
 
   import Ecto.Query, warn: false
+  alias MtgFriends.Pairings.Pairing
   alias MtgFriends.Repo
 
   alias MtgFriends.Tournaments.Tournament
+  alias MtgFriends.Rounds.Round
+  alias MtgFriends.Participants.Participant
 
   @doc """
   Returns the list of tournaments.
@@ -18,8 +21,6 @@ defmodule MtgFriends.Tournaments do
 
   """
   def list_tournaments(params \\ {}) do
-    IO.inspect(params, label: "list_tournaments params")
-
     case params do
       "filter-inactive" ->
         Repo.all(from(t in Tournament, where: [active: false], select: t))
@@ -28,7 +29,7 @@ defmodule MtgFriends.Tournaments do
         Repo.all(from(t in Tournament, where: [active: true], select: t))
 
       _ ->
-        Repo.all(Tournament, order_by: [desc: :date]) |> IO.inspect(label: "all tournaments")
+        Repo.all(Tournament, order_by: [desc: :date])
     end
   end
 
@@ -53,15 +54,14 @@ defmodule MtgFriends.Tournaments do
   #     |> Repo.preload([:participants])
 
   def get_tournament!(id) do
-    alias MtgFriends.Participants.Participant
-
     query =
       from(
         t in Tournament,
         where: t.id == ^id,
         select: t,
         preload: [
-          participants: ^from(p in Participant, order_by: [asc: p.id])
+          participants: ^from(p in Participant, order_by: [asc: p.id]),
+          rounds: ^from(r in Round, order_by: [asc: r.id], preload: :pairings)
         ]
       )
 

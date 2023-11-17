@@ -56,7 +56,6 @@ defmodule MtgFriends.Participants do
   end
 
   def create_empty_participant(tournament_id) do
-    tournament_id |> IO.inspect(label: "a")
     now = NaiveDateTime.local_now()
 
     create_participant(%{
@@ -68,27 +67,6 @@ defmodule MtgFriends.Participants do
       tournament_id: tournament_id
     })
     |> IO.inspect(label: "create empty")
-  end
-
-  def create_x_participants(tournament_id, participant_count) do
-    now = NaiveDateTime.local_now() |> IO.inspect(label: "naive datetime")
-
-    new_participants =
-      Enum.to_list(1..participant_count)
-      |> Enum.map(fn _ ->
-        %{
-          inserted_at: now,
-          updated_at: now,
-          name: "",
-          points: 0,
-          decklist: "",
-          tournament_id: tournament_id
-        }
-      end)
-
-    Ecto.Multi.new()
-    |> Ecto.Multi.insert_all(:insert_all, Participant, new_participants)
-    |> Repo.transaction()
   end
 
   @doc """
@@ -109,26 +87,41 @@ defmodule MtgFriends.Participants do
     |> Repo.update()
   end
 
-  # def update_participants(participant_forms) do
-  #   now = NaiveDateTime.local_now() |> IO.inspect(label: "naive datetime")
+  def update_participants_for_tournament(tournament_id, participants, form_changes) do
+    multi =
+      Enum.reduce(participants, Ecto.Multi.new(), fn participant, multi ->
+        with id <- participant.id,
+             name <- form_changes["form-participant-name-#{id}"],
+             true <- not is_nil(name) and name != "",
+             decklist <- form_changes["form-participant-decklist-#{id}"],
+             participant <- get_participant!(id) do
+          IO.inspect(name, label: "name")
 
-  #   new_participants =
-  #     Enum.to_list(1..participant_count)
-  #     |> Enum.map(fn _ ->
-  #       %{
-  #         inserted_at: now,
-  #         updated_at: now,
-  #         name: "",
-  #         points: 0,
-  #         decklist: "",
-  #         tournament_id: tournament_id
-  #       }
-  #     end)
+          changeset =
+            change_participant(participant, %{
+              "name" => name,
+              "decklist" => decklist
+            })
+            |> IO.inspect(label: "participant #{id} changeset")
 
-  #   Ecto.Multi.new()
-  #   |> Ecto.Multi.insert_all(:insert_all, Participant, new_participants)
-  #   |> Repo.transaction()
-  # end
+          Ecto.Multi.update(
+            multi,
+            "update_tournament_#{tournament_id}_participant_#{id}",
+            changeset
+          )
+        else
+          _ -> multi
+        end
+      end)
+      |> IO.inspect(label: "multi")
+
+    if multi do
+      IO.puts("<ULTi")
+      MtgFriends.Repo.transaction(multi)
+    else
+      {:error, :no_changes_detected}
+    end
+  end
 
   @doc """
   Deletes a participant.

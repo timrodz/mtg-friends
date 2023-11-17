@@ -3,9 +3,9 @@ defmodule MtgFriends.Repo.Migrations.CreateTournaments do
 
   def change do
     create table(:tournaments) do
-      add :date, :date
-      add :name, :string
-      add :location, :string
+      add :date, :date, null: false
+      add :name, :string, null: false
+      add :location, :string, null: false
       add :description_raw, :text
       add :description_html, :text
       add :standings_raw, :text

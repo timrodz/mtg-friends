@@ -185,7 +185,7 @@ defmodule MtgFriendsWeb.CoreComponents do
   def simple_form(assigns) do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class={["mt-2 space-y-2 bg-white", @class]}>
+      <div class={["mt-2 space-y-3 bg-white", @class]}>
         <%= render_slot(@inner_block, f) %>
         <div :for={action <- @actions} class="flex items-center justify-between gap-6">
           <%= render_slot(action, f) %>
@@ -214,8 +214,10 @@ defmodule MtgFriendsWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-indigo-600 hover:underline py-2 px-3",
+        "phx-submit-loading:opacity-75 rounded-lg bg-indigo-600 enabled:hover:underline py-2 px-3",
         "text-sm font-semibold leading-6 text-white active:text-white/80",
+        "flex items-center",
+        "disabled:bg-zinc-300",
         @class
       ]}
       {@rest}
@@ -238,6 +240,7 @@ defmodule MtgFriendsWeb.CoreComponents do
       class={[
         "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:underline py-2 px-3",
         "text-sm font-semibold leading-6 text-white active:text-white/80",
+        "flex items-center",
         @class
       ]}
       {@rest}
@@ -408,6 +411,22 @@ defmodule MtgFriendsWeb.CoreComponents do
     """
   end
 
+  attr :class, :string, default: nil
+
+  slot :inner_block, required: true
+
+  def warning(assigns) do
+    ~H"""
+    <p class={[
+      "mt-3 flex gap-3 text-sm leading-6 rounded-md p-2 font-medium bg-yellow-200 phx-no-feedback:hidden",
+      @class
+    ]}>
+      <.icon name="hero-exclamation-triangle" class="mt-0.5 h-5 w-5 flex-none" />
+      <%= render_slot(@inner_block) %>
+    </p>
+    """
+  end
+
   @doc """
   Renders a header with title.
   """
@@ -421,10 +440,10 @@ defmodule MtgFriendsWeb.CoreComponents do
     ~H"""
     <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
       <div>
-        <h1 class="text-lg font-semibold leading-8 text-zinc-800">
+        <h1 class="font-semibold leading-8 text-zinc-800">
           <%= render_slot(@inner_block) %>
         </h1>
-        <p :if={@subtitle != []} class="mt-2 text-sm leading-6 text-zinc-600">
+        <p :if={@subtitle != []} class="mt-2 leading-6 text-zinc-600">
           <%= render_slot(@subtitle) %>
         </p>
       </div>
@@ -444,6 +463,7 @@ defmodule MtgFriendsWeb.CoreComponents do
       </.table>
   """
   attr :id, :string, required: true
+  attr :class, :string, default: nil
   attr :rows, :list, required: true
   attr :row_id, :any, default: nil, doc: "the function for generating the row id"
   attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
@@ -462,12 +482,11 @@ defmodule MtgFriendsWeb.CoreComponents do
     assigns =
       with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
         assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
-        |> IO.inspect(label: "rows")
       end
 
     ~H"""
-    <div class="overflow-y-auto px-4 sm:overflow-visible sm:px-0">
-      <table class="w-[40rem] mt-11 sm:w-full">
+    <div class={["overflow-y-auto px-4 sm:overflow-visible sm:px-0", @class]}>
+      <table class="w-[40rem] sm:w-full">
         <thead class="text-sm text-left leading-6 text-zinc-500">
           <tr>
             <th :for={col <- @col} class="p-0 pr-6 pb-4 font-normal"><%= col[:label] %></th>
@@ -479,7 +498,7 @@ defmodule MtgFriendsWeb.CoreComponents do
           phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}
           class="relative divide-y divide-zinc-100 border-t border-zinc-200 text-sm leading-6 text-zinc-700"
         >
-          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="group hover:bg-zinc-50">
+          <tr :for={row <- @rows} id={@row_id && @row_id.(row)} class="group hover:bg-zinc-100">
             <td
               :for={{col, i} <- Enum.with_index(@col)}
               phx-click={@row_click && @row_click.(row)}
@@ -545,18 +564,20 @@ defmodule MtgFriendsWeb.CoreComponents do
       <.back navigate={~p"/posts"}>Back to posts</.back>
   """
   attr :navigate, :any, required: true
+  attr :class, :string, default: nil
   slot :inner_block, required: true
 
   def back(assigns) do
     ~H"""
-    <div class="mt-16">
+    <div class={["mt-8", @class]}>
       <.link
         navigate={@navigate}
         class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
       >
-        <.icon name="hero-arrow-left-solid" class="h-3 w-3" />
+        <.icon name="hero-arrow-left" class="h-3 w-3" />
         <%= render_slot(@inner_block) %>
       </.link>
+      <hr />
     </div>
     """
   end

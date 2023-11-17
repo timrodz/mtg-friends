@@ -23,8 +23,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         <.input field={@form[:location]} type="text" label="Location" />
         <.input field={@form[:date]} type="date" label="Date" />
         <.input field={@form[:description_raw]} type="textarea" label="Description" />
-        <%!-- <.input field={@form[:standings_raw]} type="textarea" label="Standings" /> --%>
-        <.input field={@form[:active]} type="checkbox" label="Active" checked />
+        <.input field={@form[:standings_raw]} type="textarea" label="Standings (OLD)" />
+        <.input field={@form[:active]} type="checkbox" label="In progress?" checked />
         <:actions>
           <.button phx-disable-with="Saving...">Submit Tournament</.button>
         </:actions>

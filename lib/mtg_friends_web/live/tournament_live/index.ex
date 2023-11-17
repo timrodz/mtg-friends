@@ -6,84 +6,11 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
 
   on_mount {MtgFriendsWeb.UserAuth, :mount_current_user}
 
-  def render(assigns) do
-    ~H"""
-    <.header class="mb-2">
-      Listing Tournaments
-      <:actions>
-        <%= if @current_user do %>
-          <.link patch={~p"/tournaments/new"}>
-            <.button>New Tournament</.button>
-          </.link>
-        <% end %>
-      </:actions>
-    </.header>
-
-    <div id="controls">
-      <p class="font-bold">Filter tournaments</p>
-      <div class="mt-2">
-        <button phx-click="filter-none">all</button>
-        <button phx-click="filter-inactive">inactive</button>
-        <button phx-click="filter-active">active</button>
-      </div>
-    </div>
-
-    <.table
-      id="tournaments"
-      rows={@streams.tournaments}
-      row_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end}
-    >
-      <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
-      <:col :let={{_id, tournament}} label="Location"><%= tournament.location %></:col>
-      <:col :let={{_id, tournament}} label="Date"><%= tournament.date %></:col>
-      <:col :let={{_id, tournament}} label="Active"><%= tournament.active %></:col>
-      <:action :let={{_id, tournament}}>
-        <%= if @current_user && @current_user.id == tournament.user_id do %>
-          <div class="sr-only">
-            <.link navigate={~p"/tournaments/#{tournament}"}>Show</.link>
-          </div>
-          <.link patch={~p"/tournaments/#{tournament}/edit"}>Edit</.link>
-        <% end %>
-      </:action>
-      <:action :let={{id, tournament}}>
-        <%= if @current_user && @current_user.id == tournament.user_id do %>
-          <.link
-            phx-click={JS.push("delete", value: %{id: tournament.id}) |> hide("##{id}")}
-            data-confirm="Are you sure?"
-          >
-            Delete
-          </.link>
-        <% end %>
-      </:action>
-    </.table>
-
-    <.modal
-      :if={@live_action in [:new, :edit]}
-      id="tournament-modal"
-      show
-      on_cancel={JS.patch(~p"/tournaments")}
-    >
-      <.live_component
-        module={MtgFriendsWeb.TournamentLive.TournamentEditFormComponent}
-        current_user={@current_user}
-        id={@tournament.id || :new}
-        title={@page_title}
-        action={@live_action}
-        tournament={@tournament}
-        patch={~p"/tournaments"}
-      />
-    </.modal>
-    """
-  end
-
   @impl true
   def mount(_params, _session, socket) do
-    form_fields = %{"filter_by" => ""}
-
     {:ok,
      socket
-     |> stream(:tournaments, Tournaments.list_tournaments())
-     |> assign(form: to_form(form_fields))}
+     |> stream(:tournaments, Tournaments.list_tournaments())}
   end
 
   @impl true

@@ -9,6 +9,7 @@ defmodule MtgFriends.Participants.Participant do
     field :decklist, :string
 
     belongs_to :tournament, MtgFriends.Tournaments.Tournament
+
     timestamps()
   end
 

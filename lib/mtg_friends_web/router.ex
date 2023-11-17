@@ -38,6 +38,12 @@ defmodule MtgFriendsWeb.Router do
 
     live "/tournaments", TournamentLive.Index, :index
     live "/tournaments/:id", TournamentLive.Show, :show
+
+    live "/tournaments/:tournament_id/rounds/:round_number", TournamentLive.Round, :index
+
+    live "/tournaments/:tournament_id/rounds/:round_number/edit_pairing/:pairing_number",
+         TournamentLive.Round,
+         :edit
   end
 
   # Other scopes may use custom stacks.

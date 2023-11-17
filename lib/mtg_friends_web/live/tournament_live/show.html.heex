@@ -1,8 +1,10 @@
 <.header>
   Tournament: <%= @tournament.name %>
-  <:subtitle>This is a tournament record from your database.</:subtitle>
+  <:subtitle>
+    <%= (@tournament.active && "In progress 🟢") || "finished 🔴" %>
+  </:subtitle>
   <:actions>
-    <%= if @current_user && @current_user.id == @tournament.user_id do %>
+    <%= if @is_current_user_tournament_owner do %>
       <.link patch={~p"/tournaments/#{@tournament}/show/edit"} phx-click={JS.push_focus()}>
         <.button>Edit tournament</.button>
       </.link>
@@ -10,93 +12,126 @@
   </:actions>
 </.header>
 
+<.back navigate={~p"/tournaments"}>Back to tournaments</.back>
+
 <.list>
-  <:item title="Name"><%= @tournament.name %></:item>
-  <:item title="Location"><%= @tournament.location %></:item>
   <:item title="Date"><%= @tournament.date %></:item>
-  <:item title="Active"><%= @tournament.active %></:item>
+  <:item title="Location"><%= @tournament.location %></:item>
   <:item title="Description">
     <%= if @tournament.description_html do %>
       <p id="description"><%= raw(@tournament.description_html) %></p>
     <% end %>
   </:item>
-  <%!-- <:item title="Standings">
-        <%= if @tournament.standings_raw do %>
-          <%= raw(String.replace(@tournament.standings_raw, "\n", "<br/>")) %>
-        <% end %>
-      </:item> --%>
+  <:item title="Standings (OLD)">
+    <%= if @tournament.standings_raw do %>
+      <%= raw(String.replace(@tournament.standings_raw, "\n", "<br/>")) %>
+    <% end %>
+  </:item>
 </.list>
 
 <div id="participants" class="mt-8">
   <h2>Participants</h2>
-  <%= if @current_user && @current_user.id == @tournament.user_id do %>
-    <div class="mt-4 flex justify-around">
-      <p>NAME</p>
-      <p>Points</p>
-      <p>Decklist</p>
-      <p></p>
+  <hr class="mt-4" />
+  <%= if @is_current_user_tournament_owner do %>
+    <%!-- <%= if length(@rounds) == 0 do %> --%>
+    <%!-- <.button_secondary phx-click="add-participant" class="mt-2">
+      <.icon name="hero-plus" class="w-5 h-5" /> Add participant
+    </.button_secondary> --%>
+    <%!-- <% end %> --%>
+    <div class="mt-4 grid grid-cols-4 md:grid-cols-7">
+      <p class="col-span-1">Standings</p>
+      <p class="col-span-1 md:col-span-2">Name</p>
+      <p class="col-span-1 text-center">Points</p>
+      <p class="col-span-1 md:col-span-2">Decklist</p>
+      <p class="hidden col-span-0 md:block md:col-span-1" />
     </div>
-    <div
-      :for={form <- @participant_forms}
-      id={"tournament#{@tournament.id}-participant#{form.data.id}"}
-    >
-      <.simple_form
-        for={form}
-        phx-value-id={form.data.id}
-        class="min-w-0 flex-1 drag-ghost:opacity-0 flex justify-around"
+    <.simple_form for={@participant_forms} phx-submit="save-participants">
+      <div
+        :for={{p, index} <- Enum.with_index(@participant_forms.params["participants"])}
+        id={"data-#{p["id"]}"}
+        class="grid grid-cols-4 md:grid-cols-7"
       >
-        <.input phx-change="update-name" type="text" field={form[:name]} />
-        <div class="flex justify-center items-center">
-          <button
-            :if={form.data.id}
-            phx-click={JS.push("decrease-points")}
-            phx-value-id={form.data.id}
-            type="button"
-          >
-            <.icon name="hero-minus" class="w-5 h-5" />
-          </button>
-          <p class="font-mono w-8 text-center"><%= form.data.points %></p>
-          <button
-            :if={form.data.id}
-            phx-click={JS.push("add-points")}
-            phx-value-id={form.data.id}
-            type="button"
-          >
-            <.icon name="hero-plus" class="w-5 h-5" />
-          </button>
+        <input type="hidden" name={"participant-id-#{p["id"]}"} value={p["id"]} />
+        <p class="col-span-1 text-zinc-500">
+          #<%= index + 1 %>
+        </p>
+        <div class="col-span-1 md:col-span-2">
+          <%= if p["name"] do %>
+            <p><%= p["name"] %></p>
+          <% else %>
+            <.input type="text" name={"form-participant-name-#{p["id"]}"} value={p["name"]} />
+          <% end %>
         </div>
-        <.input phx-change="update-decklist" type="url" field={form[:decklist]} />
-        <.link
-          phx-click={
-            JS.push("delete-participant", value: %{id: form.data.id})
-            |> hide("##{form.data.id}")
-          }
-          data-confirm="Are you sure?"
-        >
-          Delete
-        </.link>
-      </.simple_form>
-    </div>
-    <div id="save" class="mt-4">
-      <.button_secondary
-        phx-click="add-participant"
-        data-confirm="Are you sure? If you have changes you haven't saved, they will be discarded"
-      >
-        <.icon name="hero-plus" class="w-5 h-5" /> Add participant
-      </.button_secondary>
-      <.button phx-click="save-tournament">Save changes</.button>
-    </div>
+        <p class="col-span-1 text-center"><%= p["total_score"] %></p>
+        <div class="col-span- md:col-span-2">
+          <.input type="text" name={"form-participant-decklist-#{p["id"]}"} value={p["decklist"]} />
+        </div>
+        <div class="hidden col-span-0 md:col-span-1 md:flex md:justify-center">
+          <.link
+            phx-click={
+              JS.push("delete-participant", value: %{id: p["id"]})
+              |> hide("##{p["id"]}")
+            }
+            data-confirm="Are you sure?"
+            class="text-zinc-400 font-medium"
+          >
+            Delete
+          </.link>
+        </div>
+      </div>
+      <:actions>
+        <.button phx-disable-with="Saving...">Update participants</.button>
+      </:actions>
+    </.simple_form>
   <% else %>
-    <.table id="tournaments" rows={@participant_forms}>
+    <.table id="tournaments" rows={@participant_forms} class="mt-6">
       <:col :let={form} label="Standing">1</:col>
       <:col :let={form} label="Name"><%= form.data.name %></:col>
       <:col :let={form} label="Points"><%= form.data.points %></:col>
       <:col :let={form} label="Decklist"><%= form.data.decklist %></:col>
     </.table>
+    <%!-- <p class="mt-4">Total participants: <%= length(@participant_forms) %></p> --%>
   <% end %>
 </div>
 
-<.back navigate={~p"/tournaments"}>Back to tournaments</.back>
+<div id="rounds" class="mt-8">
+  <h2>Rounds</h2>
+  <%= if length(@tournament.participants || []) > 3 do %>
+    <.table id="tournaments" rows={@tournament.rounds} class="mt-0">
+      <:col :let={round}>
+        <.link patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"}>
+          <div class="flex gap-2 items-center">
+            <p>
+              Round #<%= round.number + 1 %> — <%= (round.active && "In progress 🟢") ||
+                "Finished 🔴" %>
+            </p>
+          </div>
+        </.link>
+      </:col>
+      <:action :let={round} :if={@is_current_user_tournament_owner}>
+        <.link patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"}>
+          Edit
+        </.link>
+      </:action>
+    </.table>
+
+    <.warning :if={not @all_participants_have_names}>
+      In order to start a round, all participants must have names assigned to them
+    </.warning>
+    <.button
+      :if={@is_current_user_tournament_owner}
+      phx-click="create-round"
+      class="mt-4"
+      disabled={not @all_participants_have_names}
+    >
+      <.icon name="hero-plus" class="mr-1 w-5 h-5" />Start new round
+    </.button>
+  <% else %>
+    <.warning>
+      Add at least 4 participants to start new rounds
+    </.warning>
+  <% end %>
+</div>
 
 <.modal
   :if={@live_action == :edit}
