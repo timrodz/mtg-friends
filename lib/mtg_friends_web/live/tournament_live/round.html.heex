@@ -1,7 +1,7 @@
 <.header>
   Tournament: <%= @tournament_name %>
   <:subtitle>
-    Round #<%= @round_number + 1 %> — <%= (@round_active && "In progress 🟢") ||
+    Round #<%= @round_number + 1 %> — <%= (@is_round_active && "In progress 🟢") ||
       "Finished 🔴" %>
   </:subtitle>
 </.header>
@@ -41,7 +41,7 @@
       <.link
         :if={@is_current_user_tournament_owner}
         patch={
-          ~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}/edit_pairing/#{pairing_number + 1}"
+          ~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}/pairing/#{pairing_number + 1}/edit"
         }
         phx-click={JS.push_focus()}
       >
@@ -76,39 +76,76 @@
 <div :if={@is_current_user_tournament_owner} class="mt-4">
   <%= if not(@has_pairings) do %>
     <h3>There are no pods yet<br />Create pods by selecting one of the formulas below</h3>
-    <div class="mt-4 flex flex-col gap-4 mx-2">
-      <div class="flex flex-col gap-2">
+    <div id="round-pods" class="mt-6 space-y-6 px-4 text-zinc-700 text-sm md:text-md">
+      <div id="create-pairings" class="space-y-4">
         <.button
           phx-click="create-pairings"
-          class="text-md"
-          data-confirm="Are you sure? You've selected 'Last round standings into groups (1st/2nd/3rd/4th)'"
-          class="text-lg"
+          data-confirm="Are you sure? You've selected 'Default' mode"
+          class="text-left"
         >
-          #1: Last round standings
+          Last round standings
         </.button>
-        <p class="text-zinc-700">
-          This will group winners into their own pods. 1st place winners will go to their pod, and so will 2nd/3rd/4th place participants. The only exception is for uneven participant numbers, where we'll randomly promote a participant from 2nd > 1st, 3rd > 2nd, 4th > 3rd.
-        </p>
-        <.link
-          patch={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number}"}
-          phx-click={JS.push_focus()}
-          target="_blank"
-        >
-          See last round results
-        </.link>
+        <div class="space-y-4 ml-4">
+          <p>
+            Generate pods based on last round's standings, grouping them into pods for
+            <b>1st/2nd/3rd/4th</b>
+            places. If the tournament has an uneven number of participants, we'll randomly promote a participant from 4th > 3rd, 3rd > 2nd, and 2nd > 1st.
+            <span class="text-black">
+              <.link
+                patch={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number}"}
+                phx-click={JS.push_focus()}
+                target="_blank"
+              >
+                See last round results here
+              </.link>
+            </span>
+          </p>
+          <p class="flex items-center">
+            <.icon name="hero-light-bulb" class="mr-1 w-5 h-5 text-yellow-600" />Recommended usage: most rounds except the last
+          </p>
+        </div>
       </div>
-      <.button phx-click="create-pairings-tie-breaker" class="text-lg" disabled>
-        #2: Tie breaker (coming soon)
-      </.button>
-      <.button phx-click="create-pairings-top-cut-4" class="text-lg" disabled>
-        #3: Top cut 4 (coming soon)
-      </.button>
+      <div id="create-pairings-overall-scores" class="space-y-4">
+        <.button
+          phx-click="create-pairings-overall-scores"
+          class="text-left"
+          disabled={@round_number == 0}
+        >
+          Overall scores
+        </.button>
+        <div class="space-y-4 ml-4">
+          <p>
+            Generate pods based on each participant's overall score<span
+              :if={@round_number == 0}
+              class="font-bold"
+            >
+          (disabled because it's the first round)
+        </span>
+          </p>
+          <p class="flex items-center">
+            <.icon name="hero-light-bulb" class="mr-1 w-5 h-5 text-yellow-600" />Recommended usage: last round (decide the overall winner of the tournament)
+          </p>
+        </div>
+      </div>
+      <div id="create-pairings-winrate" class="space-y-4">
+        <.button phx-click="create-pairings-winrate" class="text-lg" disabled>
+          Winrate (coming soon)
+        </.button>
+        <div class="space-y-4 ml-4">
+          <p>
+            Generate pods based on each participant's winrate, which is calculated by their total number of wins divided by the total amount of rounds
+          </p>
+          <p class="flex items-center">
+            <.icon name="hero-light-bulb" class="mr-1 w-5 h-5 text-yellow-600" />Recommended usage: rounds between the first and the last
+          </p>
+        </div>
+      </div>
     </div>
   <% else %>
-    <.button :if={@round_active} phx-click="finish-round">Finish round</.button>
+    <.button :if={@is_round_active} phx-click="finish-round">Finish round</.button>
   <% end %>
 </div>
 
-<.warning :if={not @round_active && @is_current_user_tournament_owner} class="text-xs">
+<.warning :if={not @is_round_active && @is_current_user_tournament_owner} class="text-xs">
   TEST period notice: As the owner of this tournament, you can still edit pod results
 </.warning>

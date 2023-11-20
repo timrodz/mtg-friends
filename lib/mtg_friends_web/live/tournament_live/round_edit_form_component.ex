@@ -1,8 +1,6 @@
 defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
   use MtgFriendsWeb, :live_component
 
-  alias MtgFriends.Tournaments
-  alias MtgFriends.Rounds
   alias MtgFriends.Pairings
 
   @impl true
@@ -30,15 +28,15 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
                 name={"input-points-participant-#{p.id}"}
                 value={p.points}
                 type="number"
-                max="4"
-                min="1"
-                value={p.points}
+                max="10"
+                min="0"
                 class="w-[8rem]"
               />
             </div>
           </div>
         </div>
-        <.input
+        <%!-- TODO: Make system automatically deduce who the winner was --%>
+        <%!-- <.input
           label="Assign winner"
           name="winner_id"
           type="select"
@@ -46,7 +44,7 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
           options={
             Enum.map(@form.params["participants"], fn p -> {String.capitalize(p.name), p.id} end)
           }
-        />
+        /> --%>
         <:actions>
           <.button phx-disable-with="Saving...">Update pod results</.button>
         </:actions>
@@ -56,9 +54,7 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
   end
 
   @impl true
-  def update(%{tournament_id: tournament_id, round_id: round_id, form: form} = assigns, socket) do
-    IO.inspect(assigns, label: "assigns")
-
+  def update(assigns, socket) do
     {
       :ok,
       socket
@@ -69,22 +65,16 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
   @impl true
   def handle_event(
         "save",
-        %{"pairing-number" => pairing_number_str, "winner_id" => winner_id} = params,
+        params,
         socket
       ) do
     %{tournament_id: tournament_id, round_id: round_id} = socket.assigns
 
-    Pairings.update_pairings(tournament_id, round_id, winner_id, params)
+    Pairings.update_pairings(tournament_id, round_id, params)
 
     {:noreply,
      socket
      |> put_flash(:info, "Pod updated successfully")
      |> push_patch(to: socket.assigns.patch)}
   end
-
-  defp assign_form(socket, %Ecto.Changeset{} = changeset) do
-    assign(socket, :form, to_form(changeset))
-  end
-
-  defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 end

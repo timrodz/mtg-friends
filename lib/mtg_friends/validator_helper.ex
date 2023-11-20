@@ -24,25 +24,4 @@ defmodule ValidationHelper do
       attrs
     end
   end
-
-  def validate_url(changeset, field, opts \\ []) do
-    Ecto.Changeset.validate_change(changeset, field, fn _, value ->
-      case URI.parse(value) do
-        %URI{scheme: nil} ->
-          Ecto.Changeset.add_error(changeset, field, "is missing a scheme (e.g. https)")
-
-        %URI{host: nil} ->
-          Ecto.Changeset.add_error(changeset, field, "is missing a host (e.g. .com)")
-
-        %URI{host: host} ->
-          case :inet.gethostbyname(Kernel.to_charlist(host)) do
-            {:ok, _} ->
-              changeset
-
-            {:error, _} ->
-              Ecto.Changeset.add_error(changeset, field, "has an invalid host")
-          end
-      end
-    end)
-  end
 end

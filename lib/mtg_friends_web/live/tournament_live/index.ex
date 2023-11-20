@@ -53,7 +53,6 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
   end
 
   def handle_event("validate", %{"filter_by" => form}, socket) do
-    IO.inspect(form, label: "form")
     {:noreply, assign(socket, form: to_form(form))}
   end
 

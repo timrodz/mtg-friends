@@ -32,38 +32,45 @@
 <div id="participants" class="mt-8">
   <h2>Participants</h2>
   <hr class="mt-4" />
-  <div class="my-4 grid grid-cols-4 md:grid-cols-7">
-    <p class="col-span-1">Standings</p>
-    <p class="col-span-1 md:col-span-1">Name</p>
-    <p class="col-span-1 md:col-span-2 text-center">Points / Winrate</p>
-    <p class="col-span-1 md:col-span-2">Decklists</p>
+  <div
+    id="participant-headers"
+    class="my-2 md:my-4 grid grid-cols-7 md:grid-cols-8 text-xs md:text-md font-semibold"
+  >
+    <p class="col-span-1"><.icon name="hero-trophy" class="h-5 w-5" /></p>
+    <p class="col-span-2">Name</p>
+    <p class="col-span-2">Points / Winrate</p>
+    <p class="col-span-2">Decklists</p>
     <p class="hidden col-span-0 md:block md:col-span-1" />
   </div>
   <.simple_form for={@participant_forms} phx-submit="save-participants">
     <div
       :for={{p, index} <- Enum.with_index(@participant_forms.params["participants"])}
       id={"data-#{p["id"]}"}
-      class="grid grid-cols-4 md:grid-cols-7"
+      class="grid grid-cols-7 md:grid-cols-8"
     >
       <input type="hidden" name={"participant-id-#{p["id"]}"} value={p["id"]} />
-      <p class="self-center col-span-1 text-zinc-500">
-        #<%= index + 1 %>
-      </p>
-      <div class="self-center col-span-1 md:col-span-1 text-sm md:text-md">
+      <div class="col-span-1 self-center">
+        <p class="text-zinc-500 font-mono w-[2rem]">
+          #<%= index + 1 %>
+        </p>
+      </div>
+      <div class="col-span-2 self-center text-sm md:text-md mr-2 flex">
         <%= if p["name"] do %>
           <p><%= p["name"] %></p>
         <% else %>
           <.input type="text" name={"form-participant-name-#{p["id"]}"} value={p["name"]} />
         <% end %>
       </div>
-      <p class="self-center col-span-1 md:col-span-2 text-center text-sm md:text-md">
-        <%= if p["scores"] do %>
-          <%= p["scores"].total_score %> / <%= p["scores"].win_rate %>
-        <% else %>
-          0
-        <% end %>
-      </p>
-      <div class="col-span- md:col-span-2">
+      <div class="col-span-2 self-center">
+        <p class="text-sm md:text-md">
+          <%= if p["scores"] do %>
+            <%= p["scores"].total_score %> / <%= p["scores"].win_rate %>
+          <% else %>
+            0 / 0.00%
+          <% end %>
+        </p>
+      </div>
+      <div class="col-span-2 self-center">
         <%= if @is_current_user_tournament_owner do %>
           <.input type="text" name={"form-participant-decklist-#{p["id"]}"} value={p["decklist"]} />
         <% else %>
@@ -74,12 +81,12 @@
               </a>
             </.badge>
           <% else %>
-            <p class="text-red-500">No decklist</p>
+            <p class="text-red-300">---</p>
           <% end %>
         <% end %>
       </div>
       <div
-        :if={@is_current_user_tournament_owner}
+        :if={@is_current_user_tournament_owner and length(@rounds) == 0}
         class="hidden col-span-0 md:col-span-1 md:flex md:justify-center"
       >
         <.link
@@ -87,22 +94,24 @@
             JS.push("delete-participant", value: %{id: p["id"]})
             |> hide("##{p["id"]}")
           }
-          data-confirm="Are you sure?"
+          data-confirm={"Are you sure? You're about to delete #{p["name"]}"}
           class="text-zinc-400 font-medium"
         >
           Delete
         </.link>
       </div>
     </div>
-    <:actions>
-      <.button phx-disable-with="Saving...">Update existing participants</.button>
-    </:actions>
-  </.simple_form>
-  <%= if @is_current_user_tournament_owner and length(@rounds) == 0 do %>
-    <.button_secondary phx-click="add-participant" class="mt-2 text-sm">
+    <.button_secondary
+      :if={@is_current_user_tournament_owner and length(@rounds) == 0}
+      phx-click="add-participant"
+      class="mt-4 text-sm"
+    >
       <.icon name="hero-plus" class="mr-1 w-5 h-5" /> Add participant
     </.button_secondary>
-  <% end %>
+    <:actions :if={@is_current_user_tournament_owner and length(@tournament.participants) > 0}>
+      <.button phx-disable-with="Saving..." class="text-lg">Update existing participants</.button>
+    </:actions>
+  </.simple_form>
 </div>
 
 <div id="rounds" class="mt-8">
@@ -124,7 +133,7 @@
             JS.push("delete-round", value: %{id: round.id})
             |> hide("##{round.id}")
           }
-          data-confirm="Are you sure?"
+          data-confirm="Are you sure? This action is irreversible."
           class="text-zinc-400 font-medium"
         >
           Delete
@@ -139,10 +148,13 @@
       :if={@is_current_user_tournament_owner}
       phx-click="create-round"
       class="mt-4"
-      disabled={not @all_participants_have_names}
+      disabled={not @all_participants_have_names or @current_round_active}
     >
       <.icon name="hero-plus" class="mr-1 w-5 h-5" />Start new round
     </.button>
+    <p :if={@current_round_active} class="mt-2 text-zinc-600">
+      Finish the current round before starting a new one
+    </p>
   <% else %>
     <.warning>
       Add at least 4 participants to start new rounds

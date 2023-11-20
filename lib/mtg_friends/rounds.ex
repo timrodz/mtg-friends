@@ -4,7 +4,6 @@ defmodule MtgFriends.Rounds do
   """
 
   import Ecto.Query, warn: false
-  alias Ecto.Query.Builder.Preload
   alias MtgFriends.Repo
 
   alias MtgFriends.Rounds.Round
@@ -49,7 +48,7 @@ defmodule MtgFriends.Rounds do
     {number, ""} = Integer.parse(number_str)
 
     Repo.get_by!(Round, tournament_id: tournament_id, number: number - 1)
-    |> Repo.preload(tournament: [:participants], pairings: [:participant])
+    |> Repo.preload(tournament: [:participants, rounds: :pairings], pairings: [:participant])
   end
 
   @doc """

@@ -66,7 +66,6 @@ defmodule MtgFriends.Participants do
       decklist: "",
       tournament_id: tournament_id
     })
-    |> IO.inspect(label: "create empty")
   end
 
   @doc """
@@ -88,8 +87,8 @@ defmodule MtgFriends.Participants do
   end
 
   defp a(name, decklist) do
-    name_valid = not is_nil(name) and name != "" |> IO.inspect(label: "name")
-    decklist_valid = not is_nil(decklist) and name != "" |> IO.inspect(label: "decklist")
+    name_valid = not is_nil(name) and name != ""
+    decklist_valid = not is_nil(decklist) and name != ""
 
     if name_valid and decklist_valid do
       %{"name" => name, "decklist" => decklist}
@@ -109,9 +108,7 @@ defmodule MtgFriends.Participants do
              name <- form_changes["form-participant-name-#{id}"],
              decklist <- form_changes["form-participant-decklist-#{id}"],
              participant <- get_participant!(id) do
-          changeset =
-            change_participant(participant, a(name, decklist))
-            |> IO.inspect(label: "participant #{id} changeset")
+          changeset = change_participant(participant, a(name, decklist))
 
           Ecto.Multi.update(
             multi,
@@ -120,7 +117,6 @@ defmodule MtgFriends.Participants do
           )
         end
       end)
-      |> IO.inspect(label: "multi")
 
     if multi do
       IO.puts("<ULTi")

@@ -44,12 +44,12 @@ h3 {
   @apply mt-4 max-w-xl mx-auto text-center;
 }
 
-/* #controls button {
-  @apply bg-indigo-400 mx-1 py-1 px-2 border-2 rounded-sm border-indigo-400 text-white font-bold hover:bg-indigo-500 hover:border-indigo-500  transition ease-in-out duration-100;
-} */
-
 #participants button {
   @apply font-bold;
+}
+
+#participant-headers p {
+  @apply text-xs md:text-lg;
 }
 
 a {

@@ -4,10 +4,9 @@ defmodule MtgFriends.Pairings do
   """
 
   import Ecto.Query, warn: false
-  alias MtgFriends.Participants
-  alias MtgFriends.Pairings
   alias MtgFriends.Repo
 
+  alias MtgFriends.Pairings
   alias MtgFriends.Pairings.Pairing
 
   @doc """
@@ -116,12 +115,9 @@ defmodule MtgFriends.Pairings do
     |> Repo.update()
   end
 
-  def update_pairings(tournament_id, round_id, winner_id, form_params) do
-    form_params |> IO.inspect(label: "form_params")
-
+  def update_pairings(tournament_id, round_id, form_params) do
     participant_scores =
-      Enum.map(Map.drop(form_params, ["pairing-number", "winner_id"]), fn {participant_id_str,
-                                                                           score_str} ->
+      Enum.map(Map.drop(form_params, ["pairing-number"]), fn {participant_id_str, score_str} ->
         participant_id =
           String.replace_prefix(participant_id_str, "input-points-participant-", "")
 
@@ -130,11 +126,14 @@ defmodule MtgFriends.Pairings do
         %{
           "id" => participant_id,
           "points" => points,
-          "winner" => winner_id == participant_id,
           "active" => false
         }
       end)
-      |> IO.inspect(label: "participant_scores")
+
+    highest_score =
+      participant_scores
+      |> Enum.max_by(fn s -> s["points"] end)
+      |> IO.inspect(label: "highest score")
 
     multi =
       Enum.reduce(participant_scores, Ecto.Multi.new(), fn %{"id" => participant_id} =
@@ -142,9 +141,9 @@ defmodule MtgFriends.Pairings do
                                                            multi ->
         with pairing <- Pairings.get_pairing!(tournament_id, round_id, participant_id) do
           pairing_changeset =
-            Pairings.change_pairing(pairing, params)
-            |> IO.inspect(
-              label: "pairing #{pairing.id} / participant #{participant_id} changeset"
+            Pairings.change_pairing(
+              pairing,
+              Map.put(params, "winner", highest_score["id"] == participant_id)
             )
 
           Ecto.Multi.update(

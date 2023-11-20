@@ -4,7 +4,6 @@ defmodule MtgFriends.Tournaments do
   """
 
   import Ecto.Query, warn: false
-  alias MtgFriends.Pairings.Pairing
   alias MtgFriends.Repo
 
   alias MtgFriends.Tournaments.Tournament
@@ -83,7 +82,6 @@ defmodule MtgFriends.Tournaments do
   def create_tournament(attrs \\ %{}) do
     %Tournament{}
     |> Tournament.changeset(Map.put(attrs, "description_html", validate_description(attrs)))
-    |> IO.inspect(label: "create_tournament")
     |> Repo.insert()
   end
 
@@ -136,8 +134,6 @@ defmodule MtgFriends.Tournaments do
   end
 
   defp validate_description(attrs) do
-    Map.get(attrs, "description_raw") |> IO.inspect(label: "description_raw")
-
     with description_raw <- Map.get(attrs, "description_raw"),
          true <- String.length(description_raw) > 0 do
       IO.puts("leshgo")
@@ -180,7 +176,6 @@ defmodule MtgFriends.Tournaments do
           "<a class=\"underline\" target=\"_blank\" href=\"#{metadata.image_uri}\">#{metadata.name}</a>"
         end
       )
-      |> IO.inspect(label: "results")
     else
       _ -> ""
     end
