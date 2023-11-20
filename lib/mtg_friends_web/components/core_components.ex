@@ -66,7 +66,7 @@ defmodule MtgFriendsWeb.CoreComponents do
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
               phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-              class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white p-14 shadow-lg ring-1 transition"
+              class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white p-6 md:p-14 shadow-lg ring-1 transition"
             >
               <div class="absolute top-6 right-5">
                 <button
@@ -217,7 +217,7 @@ defmodule MtgFriendsWeb.CoreComponents do
         "phx-submit-loading:opacity-75 rounded-lg bg-indigo-600 enabled:hover:underline py-2 px-3",
         "text-sm font-semibold leading-6 text-white active:text-white/80",
         "flex items-center",
-        "disabled:bg-zinc-300",
+        "disabled:bg-zinc-300 disabled:text-gray-600",
         @class
       ]}
       {@rest}
@@ -411,8 +411,10 @@ defmodule MtgFriendsWeb.CoreComponents do
     """
   end
 
+  @doc """
+  Generates a generic warning message.
+  """
   attr :class, :string, default: nil
-
   slot :inner_block, required: true
 
   def warning(assigns) do
@@ -606,6 +608,23 @@ defmodule MtgFriendsWeb.CoreComponents do
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
     <span class={[@name, @class]} />
+    """
+  end
+
+  @doc """
+  Generates a generic badge message.
+  """
+  attr :class, :string, default: nil
+  slot :inner_block, required: true
+
+  def badge(assigns) do
+    ~H"""
+    <span class={[
+      "inline-flex items-center rounded-md bg-teal-300 px-2 py-1 text-xs font-medium text-zinc-700 ring-1 ring-inset ring-teal-900/10",
+      @class
+    ]}>
+      <%= render_slot(@inner_block) %>
+    </span>
     """
   end
 

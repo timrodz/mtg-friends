@@ -17,7 +17,7 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
       <.simple_form for={@form} id={"edit-pairing-#{@id}"} phx-target={@myself} phx-submit="save">
         <input type="hidden" name="pairing-number" value={@id} />
 
-        <div class="grid grid-cols-1 gap-2 w-1/2">
+        <div class="grid grid-cols-1 gap-2 w-full md:w-3/4">
           <div
             :for={p <- @form.params["participants"]}
             class="flex justify-between items-center"
@@ -31,9 +31,9 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
                 value={p.points}
                 type="number"
                 max="4"
-                min="0"
+                min="1"
                 value={p.points}
-                class="w-[4rem]"
+                class="w-[8rem]"
               />
             </div>
           </div>

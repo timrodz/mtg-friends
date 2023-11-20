@@ -40,7 +40,12 @@ defmodule MtgFriends.Rounds do
     do:
       Repo.get!(Round, id) |> Repo.preload(tournament: [:participants], pairings: [:participant])
 
-  def get_round!(tournament_id, number_str) do
+  def get_round!(tournament_id, round_number) do
+    Repo.get_by!(Round, tournament_id: tournament_id, number: round_number)
+    |> Repo.preload(tournament: [:participants, rounds: [:pairings]], pairings: [:participant])
+  end
+
+  def get_round_from_round_number_str!(tournament_id, number_str) do
     {number, ""} = Integer.parse(number_str)
 
     Repo.get_by!(Round, tournament_id: tournament_id, number: number - 1)

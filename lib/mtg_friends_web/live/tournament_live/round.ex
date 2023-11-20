@@ -9,98 +9,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
 
   on_mount {MtgFriendsWeb.UserAuth, :mount_current_user}
 
-  def render(assigns) do
-    ~H"""
-    <.header>
-      Tournament: <%= @tournament_name %>
-      <:subtitle>
-        Round #<%= @round_number + 1 %> — Status: <%= (@round_active && "In progress 🟢") ||
-          "Finished 🔴" %>
-      </:subtitle>
-    </.header>
-    <.warning :if={not @round_active && @is_current_user_tournament_owner} class="text-xs">
-      TEST period notice: As the owner of this tournament, you can still edit pod results
-    </.warning>
-
-    <.back navigate={~p"/tournaments/#{@tournament_id}"}>Back to tournament</.back>
-
-    <div id="pairings" class="mt-8">
-      <h2>Pods for round #<%= @round_number + 1 %></h2>
-      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
-        <div
-          :for={{pairing_number, pairing_group} <- @pairing_groups}
-          id={"tournament-#{@tournament_id}-round-#{@round_id}-pairing-number-#{pairing_number}"}
-          class={["border rounded-lg p-4"]}
-        >
-          <p class="font-semibold">
-            Pod #<%= pairing_number %> — <%= (pairing_group.active && "In progress 🟢") ||
-              "Finished 🔴" %>
-          </p>
-          <div class="grid grid-cols-1 gap-2 p-3 mb-2">
-            <div
-              :for={pairing <- pairing_group.pairings}
-              id={"tournament-#{@tournament_id}-round-#{@round_id}-pairing-number-#{pairing_number}-#{pairing.id}"}
-              class={[
-                "flex justify-between items-center gap-2 py-1 px-2 rounded-md",
-                (pairing.winner && "font-bold bg-green-200") || ""
-              ]}
-            >
-              <p class="flex gap-1 items-center">
-                <%= pairing.participant.name %>
-                <.icon :if={pairing.winner} name="hero-trophy" class="h-5 w-5" />
-              </p>
-              <p>
-                Points: <%= pairing.points %>
-              </p>
-            </div>
-          </div>
-          <.link
-            :if={@is_current_user_tournament_owner}
-            patch={
-              ~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}/edit_pairing/#{pairing_number + 1}"
-            }
-            phx-click={JS.push_focus()}
-          >
-            <.button_secondary>
-              <%= (pairing_group.active && "Add") ||
-                "Update" %> pod results
-            </.button_secondary>
-          </.link>
-        </div>
-      </div>
-
-      <.modal
-        :if={@live_action == :edit}
-        id={"pairing-modal-#{@selected_page_number}"}
-        show
-        on_cancel={JS.patch(~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}")}
-      >
-        <.live_component
-          module={MtgFriendsWeb.TournamentLive.RoundEditFormComponent}
-          current_user={@current_user}
-          id={@selected_page_number}
-          title={@page_title}
-          action={@live_action}
-          tournament_id={@tournament_id}
-          round_id={@round_id}
-          form={Enum.at(@forms, @selected_page_number - 1) |> elem(1)}
-          patch={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}"}
-        />
-      </.modal>
-
-      <div class="mt-4">
-        <%= if not(@has_pairings) do %>
-          <.button :if={@is_current_user_tournament_owner} phx-click="create-pods">
-            Create pods
-          </.button>
-        <% else %>
-          <.button :if={@round_active} phx-click="finish-round">Finish round</.button>
-        <% end %>
-      </div>
-    </div>
-    """
-  end
-
+  @impl true
   def mount(_params, _session, socket) do
     {:ok, socket}
   end
@@ -111,7 +20,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
   end
 
   defp generate_socket(socket, tournament_id, round_number) do
-    round = Rounds.get_round!(tournament_id, round_number)
+    round = Rounds.get_round_from_round_number_str!(tournament_id, round_number)
 
     pairing_groups =
       Enum.group_by(round.pairings, fn pairing -> pairing.number end)
@@ -132,13 +41,16 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
            "pairing_number" => index,
            "winner_id" => "",
            "participants" =>
-             Enum.map(pairing_groups.pairings, fn pairing ->
-               %{
-                 id: pairing.participant.id,
-                 points: pairing.points || 0,
-                 name: pairing.participant.name
-               }
-             end)
+             Enum.map(
+               Enum.sort_by(pairing_groups.pairings, fn p -> p.points end, :desc),
+               fn pairing ->
+                 %{
+                   id: pairing.participant.id,
+                   points: pairing.points || 0,
+                   name: pairing.participant.name
+                 }
+               end
+             )
          })}
       end)
 
@@ -152,6 +64,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
     |> assign(
       tournament_id: round.tournament.id,
       tournament_name: round.tournament.name,
+      tournament_rounds: round.tournament.rounds,
       participants: round.tournament.participants
     )
     |> assign(pairing_groups: pairing_groups, forms: forms)
@@ -204,12 +117,29 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
   end
 
   @impl true
-  def handle_event("create-pods", _, socket) do
-    %{tournament_id: tournament_id, round_id: round_id, participants: participants} =
+  def handle_event("create-pairings", _, socket) do
+    %{
+      tournament_id: tournament_id,
+      round_id: round_id,
+      round_number: round_number,
+      participants: participants
+    } =
       socket.assigns
 
-    # TODO: Order from highest points to lowest points
-    participant_pairings = Enum.chunk_every(participants, 4)
+    round_number |> IO.inspect(label: "round number")
+
+    participant_pairings =
+      case round_number do
+        0 ->
+          split_pairings_into_even_chunks(
+            participants
+            |> Enum.map(fn p -> %{id: p.id, name: p.name} end)
+          )
+
+        round ->
+          sort_previous_round_results_by_points_and_shuffle_groups(socket, round)
+          |> split_pairings_into_even_chunks()
+      end
 
     participant_pairings
     |> Enum.with_index(fn pairing, index ->
@@ -224,6 +154,55 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
     end)
 
     {:noreply, socket |> put_flash(:info, "Pairings created successfully") |> reload_page()}
+  end
+
+  defp split_pairings_into_even_chunks(pairings) do
+    total_pairings = length(pairings)
+
+    with num_pairings <- round(Float.ceil(total_pairings / 4)),
+         num_full_tables <- rem(total_pairings, num_pairings) do
+      num_full_tables = if num_full_tables == 0, do: num_pairings, else: num_full_tables
+
+      pairings_to_chunk_into_4 =
+        (num_full_tables * 4) |> IO.inspect(label: "pairings to chunk into 4")
+
+      chunks_4 =
+        pairings
+        |> Enum.slice(0..(pairings_to_chunk_into_4 - 1))
+        |> Enum.chunk_every(4)
+        |> IO.inspect(label: "chunks of 4")
+
+      chunks_3 =
+        pairings
+        |> Enum.slice(pairings_to_chunk_into_4..total_pairings)
+        |> Enum.chunk_every(3)
+        |> IO.inspect(label: "chunks of 3")
+
+      (chunks_4 ++ chunks_3) |> IO.inspect(label: "final chunks")
+    else
+      _ -> nil
+    end
+  end
+
+  defp sort_previous_round_results_by_points_and_shuffle_groups(socket, current_round_number) do
+    # current_round_number must be greater than 0
+    %{tournament_id: tournament_id, participants: participants} = socket.assigns
+
+    previous_round = Rounds.get_round!(tournament_id, current_round_number - 1)
+
+    pairings =
+      previous_round.pairings
+      |> Enum.map(fn pairing ->
+        %{
+          id: pairing.participant_id,
+          name: pairing.participant.name,
+          points: pairing.points,
+          winner: pairing.winner
+        }
+      end)
+      |> Enum.group_by(fn p -> p.points end)
+      |> Enum.reverse()
+      |> Enum.flat_map(fn {index, participants} -> Enum.shuffle(participants) end)
   end
 
   defp reload_page(socket) do

@@ -3,9 +3,8 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
 
   alias MtgFriendsWeb.Live.TournamentLive.Utils
   alias MtgFriends.Tournaments
-  alias MtgFriends.Rounds
   alias MtgFriends.Participants
-  alias MtgFriends.Participants.Participant
+  alias MtgFriends.Rounds
 
   on_mount {MtgFriendsWeb.UserAuth, :mount_current_user}
 
@@ -22,11 +21,20 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     participant_scores =
       rounds
       |> Enum.flat_map(fn round -> round.pairings end)
-      |> Enum.group_by(&Map.get(&1, :participant_id), fn x -> x.points end)
+      |> Enum.group_by(&Map.get(&1, :participant_id))
       |> Enum.map(fn {id, p} ->
-        %{"id" => id, "total_score" => Enum.reduce(p, 0, fn i, acc -> i + acc end)}
+        total_wins = Enum.reduce(p, 0, fn i, acc -> (i.winner && 1 + acc) || acc end)
+
+        %{
+          "id" => id,
+          "total_score" => Enum.reduce(p, 0, fn i, acc -> i.points + acc end),
+          "win_rate" =>
+            "#{(total_wins / length(rounds) * 100) |> Decimal.from_float() |> Decimal.round(2)}%"
+        }
       end)
-      |> Map.new(fn %{"id" => k, "total_score" => v} -> {k, v} end)
+      |> Map.new(fn %{"id" => k, "total_score" => total_score, "win_rate" => win_rate} ->
+        {k, %{total_score: total_score, win_rate: win_rate}}
+      end)
 
     participant_forms =
       to_form(%{
@@ -36,11 +44,12 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
             %{
               "id" => participant.id,
               "name" => participant.name,
-              "decklist" => participant.decklist || "",
-              "total_score" => Map.get(participant_scores, participant.id, 0)
+              "decklist" => participant.decklist,
+              "scores" => Map.get(participant_scores, participant.id, nil)
             }
           end)
-          |> Enum.sort_by(fn x -> x["total_score"] end, :desc)
+          |> Enum.sort_by(fn x -> x["scores"] && x["scores"].total_score end, :desc)
+          |> IO.inspect()
       })
 
     %{current_user: current_user, live_action: live_action} = socket.assigns
@@ -62,15 +71,6 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
 
   defp page_title(:show), do: "Show Tournament"
   defp page_title(:edit), do: "Edit Tournament"
-
-  defp build_participant_form(item_or_changeset, params, action \\ nil) do
-    changeset =
-      item_or_changeset
-      |> Participants.change_participant(params)
-      |> Map.put(:action, action)
-
-    to_form(changeset, id: "form-#{changeset.data.tournament_id}-#{changeset.data.id}")
-  end
 
   @impl true
   def handle_event("save-participants", params, socket) do
@@ -109,7 +109,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
          |> put_flash(:info, "Round #{round.number + 1} created successfully")
          |> reload_page()}
 
-      {:error, %Ecto.Changeset{} = changeset} ->
+      {:error, %Ecto.Changeset{} = _} ->
         {:noreply, put_flash(socket, :error, "Something wrong happened when creating a round")}
     end
   end
@@ -119,13 +119,13 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     tournament_id = socket.assigns.tournament.id
 
     case Participants.create_empty_participant(tournament_id) do
-      {:ok, participant} ->
+      {:ok, _} ->
         {:noreply,
          socket
          |> put_flash(:info, "Participant created successfully")
          |> reload_page()}
 
-      {:error, %Ecto.Changeset{} = changeset} ->
+      {:error, %Ecto.Changeset{} = _} ->
         {:noreply,
          put_flash(socket, :error, "Something wrong happened when adding a participant")}
     end
@@ -133,10 +133,16 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
 
   @impl true
   def handle_event("delete-participant", %{"id" => id}, socket) do
-    tournament_id = socket.assigns.tournament.id
-
     participant = Participants.get_participant!(id)
     {:ok, _} = Participants.delete_participant(participant)
+
+    {:noreply, reload_page(socket)}
+  end
+
+  @impl true
+  def handle_event("delete-round", %{"id" => id}, socket) do
+    round = Rounds.get_round!(id)
+    {:ok, _} = Rounds.delete_round(round)
 
     {:noreply, reload_page(socket)}
   end

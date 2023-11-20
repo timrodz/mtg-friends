@@ -87,21 +87,30 @@ defmodule MtgFriends.Participants do
     |> Repo.update()
   end
 
+  defp a(name, decklist) do
+    name_valid = not is_nil(name) and name != "" |> IO.inspect(label: "name")
+    decklist_valid = not is_nil(decklist) and name != "" |> IO.inspect(label: "decklist")
+
+    if name_valid and decklist_valid do
+      %{"name" => name, "decklist" => decklist}
+    else
+      if name_valid do
+        %{"name" => name, "decklist" => decklist}
+      else
+        %{"decklist" => decklist}
+      end
+    end
+  end
+
   def update_participants_for_tournament(tournament_id, participants, form_changes) do
     multi =
       Enum.reduce(participants, Ecto.Multi.new(), fn participant, multi ->
         with id <- participant.id,
              name <- form_changes["form-participant-name-#{id}"],
-             true <- not is_nil(name) and name != "",
              decklist <- form_changes["form-participant-decklist-#{id}"],
              participant <- get_participant!(id) do
-          IO.inspect(name, label: "name")
-
           changeset =
-            change_participant(participant, %{
-              "name" => name,
-              "decklist" => decklist
-            })
+            change_participant(participant, a(name, decklist))
             |> IO.inspect(label: "participant #{id} changeset")
 
           Ecto.Multi.update(
@@ -109,8 +118,6 @@ defmodule MtgFriends.Participants do
             "update_tournament_#{tournament_id}_participant_#{id}",
             changeset
           )
-        else
-          _ -> multi
         end
       end)
       |> IO.inspect(label: "multi")
