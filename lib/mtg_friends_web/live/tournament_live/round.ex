@@ -144,13 +144,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
 
   @impl true
   def handle_event("create-pairings-overall-scores", _, socket) do
-    %{
-      tournament_id: tournament_id,
-      round_id: round_id,
-      round_number: round_number,
-      participants: participants
-    } =
-      socket.assigns
+    %{tournament_id: tournament_id, round_id: round_id} = socket.assigns
 
     participant_pairings =
       create_pairings_from_overall_scores(socket) |> split_pairings_into_chunks()
@@ -198,7 +192,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
         id: id,
         total_score:
           Enum.reduce(p, 0, fn cur_pairing, acc ->
-            calculate_scores(rounds, num_pairings, p, cur_pairing, acc)
+            calculate_scores(rounds, num_pairings, cur_pairing, acc)
           end),
         win_rate:
           "#{(total_wins / length(rounds) * 100) |> Decimal.from_float() |> Decimal.round(2)}%"
@@ -207,7 +201,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
     |> Enum.sort_by(fn p -> p.total_score end, :desc)
   end
 
-  defp calculate_scores(rounds, num_pairings, p, cur_pairing, acc) do
+  defp calculate_scores(rounds, num_pairings, cur_pairing, acc) do
     cur_round = Enum.find(rounds, fn r -> r.id == cur_pairing.round_id end)
 
     case cur_round.number do

@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for mtg-friends on 2023-11-05T16:12:14-05:00
+# fly.toml app configuration file generated for mtg-friends on 2023-11-19T23:16:53-06:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -6,7 +6,6 @@
 app = "mtg-friends"
 primary_region = "mia"
 kill_signal = "SIGTERM"
-swap_size_mb = 512
 
 [build]
 

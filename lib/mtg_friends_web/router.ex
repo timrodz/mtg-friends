@@ -1,5 +1,4 @@
 defmodule MtgFriendsWeb.Router do
-  alias Plug.BasicAuth
   use MtgFriendsWeb, :router
 
   import MtgFriendsWeb.UserAuth
@@ -94,14 +93,5 @@ defmodule MtgFriendsWeb.Router do
       live "/users/confirm/:token", UserConfirmationLive, :edit
       live "/users/confirm", UserConfirmationInstructionsLive, :new
     end
-  end
-
-  pipeline :admin do
-    plug BasicAuth, username: "user", password: "secret"
-  end
-
-  scope "/admin", MtgFriendsWeb do
-    pipe_through [:browser, :admin]
-    # resources "/foo",
   end
 end

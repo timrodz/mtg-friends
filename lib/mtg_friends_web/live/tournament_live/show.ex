@@ -152,7 +152,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
         "id" => id,
         "total_score" =>
           Enum.reduce(p, 0, fn cur_pairing, acc ->
-            calculate_scores(rounds, num_pairings, p, cur_pairing, acc)
+            calculate_scores(rounds, num_pairings, cur_pairing, acc)
           end)
           |> IO.inspect(label: "num")
           |> Decimal.from_float()
@@ -166,7 +166,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     end)
   end
 
-  defp calculate_scores(rounds, num_pairings, p, cur_pairing, acc) do
+  defp calculate_scores(rounds, num_pairings, cur_pairing, acc) do
     cur_round = Enum.find(rounds, fn r -> r.id == cur_pairing.round_id end)
 
     case cur_round.number do
