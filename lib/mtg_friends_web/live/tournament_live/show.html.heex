@@ -144,24 +144,26 @@
       </.link>
     </:action>
   </.table>
-  <.warning :if={not @has_enough_participants}>
-    Have at least 6 participants before starting this tournament
-  </.warning>
-  <.warning :if={not @all_participants_have_names}>
-    In order to start a round, all participants must have names assigned to them
-  </.warning>
-  <.button
-    :if={@current_user_owner}
-    phx-click="create-round"
-    disabled={
-      not @all_participants_have_names or @current_round_active or not @has_enough_participants
-    }
-  >
-    <.icon name="hero-plus" class="mr-1 w-5 h-5" />Start new round
-  </.button>
-  <p :if={@current_round_active} class="mt-2 text-zinc-600">
-    <.icon name="hero-exclamation-triangle  " class="mr-1 w-5 h-5" />Finish the current round before starting a new one
-  </p>
+  <div class="space-y-4">
+    <.warning :if={not @has_enough_participants}>
+      Have at least 6 participants before starting this tournament
+    </.warning>
+    <.warning :if={not @all_participants_have_names}>
+      In order to start a round, all participants must have names assigned to them
+    </.warning>
+    <.warning :if={@current_round_active}>
+      Finish the current round before starting a new one
+    </.warning>
+    <.button
+      :if={@current_user_owner}
+      phx-click="create-round"
+      disabled={
+        not @all_participants_have_names or @current_round_active or not @has_enough_participants
+      }
+    >
+      <.icon name="hero-plus" class="mr-1 w-5 h-5" />Start new round
+    </.button>
+  </div>
 </div>
 
 <.modal
