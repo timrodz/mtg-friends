@@ -1,0 +1,59 @@
+<.header class="mb-2">
+  Listing Tournaments
+  <:actions>
+    <.link patch={~p"/tournaments/new"}>
+      <.button>New Tournament</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<div id="controls" class="mb-8">
+  <p class="font-bold">Filter tournaments</p>
+  <div class="mt-2 flex items-center gap-2 justify-center">
+    <.button_secondary phx-click="filter-none">all</.button_secondary>
+    <.button_secondary phx-click="filter-inactive">inactive</.button_secondary>
+    <.button_secondary phx-click="filter-active">active</.button_secondary>
+  </div>
+</div>
+
+<.table
+  id="tournaments"
+  rows={@streams.tournaments}
+  row_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end}
+>
+  <:col :let={{_id, tournament}} label="ID"><%= tournament.id %></:col>
+  <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
+  <:col :let={{_id, tournament}} label="Participants">
+    <%= length(tournament.participants) %>
+  </:col>
+  <:col :let={{_id, tournament}} label="Rounds">
+    <%= length(tournament.rounds) %>
+  </:col>
+  <:action :let={{id, tournament}}>
+    <%= if @current_user_admin do %>
+      <.link
+        phx-click={JS.push("delete", value: %{id: tournament.id}) |> hide("##{id}")}
+        data-confirm="Are you sure?"
+      >
+        Delete
+      </.link>
+    <% end %>
+  </:action>
+</.table>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="tournament-modal"
+  show
+  on_cancel={JS.patch(~p"/tournaments")}
+>
+  <.live_component
+    module={MtgFriendsWeb.TournamentLive.TournamentEditFormComponent}
+    current_user={@current_user}
+    id={@tournament.id || :new}
+    title={@page_title}
+    action={@live_action}
+    tournament={@tournament}
+    patch={~p"/tournaments"}
+  />
+</.modal>

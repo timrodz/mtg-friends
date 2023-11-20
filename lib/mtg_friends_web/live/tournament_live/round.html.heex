@@ -39,7 +39,7 @@
         </div>
       </div>
       <.link
-        :if={@is_current_user_tournament_owner}
+        :if={@current_user_owner}
         patch={
           ~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}/pairing/#{pairing_number + 1}/edit"
         }
@@ -73,9 +73,9 @@
   </.modal>
 </div>
 
-<div :if={@is_current_user_tournament_owner} class="mt-4">
+<div :if={@current_user_owner} class="mt-4">
   <%= if not(@has_pairings) do %>
-    <h3>There are no pods yet<br />Create pods by selecting one of the formulas below</h3>
+    <h3>Assign pods by selecting one of the methods below</h3>
     <div id="round-pods" class="mt-6 space-y-6 px-4 text-zinc-700 text-sm md:text-md">
       <div id="create-pairings" class="space-y-4">
         <.button
@@ -101,7 +101,7 @@
             </span>
           </p>
           <p class="flex items-center">
-            <.icon name="hero-light-bulb" class="mr-1 w-5 h-5 text-yellow-600" />Recommended usage: most rounds except the last
+            <.icon name="hero-light-bulb" class="mr-1 w-5 h-5 text-yellow-600" />Recommended usage: most rounds except the last round
           </p>
         </div>
       </div>
@@ -111,23 +111,21 @@
           class="text-left"
           disabled={@round_number == 0}
         >
-          Overall scores
+          Overall scores<span :if={@round_number == 0} class="ml-0.5 text-black">*</span>
         </.button>
         <div class="space-y-4 ml-4">
           <p>
-            Generate pods based on each participant's overall score<span
-              :if={@round_number == 0}
-              class="font-bold"
-            >
-          (disabled because it's the first round)
-        </span>
+            Generate pods based on each participant's overall score (highest to lowest). In order to deal with ties, we assign extra points based on each participant's pods, ranking top place pods higher (1st > 2nd > 3rd > etc).
+            <span :if={@round_number == 0} class="font-bold">
+              <br /><br />* Disabled because this is the 1st round of the tournament, so there are no scores.
+            </span>
           </p>
           <p class="flex items-center">
             <.icon name="hero-light-bulb" class="mr-1 w-5 h-5 text-yellow-600" />Recommended usage: last round (decide the overall winner of the tournament)
           </p>
         </div>
       </div>
-      <div id="create-pairings-winrate" class="space-y-4">
+      <%!-- <div id="create-pairings-winrate" class="space-y-4 text-zinc-400">
         <.button phx-click="create-pairings-winrate" class="text-lg" disabled>
           Winrate (coming soon)
         </.button>
@@ -139,13 +137,13 @@
             <.icon name="hero-light-bulb" class="mr-1 w-5 h-5 text-yellow-600" />Recommended usage: rounds between the first and the last
           </p>
         </div>
-      </div>
+      </div> --%>
     </div>
   <% else %>
     <.button :if={@is_round_active} phx-click="finish-round">Finish round</.button>
   <% end %>
 </div>
 
-<.warning :if={not @is_round_active && @is_current_user_tournament_owner} class="text-xs">
+<.warning :if={not @is_round_active && @current_user_owner} class="text-xs">
   TEST period notice: As the owner of this tournament, you can still edit pod results
 </.warning>

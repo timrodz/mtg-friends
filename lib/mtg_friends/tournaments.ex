@@ -32,6 +32,11 @@ defmodule MtgFriends.Tournaments do
     end
   end
 
+  def list_tournaments_admin() do
+    Repo.all(Tournament, order_by: [asc: :id])
+    |> Repo.preload([:participants, :rounds])
+  end
+
   @doc """
   Gets a single tournament.
 

@@ -94,4 +94,10 @@ defmodule MtgFriendsWeb.Router do
       live "/users/confirm", UserConfirmationInstructionsLive, :new
     end
   end
+
+  scope "/admin", MtgFriendsWeb do
+    pipe_through [:browser, :require_admin_user]
+
+    live "/", AdminLive.Index
+  end
 end

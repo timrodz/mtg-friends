@@ -200,6 +200,8 @@ defmodule MtgFriendsWeb.UserAuth do
   they use the application at all, here would be a good place.
   """
   def require_authenticated_user(conn, _opts) do
+    conn.assigns[:current_user] |> IO.inspect(label: "current user")
+
     if conn.assigns[:current_user] do
       conn
     else
@@ -208,6 +210,20 @@ defmodule MtgFriendsWeb.UserAuth do
       |> maybe_store_return_to()
       |> redirect(to: ~p"/users/log_in")
       |> halt()
+    end
+  end
+
+  def require_admin_user(conn, _opts) do
+    with false <- is_nil(conn.assigns[:current_user]),
+         true <- conn.assigns[:current_user].admin do
+      conn
+    else
+      _ ->
+        conn
+        |> put_flash(:error, "You must log in to access this page.")
+        |> maybe_store_return_to()
+        |> redirect(to: ~p"/users/log_in")
+        |> halt()
     end
   end
 
@@ -224,4 +240,20 @@ defmodule MtgFriendsWeb.UserAuth do
   defp maybe_store_return_to(conn), do: conn
 
   defp signed_in_path(_conn), do: ~p"/tournaments"
+
+  def assign_current_user_admin(socket, current_user) do
+    Phoenix.Component.assign(
+      socket,
+      :current_user_admin,
+      not is_nil(current_user) && current_user.admin == true
+    )
+  end
+
+  def assign_current_user_owner(socket, current_user, tournament) do
+    Phoenix.Component.assign(
+      socket,
+      :current_user_owner,
+      not is_nil(current_user) && current_user.id == tournament.user_id
+    )
+  end
 end

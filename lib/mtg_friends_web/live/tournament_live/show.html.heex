@@ -4,7 +4,7 @@
     <%= (@tournament.active && "In progress 🟢") || "finished 🔴" %>
   </:subtitle>
   <:actions>
-    <%= if @is_current_user_tournament_owner do %>
+    <%= if @current_user_owner do %>
       <.link patch={~p"/tournaments/#{@tournament}/show/edit"} phx-click={JS.push_focus()}>
         <.button>Edit tournament</.button>
       </.link>
@@ -31,22 +31,19 @@
 
 <div id="participants" class="mt-8">
   <h2>Participants</h2>
-  <hr class="mt-4" />
-  <div
-    id="participant-headers"
-    class="my-2 md:my-4 grid grid-cols-7 md:grid-cols-8 text-xs md:text-md font-semibold"
-  >
+  <div class="my-2 md:my-4 grid grid-cols-7 md:grid-cols-8 text-sm text-zinc-500">
     <p class="col-span-1"><.icon name="hero-trophy" class="h-5 w-5" /></p>
     <p class="col-span-2">Name</p>
     <p class="col-span-2">Points / Winrate</p>
     <p class="col-span-2">Decklists</p>
     <p class="hidden col-span-0 md:block md:col-span-1" />
   </div>
+  <hr class="mt-4 mb-6" />
   <.simple_form for={@participant_forms} phx-submit="save-participants">
     <div
       :for={{p, index} <- Enum.with_index(@participant_forms.params["participants"])}
       id={"data-#{p["id"]}"}
-      class="grid grid-cols-7 md:grid-cols-8"
+      class="grid grid-cols-7 md:grid-cols-8 text-sm"
     >
       <input type="hidden" name={"participant-id-#{p["id"]}"} value={p["id"]} />
       <div class="col-span-1 self-center">
@@ -71,7 +68,7 @@
         </p>
       </div>
       <div class="col-span-2 self-center">
-        <%= if @is_current_user_tournament_owner do %>
+        <%= if @current_user_owner do %>
           <.input type="text" name={"form-participant-decklist-#{p["id"]}"} value={p["decklist"]} />
         <% else %>
           <%= if p["decklist"] do %>
@@ -86,7 +83,7 @@
         <% end %>
       </div>
       <div
-        :if={@is_current_user_tournament_owner and length(@rounds) == 0}
+        :if={@current_user_owner and length(@rounds) == 0}
         class="hidden col-span-0 md:col-span-1 md:flex md:justify-center"
       >
         <.link
@@ -102,13 +99,13 @@
       </div>
     </div>
     <.button_secondary
-      :if={@is_current_user_tournament_owner and length(@rounds) == 0}
+      :if={@current_user_owner and length(@rounds) == 0}
       phx-click="add-participant"
       class="mt-4 text-sm"
     >
       <.icon name="hero-plus" class="mr-1 w-5 h-5" /> Add participant
     </.button_secondary>
-    <:actions :if={@is_current_user_tournament_owner and length(@tournament.participants) > 0}>
+    <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
       <.button phx-disable-with="Saving..." class="text-lg">Update existing participants</.button>
     </:actions>
   </.simple_form>
@@ -116,50 +113,55 @@
 
 <div id="rounds" class="mt-8">
   <h2>Rounds</h2>
-  <%= if length(@tournament.participants || []) > 3 do %>
-    <.table id="tournaments" rows={@tournament.rounds} class="mt-0">
-      <:col :let={round}>
-        <.link patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"}>
-          <p>
-            Round #<%= round.number + 1 %> — <%= (round.active &&
-                                                    "In progress 🟢 / Click here to create pods and add results") ||
-              "Finished 🔴 / View pod results" %>
-          </p>
-        </.link>
-      </:col>
-      <:action :let={round} :if={@is_current_user_tournament_owner}>
-        <.link
-          phx-click={
-            JS.push("delete-round", value: %{id: round.id})
-            |> hide("##{round.id}")
-          }
-          data-confirm="Are you sure? This action is irreversible."
-          class="text-zinc-400 font-medium"
-        >
-          Delete
-        </.link>
-      </:action>
-    </.table>
-
-    <.warning :if={not @all_participants_have_names}>
-      In order to start a round, all participants must have names assigned to them
-    </.warning>
-    <.button
-      :if={@is_current_user_tournament_owner}
-      phx-click="create-round"
-      class="mt-4"
-      disabled={not @all_participants_have_names or @current_round_active}
-    >
-      <.icon name="hero-plus" class="mr-1 w-5 h-5" />Start new round
-    </.button>
-    <p :if={@current_round_active} class="mt-2 text-zinc-600">
-      Finish the current round before starting a new one
-    </p>
-  <% else %>
-    <.warning>
-      Add at least 4 participants to start new rounds
-    </.warning>
-  <% end %>
+  <.table
+    id="tournaments"
+    rows={@tournament.rounds}
+    class="my-4"
+    row_click={
+      fn round -> JS.navigate(~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}") end
+    }
+  >
+    <:col :let={round} label="Number">
+      <span class="text-zinc-500 font-mono font-medium text-sm">#<%= round.number + 1 %></span>
+    </:col>
+    <:col :let={round} label="Status">
+      <%= (round.active && "In progress 🟢") || "Finished 🔴" %>
+    </:col>
+    <:action :let={round} :if={@current_user_owner}>
+      <.link patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"}>
+        Edit
+      </.link>
+    </:action>
+    <:action :let={round} :if={@current_user_owner}>
+      <.link
+        phx-click={
+          JS.push("delete-round", value: %{id: round.id})
+          |> hide("##{round.id}")
+        }
+        data-confirm="Are you sure? This action is irreversible."
+      >
+        Delete
+      </.link>
+    </:action>
+  </.table>
+  <.warning :if={not @has_enough_participants}>
+    Have at least 6 participants before starting this tournament
+  </.warning>
+  <.warning :if={not @all_participants_have_names}>
+    In order to start a round, all participants must have names assigned to them
+  </.warning>
+  <.button
+    :if={@current_user_owner}
+    phx-click="create-round"
+    disabled={
+      not @all_participants_have_names or @current_round_active or not @has_enough_participants
+    }
+  >
+    <.icon name="hero-plus" class="mr-1 w-5 h-5" />Start new round
+  </.button>
+  <p :if={@current_round_active} class="mt-2 text-zinc-600">
+    <.icon name="hero-exclamation-triangle  " class="mr-1 w-5 h-5" />Finish the current round before starting a new one
+  </p>
 </div>
 
 <.modal

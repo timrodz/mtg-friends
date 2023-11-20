@@ -86,15 +86,15 @@ defmodule MtgFriends.Participants do
     |> Repo.update()
   end
 
-  defp a(name, decklist) do
+  defp changeset_from_string_form(name, decklist) do
     name_valid = not is_nil(name) and name != ""
     decklist_valid = not is_nil(decklist) and name != ""
 
     if name_valid and decklist_valid do
-      %{"name" => name, "decklist" => decklist}
+      %{"name" => name |> String.capitalize(), "decklist" => decklist}
     else
       if name_valid do
-        %{"name" => name, "decklist" => decklist}
+        %{"name" => name |> String.capitalize(), "decklist" => decklist}
       else
         %{"decklist" => decklist}
       end
@@ -108,7 +108,7 @@ defmodule MtgFriends.Participants do
              name <- form_changes["form-participant-name-#{id}"],
              decklist <- form_changes["form-participant-decklist-#{id}"],
              participant <- get_participant!(id) do
-          changeset = change_participant(participant, a(name, decklist))
+          changeset = change_participant(participant, changeset_from_string_form(name, decklist))
 
           Ecto.Multi.update(
             multi,

@@ -1,7 +1,8 @@
 defmodule MtgFriends.Tournaments.Tournament do
   use Ecto.Schema
   import Ecto.Changeset
-  import ValidationHelper
+
+  alias ValidationHelper
 
   schema "tournaments" do
     field :name, :string
@@ -33,7 +34,7 @@ defmodule MtgFriends.Tournaments.Tournament do
       :description_html,
       :standings_raw
     ])
-    |> allow_empty_strings()
+    |> ValidationHelper.allow_empty_strings()
     |> validate_required([
       :user_id,
       :name,

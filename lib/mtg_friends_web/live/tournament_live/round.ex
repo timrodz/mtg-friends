@@ -1,4 +1,5 @@
 defmodule MtgFriendsWeb.TournamentLive.Round do
+  alias MtgFriendsWeb.UserAuth
   use MtgFriendsWeb, :live_view
 
   alias MtgFriendsWeb.Live.TournamentLive.Utils
@@ -66,7 +67,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
       num_pairings: round(Float.ceil(length(round.tournament.participants) / 4)),
       forms: forms
     )
-    |> Utils.assign_current_user_tournament_owner(
+    |> UserAuth.assign_current_user_owner(
       socket.assigns.current_user,
       round.tournament
     )
@@ -127,14 +128,14 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
     participant_pairings =
       case round_number do
         0 ->
-          split_pairings_into_chunks(
+          Utils.split_pairings_into_chunks(
             participants
-            |> Enum.map(fn p -> %{id: p.id} end)
+            |> Enum.map(fn p -> %{id: p.id, name: p.name} end)
           )
 
         round ->
           create_pairings_from_last_round_results(socket, round)
-          |> split_pairings_into_chunks()
+          |> Utils.split_pairings_into_chunks()
       end
 
     insert_pairings_to_db(tournament_id, round_id, participant_pairings)
@@ -147,7 +148,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
     %{tournament_id: tournament_id, round_id: round_id} = socket.assigns
 
     participant_pairings =
-      create_pairings_from_overall_scores(socket) |> split_pairings_into_chunks()
+      create_pairings_from_overall_scores(socket) |> Utils.split_pairings_into_chunks()
 
     insert_pairings_to_db(tournament_id, round_id, participant_pairings)
 
@@ -182,65 +183,8 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
   defp create_pairings_from_overall_scores(socket) do
     %{tournament_rounds: rounds, num_pairings: num_pairings} = socket.assigns
 
-    rounds
-    |> Enum.flat_map(fn round -> round.pairings end)
-    |> Enum.group_by(&Map.get(&1, :participant_id))
-    |> Enum.map(fn {id, p} ->
-      total_wins = Enum.reduce(p, 0, fn i, acc -> (i.winner && 1 + acc) || acc end)
-
-      %{
-        id: id,
-        total_score:
-          Enum.reduce(p, 0, fn cur_pairing, acc ->
-            calculate_scores(rounds, num_pairings, cur_pairing, acc)
-          end),
-        win_rate:
-          "#{(total_wins / length(rounds) * 100) |> Decimal.from_float() |> Decimal.round(2)}%"
-      }
-    end)
+    Utils.create_pairings_from_overall_scores(rounds, num_pairings, false)
     |> Enum.sort_by(fn p -> p.total_score end, :desc)
-  end
-
-  defp calculate_scores(rounds, num_pairings, cur_pairing, acc) do
-    cur_round = Enum.find(rounds, fn r -> r.id == cur_pairing.round_id end)
-
-    case cur_round.number do
-      0 ->
-        cur_pairing.points + 0.0 + acc
-
-      _ ->
-        {decimals, ""} =
-          Float.parse("0.00#{num_pairings - cur_pairing.number}")
-
-        cur_pairing.points + decimals + acc
-    end
-  end
-
-  defp split_pairings_into_chunks(pairings) do
-    total_pairings = length(pairings)
-
-    with num_pairings <- round(Float.ceil(total_pairings / 4)),
-         num_full_tables <- rem(total_pairings, num_pairings) do
-      num_full_tables = if num_full_tables == 0, do: num_pairings, else: num_full_tables
-
-      pairings_to_chunk_into_4 = num_full_tables * 4
-
-      chunks_4 =
-        pairings
-        |> Enum.slice(0..(pairings_to_chunk_into_4 - 1))
-        |> Enum.chunk_every(4)
-        |> IO.inspect(label: "chunks of 4")
-
-      chunks_3 =
-        pairings
-        |> Enum.slice(pairings_to_chunk_into_4..total_pairings)
-        |> Enum.chunk_every(3)
-        |> IO.inspect(label: "chunks of 3")
-
-      chunks_4 ++ chunks_3
-    else
-      _ -> nil
-    end
   end
 
   defp insert_pairings_to_db(tournament_id, round_id, participant_pairings) do

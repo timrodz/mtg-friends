@@ -48,10 +48,6 @@ h3 {
   @apply font-bold;
 }
 
-#participant-headers p {
-  @apply text-xs md:text-lg;
-}
-
 a {
   @apply font-medium hover:underline;
 }
