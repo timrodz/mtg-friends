@@ -1,6 +1,7 @@
 defmodule MtgFriendsWeb.TournamentLive.Index do
   use MtgFriendsWeb, :live_view
 
+  alias MtgFriendsWeb.Live.TournamentLive.Utils
   alias MtgFriends.Tournaments
   alias MtgFriends.Tournaments.Tournament
 
@@ -41,6 +42,7 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
         {MtgFriendsWeb.TournamentLive.TournamentEditFormComponent, {:saved, tournament}},
         socket
       ) do
+    tournament |> IO.inspect(label: "NEW tournament")
     {:noreply, stream_insert(socket, :tournaments, tournament)}
   end
 

@@ -185,10 +185,12 @@ defmodule MtgFriendsWeb.CoreComponents do
   def simple_form(assigns) do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class={["mt-2 space-y-3 bg-white", @class]}>
+      <div class={["mt-2 space-y-4 bg-white", @class]}>
         <%= render_slot(@inner_block, f) %>
-        <div :for={action <- @actions} class="flex items-center justify-between gap-6">
-          <%= render_slot(action, f) %>
+        <div class="flex gap-2">
+          <div :for={action <- @actions} class="flex items-center justify-between gap-6">
+            <%= render_slot(action, f) %>
+          </div>
         </div>
       </div>
     </.form>

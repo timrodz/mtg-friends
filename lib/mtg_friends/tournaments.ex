@@ -22,10 +22,10 @@ defmodule MtgFriends.Tournaments do
   def list_tournaments(params \\ {}) do
     case params do
       "filter-inactive" ->
-        Repo.all(from(t in Tournament, where: [active: false], select: t))
+        from(t in Tournament, where: t.status in [:inactive, :finished]) |> Repo.all()
 
       "filter-active" ->
-        Repo.all(from(t in Tournament, where: [active: true], select: t))
+        from(t in Tournament, where: t.status == :active, select: t) |> Repo.all()
 
       _ ->
         Repo.all(Tournament, order_by: [desc: :date])
@@ -86,7 +86,21 @@ defmodule MtgFriends.Tournaments do
   """
   def create_tournament(attrs \\ %{}) do
     %Tournament{}
-    |> Tournament.changeset(Map.put(attrs, "description_html", validate_description(attrs)))
+    |> Tournament.changeset(
+      attrs
+      |> with description_raw <- Map.get(attrs, "description_raw"),
+              false <- is_nil(description_raw),
+              true <- String.length(description_raw) > 0 do
+        Map.put(
+          "description_html",
+          validate_description(description_raw)
+        )
+      else
+        _ ->
+          nil
+      end
+    )
+    |> IO.inspect(label: "hi")
     |> Repo.insert()
   end
 
@@ -103,10 +117,19 @@ defmodule MtgFriends.Tournaments do
 
   """
   def update_tournament(%Tournament{} = tournament, attrs) do
-    tournament
-    |> Tournament.changeset(attrs)
-    |> Ecto.Changeset.put_change(:description_html, validate_description(attrs))
-    |> Repo.update()
+    with description_raw <- Map.get(attrs, "description_raw"),
+         false <- is_nil(description_raw),
+         true <- String.length(description_raw) > 0 do
+      tournament
+      |> Tournament.changeset(attrs)
+      |> Ecto.Changeset.put_change(:description_html, validate_description(description_raw))
+      |> Repo.update()
+    else
+      _ ->
+        tournament
+        |> Tournament.changeset(attrs)
+        |> Repo.update()
+    end
   end
 
   @doc """
@@ -138,51 +161,45 @@ defmodule MtgFriends.Tournaments do
     Tournament.changeset(tournament, attrs)
   end
 
-  defp validate_description(attrs) do
-    with description_raw <- Map.get(attrs, "description_raw"),
-         true <- String.length(description_raw) > 0 do
-      IO.puts("leshgo")
-      HTTPoison.start()
+  defp validate_description(description_raw) do
+    HTTPoison.start()
 
-      cards_to_search =
-        Regex.scan(~r/\[\[(.*?)\]\]/, description_raw)
-        |> Enum.map(&hd/1)
-        |> then(
-          &for(
-            card <- &1,
-            do:
-              case HTTPoison.get(
-                     "https://api.scryfall.com/cards/named?fuzzy=#{card |> String.replace("[[", "") |> String.replace("]]", "")}"
-                   ) do
-                {:ok, response} ->
-                  expected_fields = ~w(image_uris name scryfall_uri)
+    cards_to_search =
+      Regex.scan(~r/\[\[(.*?)\]\]/, description_raw)
+      |> Enum.map(&hd/1)
+      |> then(
+        &for(
+          card <- &1,
+          do:
+            case HTTPoison.get(
+                   "https://api.scryfall.com/cards/named?fuzzy=#{card |> String.replace("[[", "") |> String.replace("]]", "")}"
+                 ) do
+              {:ok, response} ->
+                expected_fields = ~w(image_uris name scryfall_uri)
 
-                  body =
-                    response.body
-                    |> Poison.decode!()
-                    |> Map.take(expected_fields)
+                body =
+                  response.body
+                  |> Poison.decode!()
+                  |> Map.take(expected_fields)
 
-                  image_uris = Map.get(body, "image_uris")
-                  img_large = Map.get(image_uris, "large")
-                  name = Map.get(body, "name")
-                  %{image_uri: img_large, name: name, og_name: "[[#{name}]]"}
-              end
-          )
+                image_uris = Map.get(body, "image_uris")
+                img_large = Map.get(image_uris, "large")
+                name = Map.get(body, "name")
+                %{image_uri: img_large, name: name, og_name: "[[#{name}]]"}
+            end
         )
-
-      cards_names_to_search = for card <- cards_to_search, do: card.og_name
-
-      String.replace(
-        String.replace(description_raw, "\n", "</br>"),
-        cards_names_to_search,
-        fn og_name ->
-          metadata = Enum.find(cards_to_search, fn card -> card.og_name == og_name end)
-
-          "<a class=\"underline\" target=\"_blank\" href=\"#{metadata.image_uri}\">#{metadata.name}</a>"
-        end
       )
-    else
-      _ -> ""
-    end
+
+    cards_names_to_search = for card <- cards_to_search, do: card.og_name
+
+    String.replace(
+      String.replace(description_raw, "\n", "</br>"),
+      cards_names_to_search,
+      fn og_name ->
+        metadata = Enum.find(cards_to_search, fn card -> card.og_name == og_name end)
+
+        "<a class=\"underline\" target=\"_blank\" href=\"#{metadata.image_uri}\">#{metadata.name}</a>"
+      end
+    )
   end
 end

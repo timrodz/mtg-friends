@@ -26,7 +26,9 @@
   <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
   <:col :let={{_id, tournament}} label="Location"><%= tournament.location %></:col>
   <:col :let={{_id, tournament}} label="Date"><%= tournament.date %></:col>
-  <:col :let={{_id, tournament}} label="Active"><%= tournament.active %></:col>
+  <:col :let={{_id, tournament}} label="Status">
+    <%= Utils.render_tournament_status(tournament.status) %>
+  </:col>
   <:action :let={{_id, tournament}}>
     <%= if @current_user && @current_user.id == tournament.user_id do %>
       <div class="sr-only">

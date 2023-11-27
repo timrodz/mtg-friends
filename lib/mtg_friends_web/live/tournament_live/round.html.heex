@@ -45,7 +45,7 @@
         }
         phx-click={JS.push_focus()}
       >
-        <.button_secondary>
+        <.button_secondary phx-disable-with="Saving...">
           <%= (pairing_group.active && "Add") ||
             "Update" %> pod results
         </.button_secondary>
@@ -75,7 +75,7 @@
 
 <div :if={@current_user_owner} class="mt-4">
   <%= if not(@has_pairings) do %>
-    <h3>Assign pods by selecting one of the methods below</h3>
+    <%!-- <h3>Assign pods by selecting one of the methods below</h3>
     <div id="round-pods" class="mt-6 space-y-6 px-4 text-zinc-700 text-sm md:text-md">
       <div id="create-pairings" class="space-y-4">
         <.button
@@ -125,20 +125,7 @@
           </p>
         </div>
       </div>
-      <%!-- <div id="create-pairings-winrate" class="space-y-4 text-zinc-400">
-        <.button phx-click="create-pairings-winrate" class="text-lg" disabled>
-          Winrate (coming soon)
-        </.button>
-        <div class="space-y-4 ml-4">
-          <p>
-            Generate pods based on each participant's winrate, which is calculated by their total number of wins divided by the total amount of rounds
-          </p>
-          <p class="flex items-center">
-            <.icon name="hero-light-bulb" class="mr-1 w-5 h-5 text-yellow-600" />Recommended usage: rounds between the first and the last
-          </p>
-        </div>
-      </div> --%>
-    </div>
+    </div> --%>
   <% else %>
     <.button :if={@is_round_active} phx-click="finish-round">Finish round</.button>
   <% end %>

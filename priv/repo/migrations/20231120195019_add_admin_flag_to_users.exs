@@ -12,7 +12,6 @@ defmodule MtgFriends.Repo.Migrations.AddAdminFlagToUsers do
     flush()
 
     Repo.get_by!(MtgFriends.Accounts.User, email: "timrodz@icloud.com")
-    |> IO.inspect()
     |> Ecto.Changeset.change(%{admin: true})
     |> MtgFriends.Repo.update()
   end

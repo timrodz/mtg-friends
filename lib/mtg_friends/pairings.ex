@@ -65,37 +65,17 @@ defmodule MtgFriends.Pairings do
     |> Repo.insert()
   end
 
-  # TODO:
-  # def create_pairings(tournament_id, round_id, participant_pairings) do
-  #   pairing_info =
-  #     participant_pairings
-  #     |> Enum.with_index(fn pairing, index ->
-  #       for participant <- pairing do
-  #         Pairings.create_pairing(%{
-  #           number: index,
-  #           tournament_id: tournament_id,
-  #           round_id: round_id,
-  #           participant_id: participant.id
-  #         })
-  #       end
-  #     end)
+  def create_multiple_pairings(participant_pairings) do
+    now = NaiveDateTime.local_now()
 
-  #   multi =
-  #     Enum.reduce(participant_pairings, Ecto.Multi.new(), fn {pairing, index}, multi ->
-  #       pairing |> Enum.map()
+    new_pairings =
+      participant_pairings
+      |> Enum.map(fn p -> p |> Map.put(:inserted_at, now) |> Map.put(:updated_at, now) end)
 
-  #       pairing_changeset =
-  #         %Pairing{} |> Pairing.changeset(%{tournament_id: tournament_id, round_id: round_id})
-
-  #       Ecto.Multi.insert(
-  #         multi,
-  #         "update_tournament_#{tournament_id}_round_#{round_id}",
-  #         pairing_changeset
-  #       )
-  #     end)
-
-  #   MtgFriends.Repo.transaction(multi)
-  # end
+    Ecto.Multi.new()
+    |> Ecto.Multi.insert_all(:insert_all, Pairing, new_pairings)
+    |> Repo.transaction()
+  end
 
   @doc """
   Updates a pairing.
@@ -130,10 +110,7 @@ defmodule MtgFriends.Pairings do
         }
       end)
 
-    highest_score =
-      participant_scores
-      |> Enum.max_by(fn s -> s["points"] end)
-      |> IO.inspect(label: "highest score")
+    highest_score = participant_scores |> Enum.max_by(fn s -> s["points"] end)
 
     multi =
       Enum.reduce(participant_scores, Ecto.Multi.new(), fn %{"id" => participant_id} =

@@ -1,7 +1,7 @@
 <.header>
   Tournament: <%= @tournament.name %>
   <:subtitle>
-    <%= (@tournament.active && "In progress 🟢") || "finished 🔴" %>
+    <b>Status</b>: <%= Utils.render_tournament_status(@tournament.status) %>
   </:subtitle>
   <:actions>
     <%= if @current_user_owner do %>
@@ -17,16 +17,16 @@
 <.list>
   <:item title="Date"><%= @tournament.date %></:item>
   <:item title="Location"><%= @tournament.location %></:item>
-  <:item title="Description">
-    <%= if @tournament.description_html do %>
-      <p id="description"><%= raw(@tournament.description_html) %></p>
-    <% end %>
+  <:item :if={@tournament.format} title="Format">
+    <%= Utils.render_format(@tournament.format) %>
   </:item>
-  <%!-- <:item title="Standings (OLD)">
-    <%= if @tournament.standings_raw do %>
-      <%= raw(String.replace(@tournament.standings_raw, "\n", "<br/>")) %>
-    <% end %>
-  </:item> --%>
+  <:item :if={@tournament.subformat} title="Subformat">
+    <%= Utils.render_subformat(@tournament.subformat) %>
+  </:item>
+  <:item :if={@tournament.top_cut_4} title="Top Cut 4"><b><%= @tournament.top_cut_4 %></b></:item>
+  <:item :if={@tournament.description_html} title="Description">
+    <%= raw(@tournament.description_html) %>
+  </:item>
 </.list>
 
 <div id="participants" class="mt-8">
@@ -35,15 +35,19 @@
     <p class="col-span-1"><.icon name="hero-trophy" class="h-5 w-5" /></p>
     <p class="col-span-2">Name</p>
     <p class="col-span-2">Points / Winrate</p>
-    <p class="col-span-2">Decklists</p>
+    <p class="col-span-2">Commander / Decklist</p>
     <p class="hidden col-span-0 md:block md:col-span-1" />
   </div>
   <hr class="mt-4 mb-6" />
-  <.simple_form for={@participant_forms} phx-submit="save-participants">
+  <.simple_form for={@participant_forms} phx-submit="update-participants">
     <div
       :for={{p, index} <- Enum.with_index(@participant_forms.params["participants"])}
       id={"data-#{p["id"]}"}
-      class="grid grid-cols-7 md:grid-cols-8 text-sm"
+      class={[
+        "grid grid-cols-7 md:grid-cols-8 text-sm p-1",
+        @tournament.status == :finished && index == 0 &&
+          "bg-green-200 border rounded-lg border-green-200"
+      ]}
     >
       <input type="hidden" name={"participant-id-#{p["id"]}"} value={p["id"]} />
       <div class="col-span-1 self-center">
@@ -71,15 +75,7 @@
         <%= if @current_user_owner do %>
           <.input type="text" name={"form-participant-decklist-#{p["id"]}"} value={p["decklist"]} />
         <% else %>
-          <%= if p["decklist"] do %>
-            <.badge>
-              <a href={p["decklist"]} target="_blank">
-                Decklist
-              </a>
-            </.badge>
-          <% else %>
-            <p class="text-red-300">---</p>
-          <% end %>
+          <%= Utils.render_decklist(p["decklist"]) %>
         <% end %>
       </div>
       <div
@@ -98,15 +94,22 @@
         </.link>
       </div>
     </div>
-    <.button_secondary
-      :if={@current_user_owner and length(@rounds) == 0}
-      phx-click="add-participant"
-      class="mt-4 text-sm"
-    >
-      <.icon name="hero-plus" class="mr-1 w-5 h-5" /> Add participant
-    </.button_secondary>
+    <:actions>
+      <.button_secondary
+        :if={@current_user_owner and length(@rounds) == 0}
+        phx-click="create-participant"
+      >
+        <.icon name="hero-plus" class="mr-1 w-5 h-5" /> Add participant
+      </.button_secondary>
+    </:actions>
     <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
-      <.button phx-disable-with="Saving..." class="text-lg">Update existing participants</.button>
+      <.button_secondary
+        :if={@current_user_owner and length(@tournament.participants) > 0}
+        phx-disable-with="Updating..."
+        class="text-lg"
+      >
+        Update participants
+      </.button_secondary>
     </:actions>
   </.simple_form>
 </div>
@@ -144,26 +147,52 @@
       </.link>
     </:action>
   </.table>
-  <div class="space-y-4">
-    <.warning :if={not @has_enough_participants}>
-      Have at least 6 participants before starting this tournament
-    </.warning>
-    <.warning :if={not @all_participants_have_names}>
-      In order to start a round, all participants must have names assigned to them
-    </.warning>
-    <.warning :if={@current_round_active}>
-      Finish the current round before starting a new one
-    </.warning>
-    <.button
-      :if={@current_user_owner}
-      phx-click="create-round"
-      disabled={
-        not @all_participants_have_names or @current_round_active or not @has_enough_participants
-      }
-    >
-      <.icon name="hero-plus" class="mr-1 w-5 h-5" />Start new round
-    </.button>
-  </div>
+  <%= if @current_user_owner && @tournament.status != :finished do %>
+    <div class="space-y-4">
+      <.warning :if={not @has_enough_participants}>
+        Have at least 6 participants before starting this tournament
+      </.warning>
+      <.warning :if={not @all_participants_have_names}>
+        In order to start a round, all participants must have names assigned to them
+      </.warning>
+      <.warning :if={@current_round_active}>
+        Finish the current round before starting a new one
+      </.warning>
+      <div class="flex gap-2">
+        <.button
+          phx-click="create-round"
+          phx-value-mode="normal"
+          disabled={
+            not @all_participants_have_names or @current_round_active or
+              not @has_enough_participants
+          }
+        >
+          <%= if length(@rounds) == 0 do %>
+            <.icon name="hero-rocket-launch-solid" class="mr-1 w-5 h-5" /> Begin tournament
+          <% else %>
+            <.icon name="hero-plus" class="mr-1 w-5 h-5" /> Start new round
+          <% end %>
+        </.button>
+        <.button
+          :if={length(@rounds) > 2}
+          phx-click="create-round"
+          phx-value-mode="top-cut-4"
+          disabled={
+            not @all_participants_have_names or @current_round_active or
+              not @has_enough_participants
+          }
+        >
+          <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Start round (top cut 4)
+        </.button>
+      </div>
+      <.button
+        :if={length(@rounds) > 2 && @tournament.status == :active}
+        phx-click="finish-tournament"
+      >
+        <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Finish tournament
+      </.button>
+    </div>
+  <% end %>
 </div>
 
 <.modal

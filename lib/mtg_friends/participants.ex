@@ -68,6 +68,34 @@ defmodule MtgFriends.Participants do
     })
   end
 
+  def create_x_participants(tournament_id, participants) do
+    now = NaiveDateTime.local_now()
+
+    {participant_count, ""} = Integer.parse(participants)
+
+    multi =
+      Enum.reduce(1..participant_count, Ecto.Multi.new(), fn index, multi ->
+        changeset =
+          %Participant{}
+          |> Participant.changeset(%{
+            inserted_at: now,
+            updated_at: now,
+            name: "",
+            points: 0,
+            decklist: "",
+            tournament_id: tournament_id
+          })
+
+        Ecto.Multi.insert(
+          multi,
+          "update_tournament_#{tournament_id}_create_participant_#{index}",
+          changeset
+        )
+      end)
+
+    MtgFriends.Repo.transaction(multi)
+  end
+
   @doc """
   Updates a participant.
 
@@ -119,7 +147,6 @@ defmodule MtgFriends.Participants do
       end)
 
     if multi do
-      IO.puts("<ULTi")
       MtgFriends.Repo.transaction(multi)
     else
       {:error, :no_changes_detected}

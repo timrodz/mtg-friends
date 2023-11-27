@@ -1,7 +1,7 @@
 defmodule MtgFriendsWeb.TournamentLive.Show do
-  alias MtgFriendsWeb.UserAuth
   use MtgFriendsWeb, :live_view
 
+  alias MtgFriendsWeb.UserAuth
   alias MtgFriendsWeb.Live.TournamentLive.Utils
   alias MtgFriends.Tournaments
   alias MtgFriends.Participants
@@ -21,7 +21,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     num_pairings = round(Float.ceil(length(tournament.participants) / 4))
 
     participant_score_lookup =
-      Utils.create_pairings_from_overall_scores(tournament.rounds, num_pairings, true)
+      Utils.get_overall_scores(tournament.rounds, num_pairings, true)
       |> Map.new(fn %{id: id, total_score: total_score, win_rate: win_rate} ->
         {id, %{total_score: total_score, win_rate: win_rate}}
       end)
@@ -75,7 +75,60 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   defp page_title(:edit), do: "Edit Tournament"
 
   @impl true
-  def handle_event("save-participants", params, socket) do
+  def handle_event("create-round", %{"mode" => mode} = params, socket) do
+    tournament = socket.assigns.tournament
+    first_round? = length(tournament.rounds) == 0
+
+    case Rounds.create_round(
+           tournament.id,
+           length(tournament.rounds)
+         ) do
+      {:ok, round} ->
+        case Utils.create_pairings(
+               tournament,
+               round,
+               case mode do
+                 "normal" -> false
+                 "top-cut-4" -> true
+               end
+             ) do
+          {:ok, _} ->
+            {:ok, tournament} = Tournaments.update_tournament(tournament, %{"status" => :active})
+
+            {:noreply,
+             socket
+             |> put_flash(:info, "Round #{round.number + 1} created successfully")
+             |> reload_page()}
+
+          {:error, _} ->
+            {:noreply,
+             put_flash(socket, :error, "Something wrong happened when creating a round")}
+        end
+
+      {:error, %Ecto.Changeset{} = _} ->
+        {:noreply, put_flash(socket, :error, "Something wrong happened when creating a round")}
+    end
+  end
+
+  @impl true
+  def handle_event("create-participant", _, socket) do
+    tournament_id = socket.assigns.tournament.id
+
+    case Participants.create_empty_participant(tournament_id) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Participant created successfully")
+         |> reload_page()}
+
+      {:error, %Ecto.Changeset{} = _} ->
+        {:noreply,
+         put_flash(socket, :error, "Something wrong happened when adding a participant")}
+    end
+  end
+
+  @impl true
+  def handle_event("update-participants", params, socket) do
     tournament = socket.assigns.tournament
 
     case Participants.update_participants_for_tournament(
@@ -98,42 +151,6 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   end
 
   @impl true
-  def handle_event("create-round", _, socket) do
-    tournament = socket.assigns.tournament
-
-    case Rounds.create_round(
-           tournament.id,
-           length(tournament.rounds)
-         ) do
-      {:ok, round} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Round #{round.number + 1} created successfully")
-         |> reload_page()}
-
-      {:error, %Ecto.Changeset{} = _} ->
-        {:noreply, put_flash(socket, :error, "Something wrong happened when creating a round")}
-    end
-  end
-
-  @impl true
-  def handle_event("add-participant", _, socket) do
-    tournament_id = socket.assigns.tournament.id
-
-    case Participants.create_empty_participant(tournament_id) do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Participant created successfully")
-         |> reload_page()}
-
-      {:error, %Ecto.Changeset{} = _} ->
-        {:noreply,
-         put_flash(socket, :error, "Something wrong happened when adding a participant")}
-    end
-  end
-
-  @impl true
   def handle_event("delete-participant", %{"id" => id}, socket) do
     participant = Participants.get_participant!(id)
     {:ok, _} = Participants.delete_participant(participant)
@@ -149,7 +166,16 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     {:noreply, reload_page(socket)}
   end
 
+  @impl true
+  def handle_event("finish-tournament", _, socket) do
+    tournament = socket.assigns.tournament
+
+    {:ok, _} = Tournaments.update_tournament(tournament, %{"status" => :finished})
+
+    {:noreply, socket |> put_flash(:info, "Tournament is now finished") |> reload_page()}
+  end
+
   defp reload_page(socket) do
-    socket |> push_navigate(to: ~p"/tournaments/#{socket.assigns.tournament.id}")
+    socket |> push_navigate(to: ~p"/tournaments/#{socket.assigns.tournament.id}", replace: true)
   end
 end

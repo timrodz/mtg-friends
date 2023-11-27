@@ -1,4 +1,5 @@
 defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
+  alias MtgFriends.Participants
   use MtgFriendsWeb, :live_component
 
   alias MtgFriends.Tournaments
@@ -9,7 +10,6 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
     <div>
       <.header>
         <%= @title %>
-        <:subtitle>Use this form to manage tournament records in your database.</:subtitle>
       </.header>
 
       <.simple_form
@@ -23,8 +23,43 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         <.input field={@form[:location]} type="text" label="Location" />
         <.input field={@form[:date]} type="date" label="Date" />
         <.input field={@form[:description_raw]} type="textarea" label="Description" />
-        <%!-- <.input field={@form[:standings_raw]} type="textarea" label="Standings (OLD)" /> --%>
-        <.input field={@form[:active]} type="checkbox" label="In progress?" />
+        <%= if @action == :new do %>
+          <.input
+            field={@form[:round_length_minutes]}
+            type="number"
+            label="Round duration (Minutes; Min: 30 / Max: 120)"
+            value={60}
+            min="30"
+            max="120"
+          />
+          <.input
+            field={@form[:participant_count]}
+            type="number"
+            label="Number of Participants (Min: 6 / Max: 24)"
+            value={8}
+            min="6"
+            max="24"
+          />
+          <.input
+            field={@form[:format]}
+            type="select"
+            options={[
+              {"EDH", "edh"}
+            ]}
+            label="Format"
+          />
+          <.input
+            field={@form[:subformat]}
+            type="select"
+            options={@subformat_options}
+            label="Round Method"
+          />
+          <.input
+            field={@form[:top_cut_4]}
+            type="checkbox"
+            label="Top Cut 4 (Has a final round decided by the top 4 players)"
+          />
+        <% end %>
         <:actions>
           <.button phx-disable-with="Saving...">Submit Tournament</.button>
         </:actions>
@@ -40,17 +75,25 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign_form(changeset)}
+     # EDH is the default format
+     |> assign(:subformat_options, get_subformat_options("edh"))
+     |> assign(:participant_count, 8)
+     |> assign_form(Map.put(changeset, :participant_count, 8))}
   end
 
   @impl true
   def handle_event("validate", %{"tournament" => tournament_params}, socket) do
+    selected_format = tournament_params["format"]
+
     changeset =
       socket.assigns.tournament
       |> Tournaments.change_tournament(tournament_params)
       |> Map.put(:action, :validate)
 
-    {:noreply, assign_form(socket, changeset)}
+    {:noreply,
+     socket
+     |> assign_form(changeset)
+     |> assign(:subformat_options, get_subformat_options(selected_format))}
   end
 
   def handle_event("save", %{"tournament" => tournament_params}, socket) do
@@ -80,13 +123,39 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
       {:ok, tournament} ->
         notify_parent({:saved, tournament})
 
-        {:noreply,
-         socket
-         |> put_flash(:info, "Tournament created successfully")
-         |> push_patch(to: socket.assigns.patch)}
+        case Participants.create_x_participants(
+               tournament.id,
+               tournament_params["participant_count"]
+             ) do
+          {:ok, _} ->
+            {:noreply,
+             socket
+             |> put_flash(:info, "Tournament created successfully")
+             |> push_patch(to: socket.assigns.patch)}
+
+          _ ->
+            {:noreply, socket}
+        end
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign_form(socket, changeset)}
+    end
+  end
+
+  defp get_subformat_options(subformat) do
+    case subformat do
+      "edh" ->
+        [
+          {"Bubble Rounds (Pods are determined by last round standings)", :bubble_rounds}
+        ]
+
+      "single" ->
+        [
+          {"Swiss Rounds", :swiss}
+        ]
+
+      nil ->
+        [{"None", :none}]
     end
   end
 

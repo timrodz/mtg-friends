@@ -35,16 +35,6 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
             </div>
           </div>
         </div>
-        <%!-- TODO: Make system automatically deduce who the winner was --%>
-        <%!-- <.input
-          label="Assign winner"
-          name="winner_id"
-          type="select"
-          value="-1"
-          options={
-            Enum.map(@form.params["participants"], fn p -> {String.capitalize(p.name), p.id} end)
-          }
-        /> --%>
         <:actions>
           <.button phx-disable-with="Saving...">Update pod results</.button>
         </:actions>
@@ -70,11 +60,15 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
       ) do
     %{tournament_id: tournament_id, round_id: round_id} = socket.assigns
 
-    Pairings.update_pairings(tournament_id, round_id, params)
+    case Pairings.update_pairings(tournament_id, round_id, params) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "Pod updated successfully")
+         |> push_patch(to: socket.assigns.patch)}
 
-    {:noreply,
-     socket
-     |> put_flash(:info, "Pod updated successfully")
-     |> push_patch(to: socket.assigns.patch)}
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Error updating pairing")}
+    end
   end
 end

@@ -1,9 +1,7 @@
 defmodule MtgFriendsWeb.TournamentLive.Round do
-  alias MtgFriendsWeb.UserAuth
   use MtgFriendsWeb, :live_view
 
-  alias MtgFriendsWeb.Live.TournamentLive.Utils
-  alias MtgFriends.Pairings
+  alias MtgFriendsWeb.UserAuth
   alias MtgFriends.Rounds
 
   on_mount {MtgFriendsWeb.UserAuth, :mount_current_user}
@@ -113,92 +111,6 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
         {:noreply,
          put_flash(socket, :error, "Something wrong happened when finishing this round")}
     end
-  end
-
-  @impl true
-  def handle_event("create-pairings", _, socket) do
-    %{
-      tournament_id: tournament_id,
-      round_id: round_id,
-      round_number: round_number,
-      participants: participants
-    } =
-      socket.assigns
-
-    participant_pairings =
-      case round_number do
-        0 ->
-          Utils.split_pairings_into_chunks(
-            participants
-            |> Enum.map(fn p -> %{id: p.id, name: p.name} end)
-          )
-
-        round ->
-          create_pairings_from_last_round_results(socket, round)
-          |> Utils.split_pairings_into_chunks()
-      end
-
-    insert_pairings_to_db(tournament_id, round_id, participant_pairings)
-
-    {:noreply, socket |> put_flash(:info, "Pairings created successfully") |> reload_page()}
-  end
-
-  @impl true
-  def handle_event("create-pairings-overall-scores", _, socket) do
-    %{tournament_id: tournament_id, round_id: round_id} = socket.assigns
-
-    participant_pairings =
-      create_pairings_from_overall_scores(socket) |> Utils.split_pairings_into_chunks()
-
-    insert_pairings_to_db(tournament_id, round_id, participant_pairings)
-
-    {:noreply, socket |> put_flash(:info, "Pairings created successfully") |> reload_page()}
-  end
-
-  defp create_pairings_from_last_round_results(socket, current_round_number) do
-    case current_round_number do
-      0 ->
-        {:error, "current_round_number must be greater than 0"}
-
-      _ ->
-        %{tournament_id: tournament_id} = socket.assigns
-
-        previous_round = Rounds.get_round!(tournament_id, current_round_number - 1)
-
-        previous_round.pairings
-        |> Enum.map(fn pairing ->
-          %{
-            id: pairing.participant_id,
-            name: pairing.participant.name,
-            points: pairing.points,
-            winner: pairing.winner
-          }
-        end)
-        |> Enum.group_by(fn p -> p.points end)
-        |> Enum.reverse()
-        |> Enum.flat_map(fn {_, participants} -> Enum.shuffle(participants) end)
-    end
-  end
-
-  defp create_pairings_from_overall_scores(socket) do
-    %{tournament_rounds: rounds, num_pairings: num_pairings} = socket.assigns
-
-    Utils.create_pairings_from_overall_scores(rounds, num_pairings, false)
-    |> Enum.sort_by(fn p -> p.total_score end, :desc)
-  end
-
-  defp insert_pairings_to_db(tournament_id, round_id, participant_pairings) do
-    participant_pairings
-    |> Enum.with_index(fn pairing, index ->
-      for participant <- pairing do
-        Pairings.create_pairing(%{
-          number: index,
-          tournament_id: tournament_id,
-          round_id: round_id,
-          participant_id: participant.id
-        })
-      end
-    end)
   end
 
   defp reload_page(socket) do

@@ -8,10 +8,13 @@ defmodule MtgFriends.Tournaments.Tournament do
     field :name, :string
     field :location, :string
     field :date, :date
-    field :active, :boolean, default: false
     field :description_raw, :string
     field :description_html, :string
-    field :standings_raw, :string
+    field :round_length_minutes, :integer, default: 60
+    field :top_cut_4, :boolean, default: false
+    field :status, Ecto.Enum, values: [:inactive, :active, :finished], default: :inactive
+    field :format, Ecto.Enum, values: [:edh, :single], default: :edh
+    field :subformat, Ecto.Enum, values: [:bubble_rounds, :swiss], default: :bubble_rounds
 
     belongs_to :user, MtgFriends.Accounts.User
 
@@ -29,10 +32,13 @@ defmodule MtgFriends.Tournaments.Tournament do
       :name,
       :location,
       :date,
-      :active,
       :description_raw,
       :description_html,
-      :standings_raw
+      :round_length_minutes,
+      :status,
+      :format,
+      :subformat,
+      :top_cut_4
     ])
     |> ValidationHelper.allow_empty_strings()
     |> validate_required([
@@ -40,7 +46,6 @@ defmodule MtgFriends.Tournaments.Tournament do
       :name,
       :location,
       :date,
-      :active,
       :description_raw,
       :description_html
     ])
