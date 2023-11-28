@@ -56,7 +56,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
       :noreply,
       socket
       |> UserAuth.assign_current_user_owner(current_user, tournament)
-      |> assign(:page_title, page_title(live_action))
+      |> assign(:page_title, page_title(live_action, tournament.name))
       |> assign(:tournament, tournament)
       |> assign(:rounds, tournament.rounds)
       |> assign(
@@ -80,8 +80,8 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     }
   end
 
-  defp page_title(:show), do: "Show Tournament"
-  defp page_title(:edit), do: "Edit Tournament"
+  defp page_title(:show, tournament_name), do: "Tournament #{tournament_name}"
+  defp page_title(:edit, tournament_name), do: "Edit Tournament #{tournament_name}"
 
   @impl true
   def handle_event("create-round", %{"mode" => mode} = _, socket) do
