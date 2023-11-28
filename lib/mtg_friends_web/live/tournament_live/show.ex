@@ -18,12 +18,17 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   def handle_params(%{"id" => id}, _, socket) do
     tournament = Tournaments.get_tournament!(id)
 
-    num_pairings = round(Float.ceil(length(tournament.participants) / 4))
+    num_pairings = Utils.get_num_pairings(length(tournament.participants))
 
     participant_score_lookup =
       Utils.get_overall_scores(tournament.rounds, num_pairings, true)
       |> Map.new(fn %{id: id, total_score: total_score, win_rate: win_rate} ->
-        {id, %{total_score: total_score, win_rate: win_rate}}
+        {id,
+         %{
+           total_score: total_score,
+           total_score_sort_by: total_score |> Decimal.round(3),
+           win_rate: win_rate
+         }}
       end)
 
     participant_forms =
@@ -39,7 +44,10 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
             }
           end)
           # Sort players by highest -> lowest overall scores
-          |> Enum.sort_by(fn x -> x["scores"] && x["scores"].total_score end, :desc)
+          |> Enum.sort_by(
+            fn x -> x["scores"] && x["scores"].total_score_sort_by end,
+            :desc
+          )
       })
 
     %{current_user: current_user, live_action: live_action} = socket.assigns

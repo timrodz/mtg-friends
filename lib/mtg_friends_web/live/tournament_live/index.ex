@@ -42,7 +42,6 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
         {MtgFriendsWeb.TournamentLive.TournamentEditFormComponent, {:saved, tournament}},
         socket
       ) do
-    tournament |> IO.inspect(label: "NEW tournament")
     {:noreply, stream_insert(socket, :tournaments, tournament)}
   end
 

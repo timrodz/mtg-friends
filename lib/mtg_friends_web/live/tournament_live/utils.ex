@@ -4,6 +4,10 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
   alias MtgFriends.Rounds
   alias MtgFriends.Pairings
 
+  def get_num_pairings(participant_count) do
+    round(Float.ceil(participant_count / 4))
+  end
+
   def render_tournament_status(status) do
     case status do
       :inactive -> "Inactive 🟡"
@@ -65,34 +69,36 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
   end
 
   def create_pairings(tournament, round, top_cut_4?) do
-    current_round_number = round.number
+    num_pairings = get_num_pairings(length(tournament.participants))
 
     participant_pairings =
       if top_cut_4? do
-        num_pairings = round(Float.ceil(length(tournament.participants) / 4))
-
         get_overall_scores(tournament.rounds, num_pairings, true)
         |> Enum.take(4)
         |> Enum.map(fn participant ->
           %{
-            number: current_round_number,
+            number: 0,
             tournament_id: tournament.id,
             round_id: round.id,
             participant_id: participant.id
           }
         end)
-        |> IO.inspect(label: "PAIRINGS?")
       else
-        case current_round_number do
+        case round.number do
+          # First round: Simply shuffle participants
           0 ->
-            split_pairings_into_chunks(
-              tournament.participants
-              |> Enum.map(fn p -> %{id: p.id, name: p.name} end)
+            partition_participants_into_pairings(
+              tournament.participants |> Enum.shuffle(),
+              num_pairings
             )
 
           _ ->
-            make_pairings_from_last_round_results(tournament, current_round_number)
-            |> split_pairings_into_chunks()
+            # TODO: Eventually this will decide the format of the round
+            case tournament.subformat do
+              _ ->
+                make_pairings_from_last_round_results(tournament, round.number)
+                |> partition_participants_into_pairings(num_pairings)
+            end
         end
         |> Enum.with_index(fn pairing, index ->
           for participant <- pairing do
@@ -110,45 +116,43 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
     Pairings.create_multiple_pairings(participant_pairings)
   end
 
-  defp split_pairings_into_chunks(participants) do
-    total_pairings = length(participants)
+  defp partition_participants_into_pairings(participants, num_pairings) do
+    participant_count = length(participants)
 
-    with num_pairings <- round(Float.ceil(total_pairings / 4)),
-         num_full_pods <- rem(total_pairings, num_pairings) do
-      corrected_num_full_pods =
-        case total_pairings do
-          # with 6/9 participants, there should be even pairings of 3, therefore 0 full tables
-          6 -> 0
-          9 -> 0
-          # when num_full_pods is 0, that means every pod is full. The result of the rem() division gives us 0 though
-          _ -> if num_full_pods == 0, do: num_pairings, else: num_full_pods
-        end
+    # when num_complete_pairings is 0, that means every pod is full
+    # example: participant_count=16; num_pairings=4; rem(16/4) = 0
+    num_complete_pairings = rem(participant_count, num_pairings)
 
-      IO.puts(
-        "Assigning #{num_pairings} pairings with #{corrected_num_full_pods} full tables (4 participants) [Total pairings: #{total_pairings}]"
-      )
+    corrected_num_complete_pairings =
+      case participant_count do
+        # with 6/9 participants, there should be even pairings of 3, therefore 0 full tables
+        6 -> 0
+        9 -> 0
+        _ -> if num_complete_pairings == 0, do: num_pairings, else: num_complete_pairings
+      end
 
-      num_participants_for_full_pods = corrected_num_full_pods * 4
+    IO.puts(
+      "Assigning #{num_pairings} pairings with #{corrected_num_complete_pairings} complete pairings [Total participants: #{participant_count}]"
+    )
 
-      full_pods =
-        case corrected_num_full_pods do
-          0 ->
-            []
+    case corrected_num_complete_pairings do
+      0 ->
+        participants |> Enum.chunk_every(3)
 
-          _ ->
-            participants
-            |> Enum.slice(0..(num_participants_for_full_pods - 1))
-            |> Enum.chunk_every(4)
-        end
+      _ ->
+        total_participants_for_complete_pairings = corrected_num_complete_pairings * 4
 
-      semi_full_pods =
-        participants
-        |> Enum.slice(num_participants_for_full_pods..total_pairings)
-        |> Enum.chunk_every(3)
+        complete_pairings =
+          participants
+          |> Enum.slice(0..(total_participants_for_complete_pairings - 1))
+          |> Enum.chunk_every(4)
 
-      full_pods ++ semi_full_pods
-    else
-      _ -> nil
+        semi_complete_pairings =
+          participants
+          |> Enum.slice(total_participants_for_complete_pairings..participant_count)
+          |> Enum.chunk_every(3)
+
+        complete_pairings ++ semi_complete_pairings
     end
   end
 
@@ -184,20 +188,22 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
     |> Enum.flat_map(fn round -> round.pairings end)
     |> Enum.group_by(&Map.get(&1, :participant_id))
     |> Enum.map(fn {id, p} ->
+      total_score =
+        with score <-
+               Enum.reduce(p, 0, fn cur_pairing, acc ->
+                 reduce_calculate_overall_score(rounds, num_pairings, cur_pairing, acc)
+               end) do
+          case scores_to_decimal do
+            true -> score |> Decimal.from_float()
+            false -> score
+          end
+        end
+
       total_wins = Enum.reduce(p, 0, fn i, acc -> (i.winner && 1 + acc) || acc end)
 
       %{
         id: id,
-        total_score:
-          with score <-
-                 Enum.reduce(p, 0, fn cur_pairing, acc ->
-                   reduce_calculate_overall_score(rounds, num_pairings, cur_pairing, acc)
-                 end) do
-            case scores_to_decimal do
-              true -> score |> Decimal.from_float()
-              false -> score
-            end
-          end,
+        total_score: total_score,
         win_rate: (total_wins / length(rounds) * 100) |> Decimal.from_float()
       }
     end)

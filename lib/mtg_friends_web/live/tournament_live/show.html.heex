@@ -8,15 +8,6 @@
       <.button_secondary>Edit tournament</.button_secondary>
     </.link>
   </:actions>
-  <:actions :if={
-    @current_user_owner &&
-      length(@rounds) > 2 && @tournament.status == :active &&
-      Enum.all?(@rounds, fn r -> r.active == false end)
-  }>
-    <.button phx-click="finish-tournament">
-      <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Finish tournament
-    </.button>
-  </:actions>
 </.header>
 
 <.back navigate={~p"/tournaments"}>Back to tournaments</.back>
@@ -130,7 +121,7 @@
     </:actions>
     <:actions>
       <.button_secondary phx-click="toggle-score-decimals" phx-disable-with="Toggling...">
-        <.icon name="hero-eye" class="mr-1 w-5 h-5" />Toggle scores
+        Toggle score decimals
       </.button_secondary>
     </:actions>
     <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
@@ -165,7 +156,7 @@
         View
       </.link>
     </:action>
-    <:action :let={round} :if={@current_user_owner && @tournament.status == :active}>
+    <:action :let={round} :if={@current_user_owner && @tournament.status != :finished}>
       <.link
         phx-click={
           JS.push("delete-round", value: %{id: round.id})
@@ -221,6 +212,16 @@
         >
           <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Start round (top cut 4)
         </.button_secondary>
+        <.button
+          :if={
+            @current_user_owner &&
+              length(@rounds) > 2 && @tournament.status == :active &&
+              Enum.all?(@rounds, fn r -> r.active == false end)
+          }
+          phx-click="finish-tournament"
+        >
+          <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Finish tournament
+        </.button>
       </div>
     </div>
   <% end %>

@@ -100,7 +100,6 @@ defmodule MtgFriends.Tournaments do
           attrs
       end
     )
-    |> IO.inspect(label: "hi")
     |> Repo.insert()
   end
 
