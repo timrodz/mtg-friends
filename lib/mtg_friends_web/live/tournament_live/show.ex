@@ -68,6 +68,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
         length(tournament.participants) >= 6
       )
       |> assign(:participant_forms, participant_forms)
+      |> assign(:toggle_score_decimals, true)
     }
   end
 
@@ -75,7 +76,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   defp page_title(:edit), do: "Edit Tournament"
 
   @impl true
-  def handle_event("create-round", %{"mode" => mode} = params, socket) do
+  def handle_event("create-round", %{"mode" => mode} = _, socket) do
     tournament = socket.assigns.tournament
     first_round? = length(tournament.rounds) == 0
 
@@ -93,12 +94,14 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
                end
              ) do
           {:ok, _} ->
-            {:ok, tournament} = Tournaments.update_tournament(tournament, %{"status" => :active})
+            if first_round? do
+              {:ok, _} = Tournaments.update_tournament(tournament, %{"status" => :active})
+            end
 
             {:noreply,
              socket
              |> put_flash(:info, "Round #{round.number + 1} created successfully")
-             |> reload_page()}
+             |> push_navigate(to: ~p"/tournaments/#{tournament.id}/rounds/#{round.number + 1}")}
 
           {:error, _} ->
             {:noreply,
@@ -173,6 +176,12 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     {:ok, _} = Tournaments.update_tournament(tournament, %{"status" => :finished})
 
     {:noreply, socket |> put_flash(:info, "Tournament is now finished") |> reload_page()}
+  end
+
+  @impl true
+  def handle_event("toggle-score-decimals", _, socket) do
+    {:noreply,
+     assign(socket, :toggle_score_decimals, not Map.get(socket.assigns, :toggle_score_decimals))}
   end
 
   defp reload_page(socket) do

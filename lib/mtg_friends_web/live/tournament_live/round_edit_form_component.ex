@@ -1,4 +1,5 @@
 defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
+  alias MtgFriends.Rounds
   use MtgFriendsWeb, :live_component
 
   alias MtgFriends.Pairings
@@ -62,6 +63,14 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
 
     case Pairings.update_pairings(tournament_id, round_id, params) do
       {:ok, _} ->
+        round = Rounds.get_round!(round_id)
+
+        case round.pairings
+             |> Enum.all?(fn p -> p.active == false end) do
+          true -> Rounds.update_round(round, %{active: false})
+          false -> nil
+        end
+
         {:noreply,
          socket
          |> put_flash(:info, "Pod updated successfully")

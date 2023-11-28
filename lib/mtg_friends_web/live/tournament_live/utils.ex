@@ -5,10 +5,10 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
   alias MtgFriends.Pairings
 
   def render_tournament_status(status) do
-    case status |> IO.inspect(label: "status") do
-      :inactive -> "Not started 🟡"
-      :active -> "Started 🟢"
-      :finished -> "Finished 🔴"
+    case status do
+      :inactive -> "Inactive 🟡"
+      :active -> "Active 🟢"
+      :finished -> "Ended 🔴"
     end
   end
 
@@ -51,6 +51,19 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
     end
   end
 
+  def render_subformat_description(subformat) do
+    case subformat do
+      :bubble_rounds ->
+        "Pods are determined by last round standings"
+
+      :swiss ->
+        "Pods are determined by trying to make sure each participant plays every opponent at least once"
+
+      nil ->
+        ""
+    end
+  end
+
   def create_pairings(tournament, round, top_cut_4?) do
     current_round_number = round.number
 
@@ -60,6 +73,15 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
 
         get_overall_scores(tournament.rounds, num_pairings, true)
         |> Enum.take(4)
+        |> Enum.map(fn participant ->
+          %{
+            number: current_round_number,
+            tournament_id: tournament.id,
+            round_id: round.id,
+            participant_id: participant.id
+          }
+        end)
+        |> IO.inspect(label: "PAIRINGS?")
       else
         case current_round_number do
           0 ->
@@ -72,18 +94,18 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
             make_pairings_from_last_round_results(tournament, current_round_number)
             |> split_pairings_into_chunks()
         end
+        |> Enum.with_index(fn pairing, index ->
+          for participant <- pairing do
+            %{
+              number: index,
+              tournament_id: tournament.id,
+              round_id: round.id,
+              participant_id: participant.id
+            }
+          end
+        end)
+        |> List.flatten()
       end
-      |> Enum.with_index(fn pairing, index ->
-        for participant <- pairing do
-          %{
-            number: index,
-            tournament_id: tournament.id,
-            round_id: round.id,
-            participant_id: participant.id
-          }
-        end
-      end)
-      |> List.flatten()
 
     Pairings.create_multiple_pairings(participant_pairings)
   end
@@ -172,12 +194,11 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
                    reduce_calculate_overall_score(rounds, num_pairings, cur_pairing, acc)
                  end) do
             case scores_to_decimal do
-              true -> score |> Decimal.from_float() |> Decimal.round(3)
+              true -> score |> Decimal.from_float()
               false -> score
             end
           end,
-        win_rate:
-          "#{(total_wins / length(rounds) * 100) |> Decimal.from_float() |> Decimal.round(2)}%"
+        win_rate: (total_wins / length(rounds) * 100) |> Decimal.from_float()
       }
     end)
     |> Enum.sort_by(fn p -> p.total_score end, :desc)

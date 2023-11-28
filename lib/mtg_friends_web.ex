@@ -81,6 +81,8 @@ defmodule MtgFriendsWeb do
 
   defp html_helpers do
     quote do
+      import Phoenix.UI.Components.{Tooltip}
+
       # HTML escaping functionality
       import Phoenix.HTML
       # Core UI components and translation

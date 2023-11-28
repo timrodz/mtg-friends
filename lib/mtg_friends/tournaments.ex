@@ -87,17 +87,17 @@ defmodule MtgFriends.Tournaments do
   def create_tournament(attrs \\ %{}) do
     %Tournament{}
     |> Tournament.changeset(
-      attrs
-      |> with description_raw <- Map.get(attrs, "description_raw"),
-              false <- is_nil(description_raw),
-              true <- String.length(description_raw) > 0 do
-        Map.put(
+      with description_raw <- Map.get(attrs, "description_raw"),
+           false <- is_nil(description_raw),
+           true <- String.length(description_raw) > 0 do
+        attrs
+        |> Map.put(
           "description_html",
           validate_description(description_raw)
         )
       else
         _ ->
-          nil
+          attrs
       end
     )
     |> IO.inspect(label: "hi")

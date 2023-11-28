@@ -1,15 +1,17 @@
 <.header>
-  Tournament: <%= @tournament_name %>
+  Tournament: <%= @tournament_name %> / Round #<%= @round_number + 1 %>
   <:subtitle>
-    Round #<%= @round_number + 1 %> — <%= (@is_round_active && "In progress 🟢") ||
-      "Finished 🔴" %>
+    <b>Round Status</b>: <%= (@is_round_active && "In progress") ||
+      "Ended" %>
   </:subtitle>
 </.header>
 
 <.back navigate={~p"/tournaments/#{@tournament_id}"}>Back to tournament</.back>
+<p class="text-3xl mt-10 text-left md:text-center">
+  Round timer: <b><%= @round_finish_time_countdown %></b>
+</p>
 
-<div :if={@has_pairings} id="pairings" class="mt-8">
-  <h2>Pods for round #<%= @round_number + 1 %></h2>
+<div :if={@has_pairings} id="pods" class="my-8">
   <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
     <div
       :for={{pairing_number, pairing_group} <- @pairing_groups}
@@ -17,8 +19,8 @@
       class="border rounded-lg p-4"
     >
       <p class="font-semibold">
-        Pod #<%= pairing_number + 1 %> — <%= (pairing_group.active && "In progress 🟢") ||
-          "Finished 🔴" %>
+        Pod #<%= pairing_number + 1 %> — <%= (pairing_group.active && "In progress") ||
+          "Finished" %>
       </p>
       <div class="grid grid-cols-1 gap-2 p-3 mb-2">
         <div
@@ -45,92 +47,39 @@
         }
         phx-click={JS.push_focus()}
       >
-        <.button_secondary phx-disable-with="Saving...">
-          <%= (pairing_group.active && "Add") ||
-            "Update" %> pod results
-        </.button_secondary>
+        <%= if pairing_group.active do %>
+          <.button phx-disable-with="Saving...">
+            Add pod results
+          </.button>
+        <% else %>
+          <.button_secondary phx-disable-with="Saving...">
+            Update pod results
+          </.button_secondary>
+        <% end %>
       </.link>
     </div>
   </div>
 
   <.modal
     :if={@live_action == :edit}
-    id={"pairing-modal-#{@selected_page_number}"}
+    id={"pairing-modal-#{@selected_pairing_number}"}
     show
     on_cancel={JS.patch(~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}")}
   >
     <.live_component
       module={MtgFriendsWeb.TournamentLive.RoundEditFormComponent}
       current_user={@current_user}
-      id={@selected_page_number}
+      id={@selected_pairing_number}
       title={@page_title}
       action={@live_action}
       tournament_id={@tournament_id}
       round_id={@round_id}
-      form={Enum.at(@forms, @selected_page_number - 1) |> elem(1)}
+      form={Enum.at(@forms, @selected_pairing_number - 1) |> elem(1)}
       patch={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}"}
     />
   </.modal>
 </div>
 
-<div :if={@current_user_owner} class="mt-4">
-  <%= if not(@has_pairings) do %>
-    <%!-- <h3>Assign pods by selecting one of the methods below</h3>
-    <div id="round-pods" class="mt-6 space-y-6 px-4 text-zinc-700 text-sm md:text-md">
-      <div id="create-pairings" class="space-y-4">
-        <.button
-          phx-click="create-pairings"
-          data-confirm="Are you sure? You've selected 'Default' mode"
-          class="text-left"
-        >
-          Last round standings
-        </.button>
-        <div class="space-y-4 ml-4">
-          <p>
-            Generate pods based on last round's standings, grouping them into pods for
-            <b>1st/2nd/3rd/4th</b>
-            places. If the tournament has an uneven number of participants, we'll randomly promote a participant from 4th > 3rd, 3rd > 2nd, and 2nd > 1st.
-            <span class="text-black">
-              <.link
-                patch={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number}"}
-                phx-click={JS.push_focus()}
-                target="_blank"
-              >
-                See last round results here
-              </.link>
-            </span>
-          </p>
-          <p class="flex items-center">
-            <.icon name="hero-light-bulb" class="mr-1 w-5 h-5 text-yellow-600" />Recommended usage: most rounds except the last round
-          </p>
-        </div>
-      </div>
-      <div id="create-pairings-overall-scores" class="space-y-4">
-        <.button
-          phx-click="create-pairings-overall-scores"
-          class="text-left"
-          disabled={@round_number == 0}
-        >
-          Overall scores<span :if={@round_number == 0} class="ml-0.5 text-black">*</span>
-        </.button>
-        <div class="space-y-4 ml-4">
-          <p>
-            Generate pods based on each participant's overall score (highest to lowest). In order to deal with ties, we assign extra points based on each participant's pods, ranking top place pods higher (1st > 2nd > 3rd > etc).
-            <span :if={@round_number == 0} class="font-bold">
-              <br /><br />* Disabled because this is the 1st round of the tournament, so there are no scores.
-            </span>
-          </p>
-          <p class="flex items-center">
-            <.icon name="hero-light-bulb" class="mr-1 w-5 h-5 text-yellow-600" />Recommended usage: last round (decide the overall winner of the tournament)
-          </p>
-        </div>
-      </div>
-    </div> --%>
-  <% else %>
-    <.button :if={@is_round_active} phx-click="finish-round">Finish round</.button>
-  <% end %>
-</div>
-
 <.warning :if={not @is_round_active && @current_user_owner} class="text-xs">
-  TEST period notice: As the owner of this tournament, you can still edit pod results
+  (ALPHA TEST NOTE) You can still edit pod results even if the round has finished
 </.warning>

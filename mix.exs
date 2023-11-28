@@ -52,7 +52,8 @@ defmodule MtgFriends.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:httpoison, "~> 2.0"},
-      {:poison, "~> 5.0"}
+      {:poison, "~> 5.0"},
+      {:phoenix_ui, "~> 0.1.9"}
     ]
   end
 

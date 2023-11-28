@@ -1,4 +1,4 @@
-<.header class="mb-2">
+<.header class="mb-4">
   Listing Tournaments
   <:actions>
     <%= if @current_user do %>
@@ -9,14 +9,14 @@
   </:actions>
 </.header>
 
-<div id="controls" class="mb-8">
-  <p class="font-bold">Filter tournaments</p>
+<%!-- <div id="controls" class="mb-8">
+  <p class="font-bold text-center">Filter tournaments</p>
   <div class="mt-2 flex items-center gap-2 justify-center">
     <.button_secondary phx-click="filter-none">all</.button_secondary>
     <.button_secondary phx-click="filter-inactive">inactive</.button_secondary>
     <.button_secondary phx-click="filter-active">active</.button_secondary>
   </div>
-</div>
+</div> --%>
 
 <.table
   id="tournaments"

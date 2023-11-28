@@ -16,6 +16,29 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
+  defp apply_action(socket, :index, %{
+         "tournament_id" => tournament_id,
+         "round_number" => round_number
+       }) do
+    socket
+    |> assign(:page_title, "Round Pairings")
+    |> assign(:selected_pairing_number, nil)
+    |> generate_socket(tournament_id, round_number)
+  end
+
+  defp apply_action(socket, :edit, %{
+         "tournament_id" => tournament_id,
+         "round_number" => round_number,
+         "pairing_number" => pairing_number_str
+       }) do
+    {pairing_number, ""} = Integer.parse(pairing_number_str)
+
+    socket
+    |> assign(:page_title, "Update pod results")
+    |> assign(:selected_pairing_number, pairing_number)
+    |> generate_socket(tournament_id, round_number)
+  end
+
   defp generate_socket(socket, tournament_id, round_number) do
     round = Rounds.get_round_from_round_number_str!(tournament_id, round_number)
 
@@ -32,14 +55,14 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
 
     forms =
       pairing_groups
-      |> Enum.map(fn {index, pairing_groups} ->
+      |> Enum.map(fn {index, pairing_group} ->
         {index,
          to_form(%{
            "pairing_number" => index,
            "winner_id" => "",
            "participants" =>
              Enum.map(
-               Enum.sort_by(pairing_groups.pairings, fn p -> p.points end, :desc),
+               Enum.sort_by(pairing_group.pairings, fn pairings -> pairings.points end, :desc),
                fn pairing ->
                  %{
                    id: pairing.participant.id,
@@ -51,11 +74,28 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
          })}
       end)
 
+    round_finish_time = NaiveDateTime.add(round.inserted_at, 60, :minute)
+
+    with timer_reference <- Map.get(socket.assigns, :timer_reference),
+         false <- is_nil(timer_reference) do
+      {:ok, ref} = timer_reference
+      :timer.cancel(ref)
+    else
+      _ -> nil
+    end
+
     socket
     |> assign(
+      timer_reference:
+        if(round.active and connected?(socket),
+          do: :timer.send_interval(1000, self(), :tick),
+          else: nil
+        ),
       round_id: round.id,
       round_number: round.number,
       is_round_active: round.active,
+      round_finish_time: round_finish_time,
+      round_finish_time_countdown: time_diff(if round.active, do: round_finish_time, else: 0),
       has_pairings: length(round.pairings) > 0,
       tournament_id: round.tournament.id,
       tournament_name: round.tournament.name,
@@ -71,53 +111,27 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
     )
   end
 
-  defp apply_action(socket, :index, %{
-         "tournament_id" => tournament_id,
-         "round_number" => round_number
-       }) do
-    socket
-    |> assign(:page_title, "Round Pairings")
-    |> assign(:selected_page_number, nil)
-    |> generate_socket(tournament_id, round_number)
+  def handle_info(:tick, socket) do
+    {:noreply,
+     assign(socket,
+       round_finish_time_countdown: time_diff(socket.assigns.round_finish_time)
+     )}
   end
 
-  defp apply_action(socket, :edit, %{
-         "tournament_id" => tournament_id,
-         "round_number" => round_number,
-         "pairing_number" => pairing_number_str
-       }) do
-    {pairing_number, ""} = Integer.parse(pairing_number_str)
+  defp time_diff(end_time) do
+    case end_time do
+      0 ->
+        "00:00"
 
-    socket
-    |> assign(:page_title, "Update pod results")
-    |> assign(:selected_page_number, pairing_number)
-    |> generate_socket(tournament_id, round_number)
-  end
+      _ ->
+        now = NaiveDateTime.utc_now()
+        seconds = NaiveDateTime.diff(end_time, now)
 
-  @impl true
-  def handle_event("finish-round", _, socket) do
-    %{round_number: round_number, round_id: round_id} = socket.assigns
-
-    round = Rounds.get_round!(round_id)
-
-    case Rounds.update_round(round, %{active: false}) do
-      {:ok, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Round #{round_number + 1} finished successfully")
-         |> reload_page()}
-
-      {:error, %Ecto.Changeset{} = _} ->
-        {:noreply,
-         put_flash(socket, :error, "Something wrong happened when finishing this round")}
+        if seconds > 0 do
+          Seconds.to_hh_mm_ss(seconds)
+        else
+          "00:00"
+        end
     end
-  end
-
-  defp reload_page(socket) do
-    socket
-    |> push_navigate(
-      to:
-        ~p"/tournaments/#{socket.assigns.tournament_id}/rounds/#{socket.assigns.round_number + 1}"
-    )
   end
 end

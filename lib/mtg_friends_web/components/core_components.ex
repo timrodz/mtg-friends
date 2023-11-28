@@ -179,6 +179,8 @@ defmodule MtgFriendsWeb.CoreComponents do
     include: ~w(autocomplete name rel action enctype method novalidate target),
     doc: "the arbitrary HTML attributes to apply to the form tag"
 
+  attr :as_flex, :boolean, default: false
+
   slot :inner_block, required: true
   slot :actions, doc: "the slot for form actions, such as a submit button"
 
@@ -187,11 +189,17 @@ defmodule MtgFriendsWeb.CoreComponents do
     <.form :let={f} for={@for} as={@as} {@rest}>
       <div class={["mt-2 space-y-4 bg-white", @class]}>
         <%= render_slot(@inner_block, f) %>
-        <div class="flex gap-2">
+        <%= if @as_flex do %>
+          <div class="flex gap-2">
+            <div :for={action <- @actions} class="flex items-center justify-between gap-6">
+              <%= render_slot(action, f) %>
+            </div>
+          </div>
+        <% else %>
           <div :for={action <- @actions} class="flex items-center justify-between gap-6">
             <%= render_slot(action, f) %>
           </div>
-        </div>
+        <% end %>
       </div>
     </.form>
     """
@@ -208,6 +216,7 @@ defmodule MtgFriendsWeb.CoreComponents do
   attr :type, :string, default: nil
   attr :class, :string, default: nil
   attr :rest, :global, include: ~w(disabled form name value)
+  # attr :secondary, :boolean, default: false
 
   slot :inner_block, required: true
 
@@ -240,9 +249,10 @@ defmodule MtgFriendsWeb.CoreComponents do
     <button
       type={@type}
       class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-900 hover:underline py-2 px-3",
+        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-700 hover:underline py-2 px-3",
         "text-sm font-semibold leading-6 text-white active:text-white/80",
         "flex items-center",
+        "disabled:bg-zinc-300 disabled:text-gray-600",
         @class
       ]}
       {@rest}
@@ -451,7 +461,7 @@ defmodule MtgFriendsWeb.CoreComponents do
           <%= render_slot(@subtitle) %>
         </p>
       </div>
-      <div class="flex-none"><%= render_slot(@actions) %></div>
+      <div class="flex flex-col gap-2"><%= render_slot(@actions) %></div>
     </header>
     """
   end
@@ -581,7 +591,7 @@ defmodule MtgFriendsWeb.CoreComponents do
         <.icon name="hero-arrow-left" class="h-3 w-3" />
         <%= render_slot(@inner_block) %>
       </.link>
-      <hr />
+      <hr class="mt-2" />
     </div>
     """
   end

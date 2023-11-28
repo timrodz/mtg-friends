@@ -44,8 +44,8 @@ h3 {
   @apply mt-4 max-w-xl mx-auto text-center;
 }
 
-#participants button {
-  @apply font-bold;
+#participant-header p {
+  @apply mx-2 md:mx-1;
 }
 
 a {

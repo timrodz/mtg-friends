@@ -3,12 +3,19 @@
   <:subtitle>
     <b>Status</b>: <%= Utils.render_tournament_status(@tournament.status) %>
   </:subtitle>
-  <:actions>
-    <%= if @current_user_owner do %>
-      <.link patch={~p"/tournaments/#{@tournament}/show/edit"} phx-click={JS.push_focus()}>
-        <.button>Edit tournament</.button>
-      </.link>
-    <% end %>
+  <:actions :if={@current_user_owner}>
+    <.link patch={~p"/tournaments/#{@tournament}/show/edit"} phx-click={JS.push_focus()}>
+      <.button_secondary>Edit tournament</.button_secondary>
+    </.link>
+  </:actions>
+  <:actions :if={
+    @current_user_owner &&
+      length(@rounds) > 2 && @tournament.status == :active &&
+      Enum.all?(@rounds, fn r -> r.active == false end)
+  }>
+    <.button phx-click="finish-tournament">
+      <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Finish tournament
+    </.button>
   </:actions>
 </.header>
 
@@ -21,17 +28,32 @@
     <%= Utils.render_format(@tournament.format) %>
   </:item>
   <:item :if={@tournament.subformat} title="Subformat">
-    <%= Utils.render_subformat(@tournament.subformat) %>
+    <.tooltip content={Utils.render_subformat_description(@tournament.subformat)} variant="arrow">
+      <%= Utils.render_subformat(@tournament.subformat) %>
+    </.tooltip>
   </:item>
-  <:item :if={@tournament.top_cut_4} title="Top Cut 4"><b><%= @tournament.top_cut_4 %></b></:item>
+  <:item :if={not is_nil(@tournament.top_cut_4)} title="Top Cut 4">
+    <.tooltip
+      content="If enabled, the tournament will enable a final round of the top 4 participants (by overall score)"
+      variant="arrow"
+    >
+      <%= (@tournament.top_cut_4 && "Enabled") || "Disabled" %>
+    </.tooltip>
+  </:item>
+  <:item title="Round duration">
+    <p><%= @tournament.round_length_minutes %> minutes</p>
+  </:item>
   <:item :if={@tournament.description_html} title="Description">
     <%= raw(@tournament.description_html) %>
   </:item>
 </.list>
 
-<div id="participants" class="mt-8">
-  <h2>Participants</h2>
-  <div class="my-2 md:my-4 grid grid-cols-7 md:grid-cols-8 text-sm text-zinc-500">
+<div id="participants" class="my-16">
+  <h2 class="font-bold">Participants & Standings</h2>
+  <div
+    id="participant-header"
+    class="mb-4 mt-10 md:mt-4 grid grid-cols-7 md:grid-cols-8 text-sm md:text-md text-zinc-500"
+  >
     <p class="col-span-1"><.icon name="hero-trophy" class="h-5 w-5" /></p>
     <p class="col-span-2">Name</p>
     <p class="col-span-2">Points / Winrate</p>
@@ -39,23 +61,23 @@
     <p class="hidden col-span-0 md:block md:col-span-1" />
   </div>
   <hr class="mt-4 mb-6" />
-  <.simple_form for={@participant_forms} phx-submit="update-participants">
+  <.simple_form for={@participant_forms} phx-submit="update-participants" as_flex>
     <div
       :for={{p, index} <- Enum.with_index(@participant_forms.params["participants"])}
       id={"data-#{p["id"]}"}
       class={[
-        "grid grid-cols-7 md:grid-cols-8 text-sm p-1",
+        "grid grid-cols-7 md:grid-cols-8 text-sm md:text-md px-1",
         @tournament.status == :finished && index == 0 &&
-          "bg-green-200 border rounded-lg border-green-200"
+          "py-1 bg-green-200 border rounded-lg border-green-200"
       ]}
     >
       <input type="hidden" name={"participant-id-#{p["id"]}"} value={p["id"]} />
       <div class="col-span-1 self-center">
-        <p class="text-zinc-500 font-mono w-[2rem]">
+        <p class="text-zinc-600 font-mono w-[2rem]">
           #<%= index + 1 %>
         </p>
       </div>
-      <div class="col-span-2 self-center text-sm md:text-md mr-2 flex">
+      <div class="col-span-2 self-center mr-2 flex">
         <%= if p["name"] do %>
           <p><%= p["name"] %></p>
         <% else %>
@@ -63,11 +85,18 @@
         <% end %>
       </div>
       <div class="col-span-2 self-center">
-        <p class="text-sm md:text-md">
+        <p class="mx-2 md:mx-0">
           <%= if p["scores"] do %>
-            <%= p["scores"].total_score %> / <%= p["scores"].win_rate %>
+            <%= Decimal.round(p["scores"].total_score, (@toggle_score_decimals && 0) || 3) %> / <%= Decimal.round(
+              p["scores"].win_rate,
+              (@toggle_score_decimals && 0) || 2
+            ) %>%
           <% else %>
-            0 / 0.00%
+            <%= if @toggle_score_decimals do %>
+              0.000 / 0.00%
+            <% else %>
+              0 / 0%
+            <% end %>
           <% end %>
         </p>
       </div>
@@ -80,7 +109,7 @@
       </div>
       <div
         :if={@current_user_owner and length(@rounds) == 0}
-        class="hidden col-span-0 md:col-span-1 md:flex md:justify-center"
+        class="hidden col-span-0 md:col-span-1 md:flex md:justify-center md:items-center"
       >
         <.link
           phx-click={
@@ -94,28 +123,26 @@
         </.link>
       </div>
     </div>
-    <:actions>
-      <.button_secondary
-        :if={@current_user_owner and length(@rounds) == 0}
-        phx-click="create-participant"
-      >
+    <:actions :if={@current_user_owner and length(@rounds) == 0}>
+      <.button_secondary phx-click="create-participant" phx-disable-with="Creating...">
         <.icon name="hero-plus" class="mr-1 w-5 h-5" /> Add participant
       </.button_secondary>
     </:actions>
-    <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
-      <.button_secondary
-        :if={@current_user_owner and length(@tournament.participants) > 0}
-        phx-disable-with="Updating..."
-        class="text-lg"
-      >
-        Update participants
+    <:actions>
+      <.button_secondary phx-click="toggle-score-decimals" phx-disable-with="Toggling...">
+        <.icon name="hero-eye" class="mr-1 w-5 h-5" />Toggle scores
       </.button_secondary>
+    </:actions>
+    <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
+      <.button phx-disable-with="Updating...">
+        Update participants
+      </.button>
     </:actions>
   </.simple_form>
 </div>
 
-<div id="rounds" class="mt-8">
-  <h2>Rounds</h2>
+<div id="rounds" class="my-16">
+  <h2 class="font-bold">Rounds</h2>
   <.table
     id="tournaments"
     rows={@tournament.rounds}
@@ -125,23 +152,27 @@
     }
   >
     <:col :let={round} label="Number">
-      <span class="text-zinc-500 font-mono font-medium text-sm">#<%= round.number + 1 %></span>
+      <span class="text-zinc-600 font-mono font-medium text-sm">#<%= round.number + 1 %></span>
     </:col>
     <:col :let={round} label="Status">
-      <%= (round.active && "In progress 🟢") || "Finished 🔴" %>
+      <%= (round.active && "In progress ⚔️") || "Ended" %>
     </:col>
     <:action :let={round} :if={@current_user_owner}>
-      <.link patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"}>
-        Edit
+      <.link
+        patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"}
+        class="text-zinc-600 font-medium"
+      >
+        View
       </.link>
     </:action>
-    <:action :let={round} :if={@current_user_owner}>
+    <:action :let={round} :if={@current_user_owner && @tournament.status == :active}>
       <.link
         phx-click={
           JS.push("delete-round", value: %{id: round.id})
           |> hide("##{round.id}")
         }
         data-confirm="Are you sure? This action is irreversible."
+        class="text-zinc-400 font-medium"
       >
         Delete
       </.link>
@@ -153,28 +184,34 @@
         Have at least 6 participants before starting this tournament
       </.warning>
       <.warning :if={not @all_participants_have_names}>
-        In order to start a round, all participants must have names assigned to them
+        In order to begin the tournament, all participants must have names assigned to them
       </.warning>
       <.warning :if={@current_round_active}>
-        Finish the current round before starting a new one
+        You must finish the current round before starting a new one
       </.warning>
       <div class="flex gap-2">
-        <.button
-          phx-click="create-round"
-          phx-value-mode="normal"
-          disabled={
-            not @all_participants_have_names or @current_round_active or
-              not @has_enough_participants
-          }
-        >
-          <%= if length(@rounds) == 0 do %>
+        <%= if (@all_participants_have_names and length(@rounds) == 0)do %>
+          <.button phx-click="create-round" phx-value-mode="normal">
             <.icon name="hero-rocket-launch-solid" class="mr-1 w-5 h-5" /> Begin tournament
-          <% else %>
-            <.icon name="hero-plus" class="mr-1 w-5 h-5" /> Start new round
-          <% end %>
-        </.button>
-        <.button
-          :if={length(@rounds) > 2}
+          </.button>
+        <% else %>
+          <.button_secondary
+            phx-click="create-round"
+            phx-value-mode="normal"
+            disabled={
+              not @all_participants_have_names or @current_round_active or
+                not @has_enough_participants
+            }
+          >
+            <%= if length(@rounds) == 0 do %>
+              <.icon name="hero-rocket-launch-solid" class="mr-1 w-5 h-5" /> Begin tournament
+            <% else %>
+              <.icon name="hero-plus" class="mr-1 w-5 h-5" /> Start new round
+            <% end %>
+          </.button_secondary>
+        <% end %>
+        <.button_secondary
+          :if={length(@rounds) > 2 && @tournament.top_cut_4}
           phx-click="create-round"
           phx-value-mode="top-cut-4"
           disabled={
@@ -183,14 +220,8 @@
           }
         >
           <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Start round (top cut 4)
-        </.button>
+        </.button_secondary>
       </div>
-      <.button
-        :if={length(@rounds) > 2 && @tournament.status == :active}
-        phx-click="finish-tournament"
-      >
-        <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Finish tournament
-      </.button>
     </div>
   <% end %>
 </div>

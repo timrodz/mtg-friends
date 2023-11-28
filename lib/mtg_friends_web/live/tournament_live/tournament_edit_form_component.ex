@@ -22,16 +22,26 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:location]} type="text" label="Location" />
         <.input field={@form[:date]} type="date" label="Date" />
+        <.input
+          field={@form[:status]}
+          type="select"
+          options={[
+            {"Inactive 🟡", "inactive"},
+            {"Active 🟢", "active"},
+            {"Ended 🔴", "finished"}
+          ]}
+          label="Status"
+        />
         <.input field={@form[:description_raw]} type="textarea" label="Description" />
+        <.input
+          field={@form[:round_length_minutes]}
+          type="number"
+          label="Round duration (Minutes; Min: 30 / Max: 120)"
+          value={60}
+          min="30"
+          max="120"
+        />
         <%= if @action == :new do %>
-          <.input
-            field={@form[:round_length_minutes]}
-            type="number"
-            label="Round duration (Minutes; Min: 30 / Max: 120)"
-            value={60}
-            min="30"
-            max="120"
-          />
           <.input
             field={@form[:participant_count]}
             type="number"
@@ -54,12 +64,12 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
             options={@subformat_options}
             label="Round Method"
           />
-          <.input
-            field={@form[:top_cut_4]}
-            type="checkbox"
-            label="Top Cut 4 (Has a final round decided by the top 4 players)"
-          />
         <% end %>
+        <.input
+          field={@form[:top_cut_4]}
+          type="checkbox"
+          label="Top Cut 4 (Has a final round decided by the top 4 players)"
+        />
         <:actions>
           <.button phx-disable-with="Saving...">Submit Tournament</.button>
         </:actions>
