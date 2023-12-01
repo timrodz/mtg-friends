@@ -74,6 +74,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
     participant_pairings =
       if top_cut_4? do
         get_overall_scores(tournament.rounds, num_pairings, true)
+        |> IO.inspect(label: "top players")
         |> Enum.take(4)
         |> Enum.map(fn participant ->
           %{
@@ -182,7 +183,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
   def get_overall_scores(
         rounds,
         num_pairings,
-        scores_to_decimal \\ false
+        round_scores_to_2_decimals? \\ false
       ) do
     rounds
     |> Enum.flat_map(fn round -> round.pairings end)
@@ -192,9 +193,10 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
         with score <-
                Enum.reduce(p, 0, fn cur_pairing, acc ->
                  reduce_calculate_overall_score(rounds, num_pairings, cur_pairing, acc)
-               end) do
-          case scores_to_decimal do
-            true -> score |> Decimal.from_float()
+               end)
+               |> Decimal.from_float() do
+          case round_scores_to_2_decimals? do
+            true -> score |> Decimal.round(2)
             false -> score
           end
         end
@@ -206,6 +208,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
         total_score: total_score,
         win_rate: (total_wins / length(rounds) * 100) |> Decimal.from_float()
       }
+      |> IO.inspect(label: "SCORE FOR #{id}")
     end)
     |> Enum.sort_by(fn p -> p.total_score end, :desc)
   end

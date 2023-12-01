@@ -5,6 +5,10 @@
       <.link patch={~p"/tournaments/new"}>
         <.button>New Tournament</.button>
       </.link>
+    <% else %>
+      <.tooltip content="To create a tournament, you must register/log in" variant="arrow">
+        <.button disabled>New Tournament</.button>
+      </.tooltip>
     <% end %>
   </:actions>
 </.header>

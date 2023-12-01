@@ -1,12 +1,7 @@
 <header class="px-4 sm:px-6 lg:px-8">
   <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
     <div class="flex items-center gap-4">
-      <a href="/">
-        <img src={~p"/images/logo.svg"} width="36" />
-      </a>
-      <p class="bg-brand/5 text-brand rounded-full px-2 font-medium leading-6">
-        v<%= Application.spec(:phoenix, :vsn) %>
-      </p>
+      <img src={~p"/images/logo.svg"} width="36" />
     </div>
     <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
       <ul class="relative z-10 flex items-center gap-5 px-4 sm:px-6 lg:px-8 justify-end">
@@ -46,11 +41,6 @@
             </.link>
           </li>
         <% end %>
-        <li>
-          <a href="https://github.com/timrodz/mtg-friends" class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700">
-            GitHub
-          </a>
-        </li>
       </ul>
     </div>
   </div>

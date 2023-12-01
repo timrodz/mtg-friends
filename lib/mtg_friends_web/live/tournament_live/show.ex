@@ -21,7 +21,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     num_pairings = Utils.get_num_pairings(length(tournament.participants))
 
     participant_score_lookup =
-      Utils.get_overall_scores(tournament.rounds, num_pairings, true)
+      Utils.get_overall_scores(tournament.rounds, num_pairings)
       |> Map.new(fn %{id: id, total_score: total_score, win_rate: win_rate} ->
         {id,
          %{
@@ -60,7 +60,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
       |> assign(:tournament, tournament)
       |> assign(:rounds, tournament.rounds)
       |> assign(
-        :current_round_active,
+        :is_current_round_active?,
         with len <- length(tournament.rounds), true <- len > 0 do
           Map.get(Enum.at(tournament.rounds, len - 1), :active, false)
         else
@@ -68,11 +68,11 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
         end
       )
       |> assign(
-        :all_participants_have_names,
+        :all_participants_have_names?,
         Enum.all?(tournament.participants, fn p -> not is_nil(p.name) end)
       )
       |> assign(
-        :has_enough_participants,
+        :has_enough_participants?,
         length(tournament.participants) >= 4
       )
       |> assign(:participant_forms, participant_forms)

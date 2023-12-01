@@ -174,17 +174,17 @@
   </.table>
   <%= if @current_user_owner && @tournament.status != :finished do %>
     <div class="space-y-4">
-      <.warning :if={not @has_enough_participants}>
+      <.warning :if={not @has_enough_participants?}>
         Must have at least 4 participants before starting this tournament
       </.warning>
-      <.warning :if={not @all_participants_have_names}>
+      <.warning :if={not @all_participants_have_names?}>
         In order to begin the tournament, all participants must have names assigned to them
       </.warning>
-      <.warning :if={@current_round_active}>
+      <.warning :if={@is_current_round_active?}>
         You must finish the current round before starting a new one
       </.warning>
       <div class="flex gap-2">
-        <%= if (@all_participants_have_names and length(@rounds) == 0)do %>
+        <%= if (@all_participants_have_names? and length(@rounds) == 0)do %>
           <.button phx-click="create-round" phx-value-mode="normal">
             <.icon name="hero-rocket-launch-solid" class="mr-1 w-5 h-5" /> Begin tournament
           </.button>
@@ -193,8 +193,8 @@
             phx-click="create-round"
             phx-value-mode="normal"
             disabled={
-              not @all_participants_have_names or @current_round_active or
-                not @has_enough_participants
+              not @all_participants_have_names? or @is_current_round_active? or
+                not @has_enough_participants?
             }
           >
             <%= if length(@rounds) == 0 do %>
@@ -209,8 +209,8 @@
           phx-click="create-round"
           phx-value-mode="top-cut-4"
           disabled={
-            not @all_participants_have_names or @current_round_active or
-              not @has_enough_participants
+            not @all_participants_have_names? or @is_current_round_active? or
+              not @has_enough_participants?
           }
         >
           <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Start round (top cut 4)

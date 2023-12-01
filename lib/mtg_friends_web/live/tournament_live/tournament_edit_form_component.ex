@@ -38,7 +38,6 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           field={@form[:round_length_minutes]}
           type="number"
           label="Round duration (Minutes; Min: 30 / Max: 120)"
-          value={60}
           min="30"
           max="120"
         />
@@ -47,7 +46,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
             field={@form[:participant_count]}
             type="number"
             label="Number of Participants (Min: 4 / Max: 24)"
-            value={8}
+            value={@participant_count}
+            phx-change="update-participant-count"
             min="4"
             max="24"
           />
@@ -89,7 +89,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
      # EDH is the default format
      |> assign(:subformat_options, get_subformat_options("edh"))
      |> assign(:participant_count, 8)
-     |> assign_form(Map.put(changeset, :participant_count, 8))}
+     |> assign_form(changeset)}
   end
 
   @impl true
@@ -105,6 +105,17 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
      socket
      |> assign_form(changeset)
      |> assign(:subformat_options, get_subformat_options(selected_format))}
+  end
+
+  @impl true
+  def handle_event(
+        "update-participant-count",
+        %{"tournament" => %{"participant_count" => count}},
+        socket
+      ) do
+    {:noreply,
+     socket
+     |> assign(:participant_count, count)}
   end
 
   def handle_event("save", %{"tournament" => tournament_params}, socket) do
