@@ -55,3 +55,7 @@ a {
 #description a {
   @apply mx-1 font-semibold;
 }
+
+div#round_countdown_timer {
+  @apply p-2 text-3xl mt-10 text-left md:text-center;
+}

@@ -21,9 +21,8 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
          "round_number" => round_number
        }) do
     socket
-    |> assign(:page_title, "Round Pairings")
     |> assign(:selected_pairing_number, nil)
-    |> generate_socket(tournament_id, round_number)
+    |> generate_socket(tournament_id, round_number, :index)
   end
 
   defp apply_action(socket, :edit, %{
@@ -34,12 +33,11 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
     {pairing_number, ""} = Integer.parse(pairing_number_str)
 
     socket
-    |> assign(:page_title, "Update pod results")
     |> assign(:selected_pairing_number, pairing_number)
-    |> generate_socket(tournament_id, round_number)
+    |> generate_socket(tournament_id, round_number, :edit)
   end
 
-  defp generate_socket(socket, tournament_id, round_number) do
+  defp generate_socket(socket, tournament_id, round_number, action) do
     round = Rounds.get_round_from_round_number_str!(tournament_id, round_number)
 
     pairing_groups =
@@ -74,14 +72,13 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
          })}
       end)
 
-    round_finish_time = NaiveDateTime.add(round.inserted_at, 60, :minute)
+    round_finish_time =
+      NaiveDateTime.add(round.inserted_at, round.tournament.round_length_minutes, :minute)
 
     with timer_reference <- Map.get(socket.assigns, :timer_reference),
          false <- is_nil(timer_reference) do
       {:ok, ref} = timer_reference
       :timer.cancel(ref)
-    else
-      _ -> nil
     end
 
     socket
@@ -95,13 +92,21 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
       round_number: round.number,
       is_round_active: round.active,
       round_finish_time: round_finish_time,
-      round_finish_time_countdown: time_diff(if round.active, do: round_finish_time, else: 0),
+      round_countdown_timer: render_countdown_timer(round_finish_time),
       has_pairings: length(round.pairings) > 0,
       tournament_id: round.tournament.id,
       tournament_name: round.tournament.name,
       tournament_rounds: round.tournament.rounds,
       participants: round.tournament.participants,
       pairing_groups: pairing_groups,
+      page_title:
+        case action do
+          :index ->
+            "Round #{round.number + 1} - Tournament #{round.tournament.name}"
+
+          :edit ->
+            "Edit Pairing #{socket.assigns.selected_pairing_number} - Round #{round.number + 1} - Tournament #{round.tournament.name}"
+        end,
       num_pairings: round(Float.ceil(length(round.tournament.participants) / 4)),
       forms: forms
     )
@@ -114,24 +119,29 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
   def handle_info(:tick, socket) do
     {:noreply,
      assign(socket,
-       round_finish_time_countdown: time_diff(socket.assigns.round_finish_time)
+       round_countdown_timer: render_countdown_timer(socket.assigns.round_finish_time)
      )}
   end
 
-  defp time_diff(end_time) do
-    case end_time do
-      0 ->
-        "00:00"
+  defp render_countdown_timer(round_end_time) do
+    time_diff = NaiveDateTime.diff(round_end_time, NaiveDateTime.utc_now())
 
-      _ ->
-        now = NaiveDateTime.utc_now()
-        seconds = NaiveDateTime.diff(end_time, now)
+    {diff_seconds, rendered_time} =
+      if time_diff > 0,
+        do: {time_diff, Seconds.to_hh_mm_ss(time_diff)},
+        else: {0, "00:00"}
 
-        if seconds > 0 do
-          Seconds.to_hh_mm_ss(seconds)
-        else
-          "00:00"
-        end
-    end
+    raw("""
+    <div id="round_countdown_timer" class="#{cond do
+      diff_seconds > 60 * 5 and diff_seconds <= 60 * 10 -> "rounded-lg bg-yellow-200"
+      diff_seconds >= 60 and diff_seconds <= 60 * 5 -> "rounded-lg bg-orange-200"
+      diff_seconds > 0 and diff_seconds < 60 -> "animate-bounce rounded-lg bg-red-200"
+      diff_seconds <= 0 -> "rounded-lg bg-red-200"
+      true -> ""
+    end}"
+    >
+      Round time: <span class="font-mono">#{rendered_time}</span>
+    </div>
+    """)
   end
 end

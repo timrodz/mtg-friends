@@ -84,9 +84,9 @@
             ) %>%
           <% else %>
             <%= if @toggle_score_decimals do %>
-              0.000 / 0.00%
-            <% else %>
               0 / 0%
+            <% else %>
+              0.000 / 0.00%
             <% end %>
           <% end %>
         </p>
@@ -114,22 +114,25 @@
         </.link>
       </div>
     </div>
-    <:actions :if={@current_user_owner and length(@rounds) == 0}>
-      <.button_secondary phx-click="create-participant" phx-disable-with="Creating...">
-        <.icon name="hero-plus" class="mr-1 w-5 h-5" /> Add participant
-      </.button_secondary>
-    </:actions>
-    <:actions>
-      <.button_secondary phx-click="toggle-score-decimals" phx-disable-with="Toggling...">
-        Toggle score decimals
-      </.button_secondary>
-    </:actions>
     <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
-      <.button phx-disable-with="Updating...">
-        Update participants
+      <.button
+        phx-disable-with="Saving..."
+        data-confirm="Are you sure? You won't be able to edit names afterwards (this is a test feature to prevent cheating)"
+      >
+        <.icon name="hero-table-cells-solid" class="mr-1 w-5 h-5" /> Save changes
+      </.button>
+    </:actions>
+    <:actions :if={@current_user_owner and length(@rounds) == 0}>
+      <.button phx-click="create-participant" phx-disable-with="Creating...">
+        <.icon name="hero-plus" class="mr-1 w-5 h-5" /> Add participant
       </.button>
     </:actions>
   </.simple_form>
+  <div class="mt-2">
+    <.button_secondary phx-click="toggle-score-decimals" phx-disable-with="Toggling...">
+      Toggle score decimals
+    </.button_secondary>
+  </div>
 </div>
 
 <div id="rounds" class="my-16">
@@ -172,7 +175,7 @@
   <%= if @current_user_owner && @tournament.status != :finished do %>
     <div class="space-y-4">
       <.warning :if={not @has_enough_participants}>
-        Have at least 6 participants before starting this tournament
+        Must have at least 4 participants before starting this tournament
       </.warning>
       <.warning :if={not @all_participants_have_names}>
         In order to begin the tournament, all participants must have names assigned to them

@@ -7,9 +7,9 @@
 </.header>
 
 <.back navigate={~p"/tournaments/#{@tournament_id}"}>Back to tournament</.back>
-<p class="text-3xl mt-10 text-left md:text-center">
-  Round timer: <b><%= @round_finish_time_countdown %></b>
-</p>
+<%= if @is_round_active do %>
+  <%= @round_countdown_timer %>
+<% end %>
 
 <div :if={@has_pairings} id="pods" class="my-8">
   <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">

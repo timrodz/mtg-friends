@@ -73,7 +73,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
       )
       |> assign(
         :has_enough_participants,
-        length(tournament.participants) >= 6
+        length(tournament.participants) >= 4
       )
       |> assign(:participant_forms, participant_forms)
       |> assign(:toggle_score_decimals, true)

@@ -23,12 +23,13 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         <.input field={@form[:location]} type="text" label="Location" />
         <.input field={@form[:date]} type="date" label="Date" />
         <.input
+          :if={@action == :edit}
           field={@form[:status]}
           type="select"
           options={[
-            {"Inactive 🟡", "inactive"},
-            {"Active 🟢", "active"},
-            {"Ended 🔴", "finished"}
+            {"1. Registering Participants", "inactive"},
+            {"2. Rounds have begun", "active"},
+            {"3. Tournament Ended", "finished"}
           ]}
           label="Status"
         />
@@ -45,9 +46,9 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           <.input
             field={@form[:participant_count]}
             type="number"
-            label="Number of Participants (Min: 6 / Max: 24)"
+            label="Number of Participants (Min: 4 / Max: 24)"
             value={8}
-            min="6"
+            min="4"
             max="24"
           />
           <.input
