@@ -183,7 +183,7 @@
       <.warning :if={@is_current_round_active?}>
         You must finish the current round before starting a new one
       </.warning>
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-col md:flex-row">
         <%= if (@all_participants_have_names? and length(@rounds) == 0)do %>
           <.button phx-click="create-round" phx-value-mode="normal">
             <.icon name="hero-rocket-launch-solid" class="mr-1 w-5 h-5" /> Begin tournament

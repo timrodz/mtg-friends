@@ -116,6 +116,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
     )
   end
 
+  @impl true
   def handle_info(:tick, socket) do
     {:noreply,
      assign(socket,
