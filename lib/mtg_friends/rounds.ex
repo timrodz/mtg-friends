@@ -63,13 +63,14 @@ defmodule MtgFriends.Rounds do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_round(tournament_id, tournament_rounds) do
+  def create_round(tournament_id, tournament_rounds, is_top_cut_4?) do
     if tournament_rounds > 0 do
       %Round{}
       |> Round.changeset(%{
         tournament_id: tournament_id,
         active: true,
-        number: tournament_rounds
+        number: tournament_rounds,
+        is_top_cut_4: is_top_cut_4?
       })
       |> Repo.insert()
     else

@@ -88,18 +88,22 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     tournament = socket.assigns.tournament
     first_round? = length(tournament.rounds) == 0
 
+    is_top_cut_4? =
+      case mode do
+        "normal" -> false
+        "top-cut-4" -> true
+      end
+
     case Rounds.create_round(
            tournament.id,
-           length(tournament.rounds)
+           length(tournament.rounds),
+           is_top_cut_4?
          ) do
       {:ok, round} ->
         case Utils.create_pairings(
                tournament,
                round,
-               case mode do
-                 "normal" -> false
-                 "top-cut-4" -> true
-               end
+               is_top_cut_4?
              ) do
           {:ok, _} ->
             if first_round? do

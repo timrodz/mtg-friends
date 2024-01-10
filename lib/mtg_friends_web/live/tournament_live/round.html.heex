@@ -11,7 +11,7 @@
   <%= @round_countdown_timer %>
 <% end %>
 
-<div :if={@has_pairings} id="pods" class="my-8">
+<div :if={@has_pairings?} id="pods" class="my-8">
   <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
     <div
       :for={{pairing_number, pairing_group} <- @pairing_groups}
@@ -74,6 +74,7 @@
       action={@live_action}
       tournament_id={@tournament_id}
       round_id={@round_id}
+      is_top_cut_4?={@is_top_cut_4}
       form={Enum.at(@forms, @selected_pairing_number - 1) |> elem(1)}
       patch={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}"}
     />

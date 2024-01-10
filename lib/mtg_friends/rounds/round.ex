@@ -5,6 +5,7 @@ defmodule MtgFriends.Rounds.Round do
   schema "rounds" do
     field :active, :boolean
     field :number, :integer
+    field :is_top_cut_4, :boolean
 
     belongs_to :tournament, MtgFriends.Tournaments.Tournament
 
@@ -16,7 +17,7 @@ defmodule MtgFriends.Rounds.Round do
   @doc false
   def changeset(round, attrs) do
     round
-    |> cast(attrs, [:active, :number, :tournament_id])
+    |> cast(attrs, [:active, :number, :tournament_id, :is_top_cut_4])
     |> validate_required([:active, :number, :tournament_id])
   end
 end

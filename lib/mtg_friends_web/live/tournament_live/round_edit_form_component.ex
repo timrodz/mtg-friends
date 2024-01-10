@@ -13,6 +13,8 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
         <:subtitle>Update this pod when you have all the results</:subtitle>
       </.header>
 
+      <p><%= @is_top_cut_4 %></p>
+
       <.simple_form for={@form} id={"edit-pairing-#{@id}"} phx-target={@myself} phx-submit="save">
         <input type="hidden" name="pairing-number" value={@id} />
 
@@ -37,7 +39,7 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
           </div>
         </div>
         <:actions>
-          <.button phx-disable-with="Saving...">Update pod results</.button>
+          <.button phx-disable-with="Saving...">Submit changes</.button>
         </:actions>
       </.simple_form>
     </div>
