@@ -31,6 +31,18 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
          }}
       end)
 
+    winner =
+      case tournament.status == :finished do
+        false ->
+          nil
+
+        true ->
+          tournament.participants |> Enum.find(fn p -> p.is_winner == true end)
+          # hd(Enum.take(tournament.rounds, -1)).pairings
+          # |> Enum.filter(fn p -> p.winner == true end)
+      end
+      |> IO.inspect(label: "tournament winner")
+
     participant_forms =
       to_form(%{
         "participants" =>
@@ -40,14 +52,16 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
               "id" => participant.id,
               "name" => participant.name,
               "decklist" => participant.decklist,
+              "is_winner" => participant.is_winner,
               "scores" => Map.get(participant_score_lookup, participant.id, nil)
             }
           end)
           # Sort players by highest -> lowest overall scores
-          |> Enum.sort_by(
-            fn x -> x["scores"] && x["scores"].total_score_sort_by end,
-            :desc
-          )
+          # |> Enum.sort_by(
+          #   fn x -> x["scores"] && x["scores"].total_score_sort_by end,
+          #   :desc
+          # )
+          |> Enum.sort_by(&{&1["is_winner"], &1["scores"].total_score_sort_by}, :desc)
       })
 
     %{current_user: current_user, live_action: live_action} = socket.assigns
@@ -56,6 +70,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
       :noreply,
       socket
       |> UserAuth.assign_current_user_owner(current_user, tournament)
+      |> assign(:has_winner?, not is_nil(winner))
       |> assign(:page_title, page_title(live_action, tournament.name))
       |> assign(:tournament, tournament)
       |> assign(:rounds, tournament.rounds)
@@ -82,6 +97,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
 
   defp page_title(:show, tournament_name), do: "Tournament #{tournament_name}"
   defp page_title(:edit, tournament_name), do: "Edit Tournament #{tournament_name}"
+  defp page_title(:end, tournament_name), do: "Finish Tournament #{tournament_name}"
 
   @impl true
   def handle_event("create-round", %{"mode" => mode} = _, socket) do

@@ -27,9 +27,9 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           field={@form[:status]}
           type="select"
           options={[
-            {"1. Registering Participants", "inactive"},
-            {"2. Rounds have begun", "active"},
-            {"3. Tournament Ended", "finished"}
+            {"1. Open (registering participants)", "inactive"},
+            {"2. In progress (tournament started)", "active"},
+            {"3. Finished", "finished"}
           ]}
           label="Status"
         />

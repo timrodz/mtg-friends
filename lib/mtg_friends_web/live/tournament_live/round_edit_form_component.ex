@@ -1,8 +1,10 @@
 defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
-  alias MtgFriends.Rounds
   use MtgFriendsWeb, :live_component
 
   alias MtgFriends.Pairings
+  alias MtgFriends.Participants
+  alias MtgFriends.Tournaments
+  alias MtgFriends.Rounds
 
   @impl true
   def render(assigns) do
@@ -12,8 +14,6 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
         <%= @title %>
         <:subtitle>Update this pod when you have all the results</:subtitle>
       </.header>
-
-      <p><%= @is_top_cut_4 %></p>
 
       <.simple_form for={@form} id={"edit-pairing-#{@id}"} phx-target={@myself} phx-submit="save">
         <input type="hidden" name="pairing-number" value={@id} />
@@ -61,25 +61,57 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
         params,
         socket
       ) do
-    %{tournament_id: tournament_id, round_id: round_id} = socket.assigns
+    %{tournament_id: tournament_id, round_id: round_id, is_top_cut_4?: is_top_cut_4?} =
+      socket.assigns
 
-    case Pairings.update_pairings(tournament_id, round_id, params) do
-      {:ok, _} ->
-        round = Rounds.get_round!(round_id)
+    {:ok, pairings} = Pairings.update_pairings(tournament_id, round_id, params)
+    round = Rounds.get_round!(round_id)
 
-        case round.pairings
-             |> Enum.all?(fn p -> p.active == false end) do
-          true -> Rounds.update_round(round, %{active: false})
-          false -> nil
+    # If all round pairings have finished, finish the round automatically
+    all_pairings_done? = round.pairings |> Enum.all?(fn p -> p.active == false end)
+
+    case all_pairings_done? do
+      true -> Rounds.update_round(round, %{active: false})
+      false -> nil
+    end
+
+    # If this round is the top cut 4, finish the tournament as well
+    case is_top_cut_4? do
+      true ->
+        IO.puts("last round")
+
+        with tournament_winner_tuple <-
+               Enum.find(pairings, fn pairing_tuple -> elem(pairing_tuple, 1).winner end),
+             false <- is_nil(tournament_winner_tuple),
+             tournament_winner <-
+               elem(tournament_winner_tuple, 1) do
+          {:ok, _} =
+            Participants.update_participant(tournament_winner.participant, %{"is_winner" => true})
+            |> IO.inspect(label: "participant update")
+
+          tournament =
+            Tournaments.get_tournament_simple!(tournament_id)
+
+          {:ok, _} =
+            Tournaments.update_tournament(tournament, %{"status" => :finished})
+            |> IO.inspect(label: "tournament update")
+
+          {:noreply,
+           socket
+           |> put_flash(:info, "Last pod updated successfully - Tournament has finished!")
+           |> push_navigate(to: ~p"/tournaments/#{tournament_id}")}
+        else
+          _ ->
+            {:noreply,
+             put_flash(socket, :error, "Error updating pairing")
+             |> push_patch(to: socket.assigns.patch)}
         end
 
+      false ->
         {:noreply,
          socket
          |> put_flash(:info, "Pod updated successfully")
          |> push_patch(to: socket.assigns.patch)}
-
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Error updating pairing")}
     end
   end
 end

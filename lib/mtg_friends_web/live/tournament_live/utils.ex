@@ -10,9 +10,9 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
 
   def render_tournament_status(status) do
     case status do
-      :inactive -> "Inactive 🟡"
-      :active -> "Active 🟢"
-      :finished -> "Ended 🔴"
+      :inactive -> "Open 🟢"
+      :active -> "In progress 🔵"
+      :finished -> "Finished 🔴"
     end
   end
 

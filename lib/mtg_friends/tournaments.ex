@@ -72,6 +72,8 @@ defmodule MtgFriends.Tournaments do
     Repo.one!(query)
   end
 
+  def get_tournament_simple!(id), do: Repo.get!(Tournament, id)
+
   @doc """
   Creates a tournament.
 

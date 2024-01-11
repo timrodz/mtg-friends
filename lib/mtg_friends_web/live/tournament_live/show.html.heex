@@ -7,6 +7,14 @@
     <.link patch={~p"/tournaments/#{@tournament}/show/edit"} phx-click={JS.push_focus()}>
       <.button_secondary>Edit tournament</.button_secondary>
     </.link>
+    <%= if @current_user_owner &&
+              length(@rounds) > 2 && @tournament.status == :active && Enum.all?(@rounds, fn r -> r.active == false end) do %>
+      <.link patch={~p"/tournaments/#{@tournament}/show/end"} phx-click={JS.push_focus()}>
+        <.button>
+          <.icon name="hero-flag" class="mr-1 w-6 md:w-5 h-5" /> Finish tournament
+        </.button>
+      </.link>
+    <% end %>
   </:actions>
 </.header>
 
@@ -58,7 +66,7 @@
       id={"data-#{p["id"]}"}
       class={[
         "grid grid-cols-7 md:grid-cols-8 text-sm md:text-md px-1",
-        @tournament.status == :finished && index == 0 &&
+        @has_winner? && @tournament.status == :finished && index == 0 &&
           "py-1 bg-green-200 border rounded-lg border-green-200"
       ]}
     >
@@ -149,7 +157,7 @@
       <span class="text-zinc-600 font-mono font-medium text-sm">#<%= round.number + 1 %></span>
     </:col>
     <:col :let={round} label="Status">
-      <%= (round.active && "In progress ⚔️") || "Ended" %>
+      <%= (round.active && "In progress 🔹") || "Finished 🔸" %>
     </:col>
     <:action :let={round} :if={@current_user_owner}>
       <.link
@@ -215,16 +223,14 @@
         >
           <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Start round (top cut 4)
         </.button_secondary>
-        <.button
-          :if={
-            @current_user_owner &&
-              length(@rounds) > 2 && @tournament.status == :active &&
-              Enum.all?(@rounds, fn r -> r.active == false end)
-          }
-          phx-click="finish-tournament"
-        >
-          <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Finish tournament
-        </.button>
+        <%= if @current_user_owner &&
+              length(@rounds) > 2 && @tournament.status == :active && Enum.all?(@rounds, fn r -> r.active == false end) do %>
+          <.link patch={~p"/tournaments/#{@tournament}/show/end"} phx-click={JS.push_focus()}>
+            <.button>
+              <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Finish tournament
+            </.button>
+          </.link>
+        <% end %>
       </div>
     </div>
   <% end %>
@@ -244,5 +250,22 @@
     action={@live_action}
     tournament={@tournament}
     patch={~p"/tournaments/#{@tournament}"}
+  />
+</.modal>
+
+<.modal
+  :if={@live_action == :end}
+  id="tournament-end-modal"
+  show
+  on_cancel={JS.patch(~p"/tournaments/#{@tournament}")}
+>
+  <.live_component
+    module={MtgFriendsWeb.TournamentLive.TournamentEndFormComponent}
+    current_user={@current_user}
+    id={@tournament.id}
+    title={@page_title}
+    action={@live_action}
+    tournament={@tournament}
+    patch={~p"/tournaments/#{@tournament}/finish"}
   />
 </.modal>

@@ -26,6 +26,7 @@ defmodule MtgFriendsWeb.Router do
       live "/users/settings/confirm_email/:token", UserSettingsLive, :confirm_email
 
       live "/tournaments/:id/show/edit", TournamentLive.Show, :edit
+      live "/tournaments/:id/show/end", TournamentLive.Show, :end
       live "/tournaments/new", TournamentLive.Index, :new
       live "/tournaments/:id/edit", TournamentLive.Index, :edit
 
