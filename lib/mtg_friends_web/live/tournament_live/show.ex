@@ -54,7 +54,6 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
             }
           end)
           # Sort players by winner & highest to lowest overall scores
-          |> IO.inspect(label: "parts")
           |> Enum.sort_by(
             &{&1["is_tournament_winner"],
              (&1["scores"] && &1["scores"].total_score_sort_by) || nil},

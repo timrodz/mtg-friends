@@ -103,7 +103,15 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
 
   @impl true
   def handle_event("validate", %{"tournament" => tournament_params}, socket) do
-    selected_format = tournament_params["format"]
+    selected_format =
+      case tournament_params["format"] do
+        # No format found in the form's params, that means the taournament already exists
+        nil ->
+          socket.assigns.tournament.format
+
+        _ ->
+          tournament_params["format"]
+      end
 
     changeset =
       socket.assigns.tournament
@@ -174,11 +182,10 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
   end
 
   defp get_subformat_options(subformat) do
-    case subformat do
+    case to_string(subformat) do
       "edh" ->
         [
           {"Bubble Rounds (Pods are determined by last round standings)", :bubble_rounds}
-          # {"Swiss Rounds", :swiss}
         ]
 
       "single" ->
@@ -186,7 +193,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           {"Swiss Rounds", :swiss}
         ]
 
-      nil ->
+      _ ->
         [{"None", :none}]
     end
   end
