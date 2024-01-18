@@ -36,6 +36,7 @@ defmodule MtgFriends.Tournaments.Tournament do
       :description_raw,
       :description_html,
       :round_length_minutes,
+      :round_count,
       :status,
       :format,
       :subformat,
