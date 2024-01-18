@@ -35,13 +35,22 @@ defmodule MtgFriends.Rounds do
       ** (Ecto.NoResultsError)
 
   """
-  def get_round!(id),
-    do:
+  def get_round!(id, preload_all \\ false) do
+    if preload_all do
       Repo.get!(Round, id) |> Repo.preload(tournament: [:participants], pairings: [:participant])
+    else
+      Repo.get!(Round, id)
+    end
+  end
 
-  def get_round!(tournament_id, round_number) do
-    Repo.get_by!(Round, tournament_id: tournament_id, number: round_number)
-    |> Repo.preload(tournament: [:participants, rounds: [:pairings]], pairings: [:participant])
+  def get_round_by_tournament_and_round_number!(tournament_id, round_number, preload_all \\ false) do
+    if preload_all do
+      Repo.get_by!(Round, tournament_id: tournament_id, number: round_number)
+      |> Repo.preload(tournament: [:participants, rounds: [:pairings]], pairings: [:participant])
+    else
+      Repo.get_by!(Round, tournament_id: tournament_id, number: round_number)
+      |> Repo.preload(pairings: [:participant])
+    end
   end
 
   def get_round_from_round_number_str!(tournament_id, number_str) do
@@ -63,21 +72,14 @@ defmodule MtgFriends.Rounds do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_round(tournament_id, tournament_rounds, is_top_cut_4?) do
-    if tournament_rounds > 0 do
-      %Round{}
-      |> Round.changeset(%{
-        tournament_id: tournament_id,
-        active: true,
-        number: tournament_rounds,
-        is_top_cut_4: is_top_cut_4?
-      })
-      |> Repo.insert()
-    else
-      %Round{}
-      |> Round.changeset(%{tournament_id: tournament_id, active: true, number: 0})
-      |> Repo.insert()
-    end
+  def create_round(tournament_id, tournament_rounds) do
+    %Round{}
+    |> Round.changeset(%{
+      tournament_id: tournament_id,
+      active: true,
+      number: tournament_rounds
+    })
+    |> Repo.insert()
   end
 
   @doc """

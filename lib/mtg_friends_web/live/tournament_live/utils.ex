@@ -68,8 +68,10 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
     end
   end
 
-  def create_pairings(tournament, round, is_top_cut_4?) do
+  def create_pairings(tournament, round) do
     num_pairings = get_num_pairings(length(tournament.participants))
+    is_last_round? = tournament.round_count == round.number + 1
+    is_top_cut_4? = is_last_round? && tournament.is_top_cut_4
 
     participant_pairings =
       if is_top_cut_4? do
@@ -77,6 +79,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
         |> Enum.take(4)
         |> Enum.map(fn participant ->
           %{
+            # Pairing number is 0 because there's only 1 pairing
             number: 0,
             tournament_id: tournament.id,
             round_id: round.id,
@@ -119,13 +122,13 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
   defp partition_participants_into_pairings(participants, num_pairings) do
     participant_count = length(participants)
 
-    # when num_complete_pairings is 0, that means every pod is full
+    # when num_complete_pairings is 0, that means every pairing is full
     # example: participant_count=16; num_pairings=4; rem(16/4) = 0
     num_complete_pairings = rem(participant_count, num_pairings)
 
     corrected_num_complete_pairings =
       case participant_count do
-        # with 6/9 participants, there should be even pairings of 3, therefore 0 full tables
+        # with 6/9 participants, there should be even pairings of 3, therefore 0 full pairings
         6 -> 0
         9 -> 0
         _ -> if num_complete_pairings == 0, do: num_pairings, else: num_complete_pairings
@@ -156,33 +159,47 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
     end
   end
 
-  def make_pairings_from_last_round_results(tournament, current_round_number) do
-    case current_round_number do
-      0 ->
-        {:error, "current_round_number must be greater than 0"}
+  defp make_pairings_from_last_round_results(tournament_id, current_round_number) do
+    previous_round =
+      Rounds.get_round_by_tournament_and_round_number!(tournament_id, current_round_number - 1)
 
-      _ ->
-        previous_round = Rounds.get_round!(tournament.id, current_round_number - 1)
-
-        previous_round.pairings
-        |> Enum.map(fn pairing ->
-          %{
-            id: pairing.participant_id,
-            name: pairing.participant.name,
-            points: pairing.points,
-            winner: pairing.winner
-          }
-        end)
-        |> Enum.group_by(fn p -> p.points end)
-        |> Enum.reverse()
-        |> Enum.flat_map(fn {_, participants} -> Enum.shuffle(participants) end)
-    end
+    previous_round.pairings
+    |> Enum.map(fn pairing ->
+      %{
+        id: pairing.participant_id,
+        name: pairing.participant.name,
+        points: pairing.points,
+        winner: pairing.winner
+      }
+    end)
+    |> Enum.group_by(fn p -> p.points end)
+    # Sort by highest to lowest, so complete pairings are rendered first in the UI
+    |> Enum.sort(:desc)
+    |> Enum.flat_map(fn {_, participants} ->
+      Enum.shuffle(participants)
+    end)
   end
 
-  def get_overall_scores(
-        rounds,
-        num_pairings
-      ) do
+  # defp make_pairings_swiss(tournament) do
+  #   participants = tournament.participants
+
+  #   all_previous_rounds =
+  #     tournament.rounds
+  #     |> Enum.map(fn round ->
+  #       # %{
+  #       #   round_number: round.number,
+  #       # pairings:
+  #       round.pairings
+  #       |> Enum.map(fn pairing -> Map.take(pairing, [:number, :participant_id]) end)
+
+  #       # }
+  #     end)
+  #     |> IO.inspect(label: "pairings??")
+
+  #   # players_played_against = participants |> Enum.map(fn participant -> nil end)
+  # end
+
+  def get_overall_scores(rounds, num_pairings) do
     rounds
     |> Enum.flat_map(fn round -> round.pairings end)
     |> Enum.group_by(&Map.get(&1, :participant_id))

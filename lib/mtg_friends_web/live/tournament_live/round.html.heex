@@ -1,8 +1,8 @@
 <.header>
   Tournament: <%= @tournament_name %> / Round #<%= @round_number + 1 %>
   <:subtitle>
-    <b>Round Status</b>: <%= (@is_round_active && "In progress") ||
-      "Finished" %> <%= (@is_top_cut_4? && " (Last round)") || "" %>
+    <b>Round Status</b>: <%= (@is_round_active && "In progress 🔹") ||
+      "Finished 🔸" %>
   </:subtitle>
 </.header>
 
@@ -75,7 +75,6 @@
       action={@live_action}
       tournament_id={@tournament_id}
       round_id={@round_id}
-      is_top_cut_4?={@is_top_cut_4?}
       form={Enum.at(@forms, @selected_pairing_number - 1) |> elem(1)}
       patch={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}"}
     />

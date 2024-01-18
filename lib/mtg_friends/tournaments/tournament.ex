@@ -11,7 +11,8 @@ defmodule MtgFriends.Tournaments.Tournament do
     field :description_raw, :string
     field :description_html, :string
     field :round_length_minutes, :integer, default: 60
-    field :top_cut_4, :boolean, default: false
+    field :is_top_cut_4, :boolean, default: false
+    field :round_count, :integer, default: 4
     field :status, Ecto.Enum, values: [:inactive, :active, :finished], default: :inactive
     field :format, Ecto.Enum, values: [:edh, :single], default: :edh
     field :subformat, Ecto.Enum, values: [:bubble_rounds, :swiss], default: :bubble_rounds
@@ -38,7 +39,7 @@ defmodule MtgFriends.Tournaments.Tournament do
       :status,
       :format,
       :subformat,
-      :top_cut_4
+      :is_top_cut_4
     ])
     |> ValidationHelper.allow_empty_strings()
     |> validate_required([

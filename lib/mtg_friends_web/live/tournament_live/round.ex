@@ -91,7 +91,6 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
       round_id: round.id,
       round_number: round.number,
       is_round_active: round.active,
-      is_top_cut_4?: round.is_top_cut_4,
       round_finish_time: round_finish_time,
       round_countdown_timer: render_countdown_timer(round_finish_time),
       has_pairings?: length(round.pairings) > 0,

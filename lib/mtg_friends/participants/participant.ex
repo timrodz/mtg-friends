@@ -7,7 +7,7 @@ defmodule MtgFriends.Participants.Participant do
     field :name, :string
     field :points, :integer
     field :decklist, :string
-    field :is_winner, :boolean
+    field :is_tournament_winner, :boolean
 
     belongs_to :tournament, MtgFriends.Tournaments.Tournament
 
@@ -17,7 +17,7 @@ defmodule MtgFriends.Participants.Participant do
   @doc false
   def changeset(participant, attrs) do
     participant
-    |> cast(attrs, [:name, :points, :decklist, :tournament_id, :is_winner])
+    |> cast(attrs, [:name, :points, :decklist, :tournament_id, :is_tournament_winner])
     |> allow_empty_strings()
     |> validate_required([:tournament_id])
   end

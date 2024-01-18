@@ -61,49 +61,30 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
         params,
         socket
       ) do
-    %{tournament_id: tournament_id, round_id: round_id, is_top_cut_4?: is_top_cut_4?} =
+    %{tournament_id: tournament_id, round_id: round_id} =
       socket.assigns
 
-    {:ok, pairings} = Pairings.update_pairings(tournament_id, round_id, params)
-    round = Rounds.get_round!(round_id)
+    {:ok, updated_pairing_tuples} = Pairings.update_pairings(tournament_id, round_id, params)
+
+    tournament = Tournaments.get_tournament_simple!(tournament_id)
+    round = Rounds.get_round!(round_id, true)
 
     # If all round pairings have finished, finish the round automatically
-    all_pairings_done? = round.pairings |> Enum.all?(fn p -> p.active == false end)
+    all_pairings_done? = Enum.all?(round.pairings, fn p -> p.active == false end)
 
     case all_pairings_done? do
-      true -> Rounds.update_round(round, %{active: false})
-      false -> nil
-    end
-
-    # If this round is the top cut 4, finish the tournament as well
-    case is_top_cut_4? do
       true ->
-        IO.puts("last round")
+        Rounds.update_round(round, %{active: false})
+        # Last round of the tournament - finish it
+        case tournament.round_count == round.number + 1 do
+          true ->
+            updated_pairings = updated_pairing_tuples |> Enum.map(fn {id, pairing} -> pairing end)
+            process_last_tournament_round(socket, tournament, updated_pairings)
 
-        with tournament_winner_tuple <-
-               Enum.find(pairings, fn pairing_tuple -> elem(pairing_tuple, 1).winner end),
-             false <- is_nil(tournament_winner_tuple),
-             tournament_winner <-
-               elem(tournament_winner_tuple, 1) do
-          {:ok, _} =
-            Participants.update_participant(tournament_winner.participant, %{"is_winner" => true})
-            |> IO.inspect(label: "participant update")
-
-          tournament =
-            Tournaments.get_tournament_simple!(tournament_id)
-
-          {:ok, _} =
-            Tournaments.update_tournament(tournament, %{"status" => :finished})
-            |> IO.inspect(label: "tournament update")
-
-          {:noreply,
-           socket
-           |> put_flash(:info, "Last pod updated successfully - Tournament has finished!")
-           |> push_navigate(to: ~p"/tournaments/#{tournament_id}")}
-        else
-          _ ->
+          false ->
             {:noreply,
-             put_flash(socket, :error, "Error updating pairing")
+             socket
+             |> put_flash(:info, "Pod updated successfully")
              |> push_patch(to: socket.assigns.patch)}
         end
 
@@ -113,5 +94,24 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
          |> put_flash(:info, "Pod updated successfully")
          |> push_patch(to: socket.assigns.patch)}
     end
+  end
+
+  def process_last_tournament_round(socket, tournament, pairings) do
+    # Assign the tournament's winner if it's top cut 4, as that round's winner may have less points than another player
+    with true <- tournament.is_top_cut_4,
+         winning_pairing <- Enum.find(pairings, fn p -> p.winner end),
+         false <- is_nil(winning_pairing) do
+      {:ok, _} =
+        Participants.update_participant(winning_pairing.participant, %{
+          "is_tournament_winner" => true
+        })
+    end
+
+    {:ok, _} = Tournaments.update_tournament(tournament, %{"status" => :finished})
+
+    {:noreply,
+     socket
+     |> put_flash(:info, "Last pod updated successfully - Tournament has finished!")
+     |> push_navigate(to: ~p"/tournaments/#{tournament.id}")}
   end
 end

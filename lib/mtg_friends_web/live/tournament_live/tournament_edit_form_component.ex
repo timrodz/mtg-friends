@@ -41,11 +41,18 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           min="30"
           max="120"
         />
+        <.input
+          field={@form[:round_count]}
+          type="number"
+          label="Number of rounds (Min: 3 / Max: 10)"
+          min="3"
+          max="10"
+        />
         <%= if @action == :new do %>
           <.input
             field={@form[:participant_count]}
             type="number"
-            label="Number of Participants (Min: 4 / Max: 24)"
+            label="Number of participants (Min: 4 / Max: 24)"
             value={@participant_count}
             phx-change="update-participant-count"
             min="4"
@@ -59,15 +66,15 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
             ]}
             label="Format"
           />
-          <.input
-            field={@form[:subformat]}
-            type="select"
-            options={@subformat_options}
-            label="Round Method"
-          />
         <% end %>
         <.input
-          field={@form[:top_cut_4]}
+          field={@form[:subformat]}
+          type="select"
+          options={@subformat_options}
+          label="Round Method"
+        />
+        <.input
+          field={@form[:is_top_cut_4]}
           type="checkbox"
           label="Top Cut 4 (Has a final round decided by the top 4 players)"
         />
@@ -81,7 +88,9 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
 
   @impl true
   def update(%{tournament: tournament} = assigns, socket) do
-    changeset = Tournaments.change_tournament(tournament, %{date: Date.utc_today()})
+    changeset =
+      Tournaments.change_tournament(tournament, %{date: Date.utc_today()})
+      |> IO.inspect(label: "changeset")
 
     {:ok,
      socket
@@ -169,6 +178,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
       "edh" ->
         [
           {"Bubble Rounds (Pods are determined by last round standings)", :bubble_rounds}
+          # {"Swiss Rounds", :swiss}
         ]
 
       "single" ->

@@ -2,10 +2,10 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   use MtgFriendsWeb, :live_view
 
   alias MtgFriendsWeb.UserAuth
-  alias MtgFriendsWeb.Live.TournamentLive.Utils
   alias MtgFriends.Tournaments
   alias MtgFriends.Participants
   alias MtgFriends.Rounds
+  alias MtgFriendsWeb.Live.TournamentLive.Utils
 
   on_mount {MtgFriendsWeb.UserAuth, :mount_current_user}
 
@@ -37,11 +37,8 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
           nil
 
         true ->
-          tournament.participants |> Enum.find(fn p -> p.is_winner == true end)
-          # hd(Enum.take(tournament.rounds, -1)).pairings
-          # |> Enum.filter(fn p -> p.winner == true end)
+          tournament.participants |> Enum.find(fn p -> p.is_tournament_winner == true end)
       end
-      |> IO.inspect(label: "tournament winner")
 
     participant_forms =
       to_form(%{
@@ -52,16 +49,12 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
               "id" => participant.id,
               "name" => participant.name,
               "decklist" => participant.decklist,
-              "is_winner" => participant.is_winner,
+              "is_tournament_winner" => participant.is_tournament_winner,
               "scores" => Map.get(participant_score_lookup, participant.id, nil)
             }
           end)
-          # Sort players by highest -> lowest overall scores
-          # |> Enum.sort_by(
-          #   fn x -> x["scores"] && x["scores"].total_score_sort_by end,
-          #   :desc
-          # )
-          |> Enum.sort_by(&{&1["is_winner"], &1["scores"].total_score_sort_by}, :desc)
+          # Sort players by winner & highest to lowest overall scores
+          |> Enum.sort_by(&{&1["is_tournament_winner"], &1["scores"].total_score_sort_by}, :desc)
       })
 
     %{current_user: current_user, live_action: live_action} = socket.assigns
@@ -100,26 +93,19 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   defp page_title(:end, tournament_name), do: "Finish Tournament #{tournament_name}"
 
   @impl true
-  def handle_event("create-round", %{"mode" => mode} = _, socket) do
+  def handle_event("create-round", _, socket) do
     tournament = socket.assigns.tournament
-    first_round? = length(tournament.rounds) == 0
-
-    is_top_cut_4? =
-      case mode do
-        "normal" -> false
-        "top-cut-4" -> true
-      end
+    round_count = length(tournament.rounds)
+    first_round? = round_count == 0
 
     case Rounds.create_round(
            tournament.id,
-           length(tournament.rounds),
-           is_top_cut_4?
+           round_count
          ) do
       {:ok, round} ->
         case Utils.create_pairings(
                tournament,
-               round,
-               is_top_cut_4?
+               round
              ) do
           {:ok, _} ->
             if first_round? do

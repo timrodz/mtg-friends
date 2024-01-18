@@ -7,14 +7,6 @@
     <.link patch={~p"/tournaments/#{@tournament}/show/edit"} phx-click={JS.push_focus()}>
       <.button_secondary>Edit tournament</.button_secondary>
     </.link>
-    <%= if @current_user_owner &&
-              length(@rounds) > 2 && @tournament.status == :active && Enum.all?(@rounds, fn r -> r.active == false end) do %>
-      <.link patch={~p"/tournaments/#{@tournament}/show/end"} phx-click={JS.push_focus()}>
-        <.button>
-          <.icon name="hero-flag" class="mr-1 w-6 md:w-5 h-5" /> Finish tournament
-        </.button>
-      </.link>
-    <% end %>
   </:actions>
 </.header>
 
@@ -31,12 +23,12 @@
       <%= Utils.render_subformat(@tournament.subformat) %>
     </.tooltip>
   </:item>
-  <:item :if={not is_nil(@tournament.top_cut_4)} title="Top Cut 4">
+  <:item :if={not is_nil(@tournament.is_top_cut_4)} title="Top Cut 4">
     <.tooltip
       content="If enabled, the tournament will enable a final round of the top 4 participants (by overall score)"
       variant="arrow"
     >
-      <%= (@tournament.top_cut_4 && "Enabled") || "Disabled" %>
+      <%= (@tournament.is_top_cut_4 && "Enabled") || "Disabled" %>
     </.tooltip>
   </:item>
   <:item title="Round duration">
@@ -66,7 +58,7 @@
       id={"data-#{p["id"]}"}
       class={[
         "grid grid-cols-7 md:grid-cols-8 text-sm md:text-md px-1",
-        @has_winner? && @tournament.status == :finished && index == 0 &&
+        @tournament.status == :finished && index == 0 &&
           "py-1 bg-green-200 border rounded-lg border-green-200"
       ]}
     >
@@ -192,45 +184,21 @@
         You must finish the current round before starting a new one
       </.warning>
       <div class="flex gap-2 flex-col md:flex-row">
-        <%= if (@all_participants_have_names? and length(@rounds) == 0)do %>
-          <.button phx-click="create-round" phx-value-mode="normal">
-            <.icon name="hero-rocket-launch-solid" class="mr-1 w-5 h-5" /> Begin tournament
-          </.button>
-        <% else %>
-          <.button_secondary
-            phx-click="create-round"
-            phx-value-mode="normal"
-            disabled={
-              not @all_participants_have_names? or @is_current_round_active? or
-                not @has_enough_participants?
-            }
-          >
-            <%= if length(@rounds) == 0 do %>
-              <.icon name="hero-rocket-launch-solid" class="mr-1 w-5 h-5" /> Begin tournament
-            <% else %>
-              <.icon name="hero-plus" class="mr-1 w-5 h-5" /> Start new round
-            <% end %>
-          </.button_secondary>
-        <% end %>
-        <.button_secondary
-          :if={length(@rounds) > 2 && @tournament.top_cut_4}
+        <.button
           phx-click="create-round"
-          phx-value-mode="top-cut-4"
+          phx-disable-with="Starting..."
           disabled={
             not @all_participants_have_names? or @is_current_round_active? or
               not @has_enough_participants?
           }
         >
-          <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Start round (top cut 4)
-        </.button_secondary>
-        <%= if @current_user_owner &&
-              length(@rounds) > 2 && @tournament.status == :active && Enum.all?(@rounds, fn r -> r.active == false end) do %>
-          <.link patch={~p"/tournaments/#{@tournament}/show/end"} phx-click={JS.push_focus()}>
-            <.button>
-              <.icon name="hero-flag" class="mr-1 w-5 h-5" /> Finish tournament
-            </.button>
-          </.link>
-        <% end %>
+          <%= if length(@rounds) == 0 do %>
+            <.icon name="hero-rocket-launch-solid" class="mr-1 w-5 h-5" /> Begin tournament
+          <% else %>
+            <.icon name="hero-plus" class="mr-1 w-5 h-5" />
+            Start <%= (@tournament.round_count == length(@rounds) + 1 && "last") || "new" %> round
+          <% end %>
+        </.button>
       </div>
     </div>
   <% end %>
@@ -266,6 +234,6 @@
     title={@page_title}
     action={@live_action}
     tournament={@tournament}
-    patch={~p"/tournaments/#{@tournament}/finish"}
+    patch={~p"/tournaments/#{@tournament.id}/finish"}
   />
 </.modal>

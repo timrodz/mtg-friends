@@ -17,7 +17,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEndFormComponent do
 
       <.simple_form for={@form} id={"edit-pairing-#{@id}"} phx-target={@myself} phx-submit="save">
         <.input
-          :if={@tournament.top_cut_4}
+          :if={@tournament.is_top_cut_4}
           label="Choose the name of the participant who won"
           name="participant_id"
           type="select"
@@ -62,7 +62,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEndFormComponent do
       |> IO.inspect(label: "participants")
       |> Enum.find(fn p -> p.id == participant_id end)
 
-    with {:ok, _} <- Participants.update_participant(participant, %{"is_winner" => true}),
+    with {:ok, _} <-
+           Participants.update_participant(participant, %{"is_tournament_winner" => true}),
          {:ok, _} <- Tournaments.update_tournament(tournament, %{"status" => :finished}) do
       {:noreply, socket |> put_flash(:info, "This tournament is now finished!") |> reload_page()}
     else
