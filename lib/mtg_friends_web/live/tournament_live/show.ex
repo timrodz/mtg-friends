@@ -54,7 +54,12 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
             }
           end)
           # Sort players by winner & highest to lowest overall scores
-          |> Enum.sort_by(&{&1["is_tournament_winner"], &1["scores"].total_score_sort_by}, :desc)
+          |> IO.inspect(label: "parts")
+          |> Enum.sort_by(
+            &{&1["is_tournament_winner"],
+             (&1["scores"] && &1["scores"].total_score_sort_by) || nil},
+            :desc
+          )
       })
 
     %{current_user: current_user, live_action: live_action} = socket.assigns
