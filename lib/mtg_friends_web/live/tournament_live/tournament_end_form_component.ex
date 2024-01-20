@@ -1,7 +1,6 @@
 defmodule MtgFriendsWeb.TournamentLive.TournamentEndFormComponent do
   alias MtgFriends.Participants
   alias MtgFriends.Tournaments
-  alias MtgFriends.Rounds
   use MtgFriendsWeb, :live_component
 
   @impl true

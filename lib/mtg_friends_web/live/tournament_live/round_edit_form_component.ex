@@ -78,7 +78,7 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
         # Last round of the tournament - finish it
         case tournament.round_count == round.number + 1 do
           true ->
-            updated_pairings = updated_pairing_tuples |> Enum.map(fn {id, pairing} -> pairing end)
+            updated_pairings = updated_pairing_tuples |> Enum.map(fn {_, pairing} -> pairing end)
             process_last_tournament_round(socket, tournament, updated_pairings)
 
           false ->
