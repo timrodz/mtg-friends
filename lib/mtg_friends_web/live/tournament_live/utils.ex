@@ -99,7 +99,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
             # TODO: Eventually this will decide the format of the round
             case tournament.subformat do
               _ ->
-                make_pairings_from_last_round_results(tournament, round.number)
+                make_pairings_from_last_round_results(tournament.id, round.number)
                 |> partition_participants_into_pairings(num_pairings)
             end
         end
