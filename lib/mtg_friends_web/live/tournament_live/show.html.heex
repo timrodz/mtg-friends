@@ -72,10 +72,14 @@
         </p>
       </div>
       <div class="col-span-2 self-center mr-2 flex">
-        <%= if p["name"] do %>
-          <p><%= p["name"] %></p>
-        <% else %>
+        <%= if @current_user_admin do %>
           <.input type="text" name={"form-participant-name-#{p["id"]}"} value={p["name"]} />
+        <% else %>
+          <%= if p["name"] do %>
+            <p><%= p["name"] %></p>
+          <% else %>
+            <.input type="text" name={"form-participant-name-#{p["id"]}"} value={p["name"]} />
+          <% end %>
         <% end %>
       </div>
       <div class="col-span-2 self-center">

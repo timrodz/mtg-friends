@@ -67,6 +67,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
       :noreply,
       socket
       |> UserAuth.assign_current_user_owner(current_user, tournament)
+      |> UserAuth.assign_current_user_admin(socket.assigns.current_user)
       |> assign(:has_winner?, not is_nil(winner))
       |> assign(:page_title, page_title(live_action, tournament.name))
       |> assign(:tournament, tournament)
