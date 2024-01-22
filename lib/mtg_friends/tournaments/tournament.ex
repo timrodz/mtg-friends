@@ -7,7 +7,7 @@ defmodule MtgFriends.Tournaments.Tournament do
   schema "tournaments" do
     field :name, :string
     field :location, :string
-    field :date, :date
+    field :date, :naive_datetime
     field :description_raw, :string
     field :description_html, :string
     field :round_length_minutes, :integer, default: 60

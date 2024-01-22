@@ -1,11 +1,11 @@
 <.header>
-  Tournament: <%= @tournament.name %>
+  <%= @tournament.name %>
   <:subtitle>
     <b>Status</b>: <%= Utils.render_tournament_status(@tournament.status) %>
   </:subtitle>
   <:actions :if={@current_user_owner}>
     <.link patch={~p"/tournaments/#{@tournament}/show/edit"} phx-click={JS.push_focus()}>
-      <.button_secondary>Edit tournament</.button_secondary>
+      <.button_secondary>Edit</.button_secondary>
     </.link>
   </:actions>
 </.header>
@@ -13,29 +13,21 @@
 <.back navigate={~p"/tournaments"}>Back to tournaments</.back>
 
 <.list>
-  <:item title="Date"><%= @tournament.date %></:item>
-  <:item title="Location"><%= @tournament.location %></:item>
+  <:item title="When"><%= NaiveDateTime.to_string(@tournament.date) %></:item>
+  <:item title="Where"><%= @tournament.location %></:item>
   <:item :if={@tournament.format} title="Format">
-    <%= Utils.render_format(@tournament.format) %>
-  </:item>
-  <:item :if={@tournament.subformat} title="Subformat">
     <.tooltip content={Utils.render_subformat_description(@tournament.subformat)} variant="arrow">
-      <%= Utils.render_subformat(@tournament.subformat) %>
+      <%= Utils.render_format(@tournament.format) %> — <%= Utils.render_subformat(
+        @tournament.subformat
+      ) %>
     </.tooltip>
   </:item>
-  <:item :if={not is_nil(@tournament.is_top_cut_4)} title="Top Cut 4">
-    <.tooltip
-      content="If enabled, the tournament will enable a final round of the top 4 participants (by overall score)"
-      variant="arrow"
-    >
-      <%= (@tournament.is_top_cut_4 && "Enabled") || "Disabled" %>
-    </.tooltip>
-  </:item>
-  <:item title="Rounds">
-    <p><%= @tournament.round_count %> rounds</p>
-  </:item>
-  <:item title="Round length">
-    <p><%= @tournament.round_length_minutes %> minutes</p>
+  <:item title="Round system">
+    <p>
+      <%= @tournament.round_count %> rounds (<%= @tournament.round_length_minutes %> minutes each) <%= (@tournament.is_top_cut_4 &&
+                                                                                                          "with top cut 4") ||
+        "" %>
+    </p>
   </:item>
   <:item :if={@tournament.description_html} title="Description">
     <%= raw(@tournament.description_html) %>

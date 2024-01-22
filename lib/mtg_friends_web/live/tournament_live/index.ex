@@ -21,7 +21,7 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
-    |> assign(:page_title, "Edit Tournament")
+    |> assign(:page_title, "Edit")
     |> assign(:tournament, Tournaments.get_tournament!(id))
   end
 

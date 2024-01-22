@@ -21,7 +21,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
       >
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:location]} type="text" label="Location" />
-        <.input field={@form[:date]} type="date" label="Date" />
+        <.input field={@form[:date]} type="datetime-local" label="Date" />
         <.input
           :if={@action == :edit}
           field={@form[:status]}
@@ -89,8 +89,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
   @impl true
   def update(%{tournament: tournament} = assigns, socket) do
     changeset =
-      Tournaments.change_tournament(tournament, %{date: Date.utc_today()})
-      |> IO.inspect(label: "changeset")
+      Tournaments.change_tournament(tournament, %{date: NaiveDateTime.local_now()})
 
     {:ok,
      socket
@@ -103,6 +102,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
 
   @impl true
   def handle_event("validate", %{"tournament" => tournament_params}, socket) do
+    tournament_params |> IO.inspect(label: "validate")
+
     selected_format =
       case tournament_params["format"] do
         # No format found in the form's params, that means the taournament already exists

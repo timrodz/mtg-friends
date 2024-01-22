@@ -50,7 +50,7 @@ defmodule MtgFriendsWeb.TournamentLiveTest do
       {:ok, index_live, _html} = live(conn, ~p"/tournaments")
 
       assert index_live |> element("#tournaments-#{tournament.id} a", "Edit") |> render_click() =~
-               "Edit Tournament"
+               "Edit"
 
       assert_patch(index_live, ~p"/tournaments/#{tournament}/edit")
 
@@ -91,7 +91,7 @@ defmodule MtgFriendsWeb.TournamentLiveTest do
       {:ok, show_live, _html} = live(conn, ~p"/tournaments/#{tournament}")
 
       assert show_live |> element("a", "Edit") |> render_click() =~
-               "Edit Tournament"
+               "Edit"
 
       assert_patch(show_live, ~p"/tournaments/#{tournament}/show/edit")
 

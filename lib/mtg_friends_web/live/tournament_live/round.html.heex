@@ -1,5 +1,5 @@
 <.header>
-  Tournament: <%= @tournament_name %> / Round #<%= @round_number + 1 %>
+  <%= @tournament_name %> / Round #<%= @round_number + 1 %>
   <:subtitle>
     <b>Round Status</b>: <%= (@is_round_active && "In progress 🔹") ||
       "Finished 🔸" %>

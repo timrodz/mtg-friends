@@ -93,9 +93,9 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     }
   end
 
-  defp page_title(:show, tournament_name), do: "Tournament #{tournament_name}"
-  defp page_title(:edit, tournament_name), do: "Edit Tournament #{tournament_name}"
-  defp page_title(:end, tournament_name), do: "Finish Tournament #{tournament_name}"
+  defp page_title(:show, tournament_name), do: "#{tournament_name}"
+  defp page_title(:edit, tournament_name), do: "Edit #{tournament_name}"
+  defp page_title(:end, tournament_name), do: "Finish #{tournament_name}"
 
   @impl true
   def handle_event("create-round", _, socket) do
