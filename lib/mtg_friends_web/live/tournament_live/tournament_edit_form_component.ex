@@ -92,7 +92,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
       Tournaments.change_tournament(
         tournament,
         case tournament.date do
-          nil -> %{date: NaiveDateTime.now()}
+          nil -> %{date: NaiveDateTime.local_now()}
           _ -> %{}
         end
       )
