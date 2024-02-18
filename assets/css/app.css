@@ -57,5 +57,5 @@ a {
 }
 
 div#round_countdown_timer {
-  @apply p-2 text-3xl mt-10 text-left md:text-center;
+  @apply p-2 text-3xl my-4 text-left md:text-center;
 }
