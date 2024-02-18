@@ -58,7 +58,6 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEndFormComponent do
 
     participant =
       tournament.participants
-      |> IO.inspect(label: "participants")
       |> Enum.find(fn p -> p.id == participant_id end)
 
     with {:ok, _} <-

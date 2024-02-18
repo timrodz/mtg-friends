@@ -20,7 +20,7 @@
 >
   <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
   <:col :let={{_id, tournament}} label="Location"><%= tournament.location %></:col>
-  <:col :let={{_id, tournament}} label="Date"><%= tournament.date %></:col>
+  <:col :let={{_id, tournament}} label="Date"><%= NaiveDateTime.to_string(tournament.date) %></:col>
   <:col :let={{_id, tournament}} label="Status">
     <%= Utils.render_tournament_status(tournament.status) %>
   </:col>

@@ -75,7 +75,9 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
       |> assign(
         :is_current_round_active?,
         with len <- length(tournament.rounds), true <- len > 0 do
-          Map.get(Enum.at(tournament.rounds, len - 1), :active, false)
+          round = Enum.at(tournament.rounds, len - 1)
+          status = Map.get(round, :status)
+          status != :finished
         else
           _ -> false
         end

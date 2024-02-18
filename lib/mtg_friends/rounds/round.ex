@@ -3,8 +3,9 @@ defmodule MtgFriends.Rounds.Round do
   import Ecto.Changeset
 
   schema "rounds" do
-    field :active, :boolean
+    field :status, Ecto.Enum, values: [:inactive, :active, :finished], default: :inactive
     field :number, :integer
+    field :started_at, :naive_datetime
 
     belongs_to :tournament, MtgFriends.Tournaments.Tournament
 
@@ -16,7 +17,7 @@ defmodule MtgFriends.Rounds.Round do
   @doc false
   def changeset(round, attrs) do
     round
-    |> cast(attrs, [:active, :number, :tournament_id])
-    |> validate_required([:active, :number, :tournament_id])
+    |> cast(attrs, [:status, :number, :tournament_id, :started_at])
+    |> validate_required([:status, :number, :tournament_id])
   end
 end

@@ -175,7 +175,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
             {:noreply,
              socket
              |> put_flash(:info, "Tournament created successfully")
-             |> push_patch(to: socket.assigns.patch)}
+             |> push_navigate(to: "/tournaments/#{tournament.id}")}
 
           _ ->
             {:noreply, socket}
@@ -190,7 +190,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
     case to_string(subformat) do
       "edh" ->
         [
-          {"Bubble Rounds (Pods are determined by last round standings)", :bubble_rounds}
+          {"Bubble Rounds (Pods are determined by last round standings)", :bubble_rounds},
+          {"Swiss Rounds", :swiss}
         ]
 
       "single" ->

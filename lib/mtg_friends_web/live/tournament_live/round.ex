@@ -1,6 +1,7 @@
 defmodule MtgFriendsWeb.TournamentLive.Round do
   use MtgFriendsWeb, :live_view
 
+  alias MtgFriendsWeb.Live.TournamentLive.Utils
   alias MtgFriendsWeb.UserAuth
   alias MtgFriends.Rounds
 
@@ -73,7 +74,10 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
       end)
 
     round_finish_time =
-      NaiveDateTime.add(round.inserted_at, round.tournament.round_length_minutes, :minute)
+      case round.started_at do
+        nil -> nil
+        _ -> NaiveDateTime.add(round.started_at, round.tournament.round_length_minutes, :minute)
+      end
 
     with timer_reference <- Map.get(socket.assigns, :timer_reference),
          false <- is_nil(timer_reference) do
@@ -84,16 +88,16 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
     socket
     |> assign(
       timer_reference:
-        if(round.active and connected?(socket),
+        if(round.status == :active and connected?(socket),
           do: :timer.send_interval(1000, self(), :tick),
           else: nil
         ),
       round_id: round.id,
+      round_started_at: round.started_at,
       round_number: round.number,
-      is_round_active: round.active,
+      round_status: round.status,
       round_finish_time: round_finish_time,
       round_countdown_timer: render_countdown_timer(round_finish_time),
-      has_pairings?: length(round.pairings) > 0,
       tournament_id: round.tournament.id,
       tournament_name: round.tournament.name,
       tournament_rounds: round.tournament.rounds,
@@ -124,25 +128,65 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
      )}
   end
 
+  @impl true
+  def handle_event("start-round", _, socket) do
+    %{round_id: round_id} = socket.assigns
+    round = Rounds.get_round!(round_id)
+    Rounds.update_round(round, %{status: :active, started_at: NaiveDateTime.utc_now()})
+
+    {:noreply,
+     socket
+     |> put_flash(:info, "This round has now begun!")
+     |> reload_page}
+  end
+
+  @impl true
+  def handle_event("finish-round", _, socket) do
+    %{round_id: round_id} = socket.assigns
+    round = Rounds.get_round!(round_id)
+    Rounds.update_round(round, %{status: :finished})
+
+    {:noreply,
+     socket
+     |> put_flash(:info, "This round has now begun!")
+     |> reload_page}
+  end
+
   defp render_countdown_timer(round_end_time) do
-    time_diff = NaiveDateTime.diff(round_end_time, NaiveDateTime.utc_now())
+    case round_end_time do
+      nil ->
+        ""
 
-    {diff_seconds, rendered_time} =
-      if time_diff > 0,
-        do: {time_diff, Seconds.to_hh_mm_ss(time_diff)},
-        else: {0, "00:00"}
+      _ ->
+        time_diff = NaiveDateTime.diff(round_end_time, NaiveDateTime.utc_now())
 
-    raw("""
-    <div id="round_countdown_timer" class="#{cond do
-      diff_seconds > 60 * 5 and diff_seconds <= 60 * 10 -> "rounded-lg bg-yellow-200"
-      diff_seconds >= 60 and diff_seconds <= 60 * 5 -> "rounded-lg bg-orange-200"
-      diff_seconds > 0 and diff_seconds < 60 -> "animate-bounce rounded-lg bg-red-200"
-      diff_seconds <= 0 -> "rounded-lg bg-red-200"
-      true -> ""
-    end}"
-    >
-      Round time: <span class="font-mono">#{rendered_time}</span>
-    </div>
-    """)
+        {diff_seconds, rendered_time} =
+          if time_diff > 0,
+            do: {time_diff, Seconds.to_hh_mm_ss(time_diff)},
+            else: {0, "00:00"}
+
+        raw("""
+        <div id="round_countdown_timer" class="#{cond do
+          diff_seconds > 60 * 5 and diff_seconds <= 60 * 10 -> "rounded-lg bg-yellow-200"
+          diff_seconds >= 60 and diff_seconds <= 60 * 5 -> "rounded-lg bg-orange-200"
+          diff_seconds > 0 and diff_seconds < 60 -> "animate-bounce rounded-lg bg-red-200"
+          diff_seconds <= 0 -> "rounded-lg bg-red-200"
+          true -> ""
+        end}"
+        >
+          Round time: <span class="font-mono">#{rendered_time}</span>
+        </div>
+        """)
+    end
+  end
+
+  defp reload_page(socket) do
+    %{tournament_id: tournament_id, round_number: round_number} = socket.assigns
+
+    socket
+    |> push_navigate(
+      to: ~p"/tournaments/#{tournament_id}/rounds/#{round_number + 1}",
+      replace: true
+    )
   end
 end

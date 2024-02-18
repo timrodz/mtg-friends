@@ -74,7 +74,7 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
 
     case all_pairings_done? do
       true ->
-        Rounds.update_round(round, %{active: false})
+        Rounds.update_round(round, %{status: :finished})
         # Last round of the tournament - finish it
         case tournament.round_count == round.number + 1 do
           true ->

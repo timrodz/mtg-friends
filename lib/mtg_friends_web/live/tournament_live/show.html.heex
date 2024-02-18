@@ -148,7 +148,7 @@
       <span class="text-zinc-600 font-mono font-medium text-sm">#<%= round.number + 1 %></span>
     </:col>
     <:col :let={round} label="Status">
-      <%= (round.active && "In progress 🔹") || "Finished 🔸" %>
+      <%= Utils.render_round_status(round.status) %>
     </:col>
     <:action :let={round} :if={@current_user_owner}>
       <.link
@@ -185,22 +185,32 @@
       <div class="flex gap-2 flex-col md:flex-row">
         <.button
           phx-click="create-round"
-          phx-disable-with="Starting..."
+          phx-disable-with="Creating..."
           disabled={
             not @all_participants_have_names? or @is_current_round_active? or
               not @has_enough_participants?
           }
         >
           <%= if length(@rounds) == 0 do %>
-            <.icon name="hero-rocket-launch-solid" class="mr-1 w-5 h-5" /> Begin tournament
+            <.icon name="hero-rocket-launch-solid" class="mr-1 w-5 h-5" />
+            Begin tournament (1st round)
           <% else %>
             <.icon name="hero-plus" class="mr-1 w-5 h-5" />
-            Start <%= (@tournament.round_count == length(@rounds) + 1 && "last") || "new" %> round
+            Begin <%= (@tournament.round_count == length(@rounds) + 1 && "last") || "new" %> round
           <% end %>
         </.button>
       </div>
     </div>
   <% end %>
+  <div :if={@current_user_owner} class="mt-4 p-2 bg-emerald-100 flex flex-col space-y-2">
+    <p>
+      Note to organizers: This app lets you organize tournaments <b>YOUR WAY</b>, so you can assign round points however you want.
+    </p>
+    <p>
+      If you want the round to end when a player wins, and "winners get 4 points, draws give 1 point to each player, and losers get 0 points", go for it. The same goes if you want to host tournaments where players get points based on their round standings (1st place: 4 points; 2nd place: 3 points; 3rd place: 2 points; 4th place: 1 point).
+    </p>
+    <p>The sky is the limit!</p>
+  </div>
 </div>
 
 <.modal

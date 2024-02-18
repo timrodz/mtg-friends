@@ -110,7 +110,18 @@ defmodule MtgFriends.Pairings do
         }
       end)
 
-    highest_score = participant_scores |> Enum.max_by(fn s -> s["points"] end)
+    highest_score_pairing =
+      participant_scores
+      |> Enum.max_by(& &1["points"])
+
+    # If this check passes, that means there are more than 1 pairings with the "highest scores", representing a draw
+    highest_score =
+      with score_groups <- participant_scores |> Enum.group_by(& &1["points"]),
+           true <- length(score_groups[highest_score_pairing["points"]]) > 1 do
+        nil
+      else
+        _ -> highest_score_pairing
+      end
 
     multi =
       Enum.reduce(participant_scores, Ecto.Multi.new(), fn %{"id" => participant_id} =

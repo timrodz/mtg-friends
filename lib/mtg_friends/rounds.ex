@@ -76,7 +76,6 @@ defmodule MtgFriends.Rounds do
     %Round{}
     |> Round.changeset(%{
       tournament_id: tournament_id,
-      active: true,
       number: tournament_rounds
     })
     |> Repo.insert()

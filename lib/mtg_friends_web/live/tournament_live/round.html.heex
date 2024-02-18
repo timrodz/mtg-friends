@@ -1,18 +1,35 @@
 <.header>
   <%= @tournament_name %> / Round #<%= @round_number + 1 %>
   <:subtitle>
-    <b>Round Status</b>: <%= (@is_round_active && "In progress 🔹") ||
-      "Finished 🔸" %>
+    <b>Round Status</b>: <%= Utils.render_round_status(@round_status) %>
   </:subtitle>
 </.header>
 
 <.back navigate={~p"/tournaments/#{@tournament_id}"}>Back to tournament</.back>
 
-<%= if @is_round_active do %>
-  <%= @round_countdown_timer %>
-<% end %>
-
-<div :if={@has_pairings?} id="pods" class="my-8">
+<div id="pods" class="mt-4">
+  <div :if={@current_user_owner} class="p-2 bg-emerald-100 flex flex-col space-y-3">
+    <p>
+      Note to organizers: This app lets you organize tournaments <b>YOUR WAY</b>, so you can assign round points however you want.
+    </p>
+    <p>
+      If you want the round to end when a player wins, and "winners get 4 points, draws give 1 point to each player, and losers get 0 points", go. The same goes if you want to host tournaments where players get points based on their round standings (1st place: 4 points; 2nd place: 3 points; 3rd place: 2 points; 4th place: 1 point).
+    </p>
+    <p>The sky is the limit!</p>
+  </div>
+  <%= if @round_status == :active do %>
+    <%= @round_countdown_timer %>
+  <% end %>
+  <%= if @current_user_owner and @round_status == :inactive do %>
+    <div class="mt-4">
+      <p class="mb-2">
+        This round's pods have been generated! Let players know who they'll be playing against. When all players are ready, press the button below to start the timer.
+      </p>
+      <.button phx-click="start-round" phx-disable-with="Starting...">
+        <.icon name="hero-rocket-launch-solid" class="mr-1 h-5 w-5" />Start round
+      </.button>
+    </div>
+  <% end %>
   <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
     <div
       :for={{pairing_number, pairing_group} <- @pairing_groups}
@@ -42,7 +59,7 @@
         </div>
       </div>
       <.link
-        :if={@current_user_owner}
+        :if={@current_user_owner && @round_status != :inactive}
         patch={
           ~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}/pairing/#{pairing_number + 1}/edit"
         }
@@ -81,6 +98,6 @@
   </.modal>
 </div>
 
-<.warning :if={not @is_round_active && @current_user_owner} class="text-xs">
+<.warning :if={@round_status == :finished && @current_user_owner} class="text-xs">
   (ALPHA TEST NOTE) You can still edit pod results even if the round has finished
 </.warning>
