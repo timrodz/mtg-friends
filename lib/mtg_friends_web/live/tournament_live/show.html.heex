@@ -98,7 +98,7 @@
         <% end %>
       </div>
       <div
-        :if={@current_user_owner and length(@rounds) == 0}
+        :if={@current_user_owner or @current_user_admin}
         class="hidden col-span-0 md:col-span-1 md:flex md:justify-center md:items-center"
       >
         <.link
