@@ -1,20 +1,13 @@
+main#landing-page {
+  @apply bg-indigo-800 w-screen min-h-screen max-w-[100vw] !text-white;
+}
+
 #landing-page {
-  h1,
-  h2,
-  h3 {
-    @apply text-white;
+  h1 {
+    @apply text-white text-3xl lg:text-5xl inline text-center bg-indigo-600 rounded-md px-4 py-3;
   }
-
-  a {
-    @apply rounded-md px-3 py-2;
-  }
-
-  .item-grid .item-grid-contents * {
-    @apply text-indigo-900;
-  }
-
-  .item-grid .item-grid-contents .item {
-    @apply hover:bg-indigo-50;
+  h2 {
+    @apply text-3xl text-white;
   }
 
   a.cta {
@@ -23,5 +16,57 @@
 
   a.cta-subtle {
     @apply bg-indigo-700 hover:bg-indigo-600;
+  }
+  section {
+    @apply my-20;
+  }
+
+  #hero {
+    h3 {
+      @apply text-2xl;
+    }
+
+    a {
+      @apply rounded-md px-3 py-2;
+    }
+  }
+
+  #tournaments {
+    h3 {
+      @apply text-white;
+    }
+    .item-grid .item-grid-contents * {
+      @apply text-indigo-900;
+    }
+
+    .item-grid .item-grid-contents .item {
+      @apply hover:bg-indigo-50;
+    }
+  }
+
+  #faq {
+    #faq-contents {
+      @apply text-black;
+
+      .paper {
+        @apply px-6 py-6;
+      }
+
+      ul {
+        @apply list-disc list-inside;
+
+        li {
+          @apply ml-2;
+        }
+      }
+    }
+  }
+}
+
+footer {
+  @apply bg-indigo-800 text-white text-sm;
+
+  a {
+    @apply p-0;
   }
 }
