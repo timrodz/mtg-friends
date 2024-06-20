@@ -1,0 +1,27 @@
+#landing-page {
+  h1,
+  h2,
+  h3 {
+    @apply text-white;
+  }
+
+  a {
+    @apply rounded-md px-3 py-2;
+  }
+
+  .item-grid .item-grid-contents * {
+    @apply text-indigo-900;
+  }
+
+  .item-grid .item-grid-contents .item {
+    @apply hover:bg-indigo-50;
+  }
+
+  a.cta {
+    @apply bg-indigo-50 text-indigo-900 hover:bg-indigo-100;
+  }
+
+  a.cta-subtle {
+    @apply bg-indigo-700 hover:bg-indigo-600;
+  }
+}

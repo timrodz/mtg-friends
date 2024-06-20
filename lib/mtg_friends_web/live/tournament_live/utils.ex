@@ -10,6 +10,14 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
 
   def render_tournament_status(status) do
     case status do
+      :inactive -> "Open"
+      :active -> "In progress"
+      :finished -> "Finished"
+    end
+  end
+
+  def render_tournament_status_extra(status) do
+    case status do
       :inactive -> "Open 🟢"
       :active -> "In progress 🔵"
       :finished -> "Finished 🔴"
@@ -77,7 +85,8 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
   end
 
   def create_pairings(tournament, round) do
-    num_pairings = get_num_pairings(length(tournament.participants))
+    active_participants = Enum.filter(tournament.participants, fn p -> not p.is_dropped end)
+    num_pairings = get_num_pairings(length(active_participants))
     is_last_round? = tournament.round_count == round.number + 1
     is_top_cut_4? = is_last_round? && tournament.is_top_cut_4
 
@@ -99,7 +108,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
           # First round: Simply shuffle participants
           0 ->
             partition_participants_into_pairings(
-              tournament.participants |> Enum.shuffle(),
+              active_participants |> Enum.shuffle(),
               num_pairings
             )
 

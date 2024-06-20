@@ -8,10 +8,20 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
   on_mount {MtgFriendsWeb.UserAuth, :mount_current_user}
 
   @impl true
-  def mount(_params, _session, socket) do
+  def mount(params, _session, socket) do
+    page_str = params |> Map.get("page", "1")
+    {page, ""} = Integer.parse(page_str)
+    limit = 6
+    offset = limit * (page - 1)
+    tournaments = Tournaments.list_tournaments_paginated(limit, page)
+    count = Tournaments.get_tournament_count()
+    has_next_page? = count > limit * page
+    has_previous_page? = offset > 0
+
     {:ok,
      socket
-     |> stream(:tournaments, Tournaments.list_tournaments())}
+     |> assign(:tournaments, tournaments)
+     |> assign(page: page, has_next_page?: has_next_page?, has_previous_page?: has_previous_page?)}
   end
 
   @impl true

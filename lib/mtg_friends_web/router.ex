@@ -39,7 +39,7 @@ defmodule MtgFriendsWeb.Router do
   scope "/", MtgFriendsWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    get "/", PageController, :index
 
     live "/tournaments", TournamentLive.Index, :index
     live "/tournaments/:id", TournamentLive.Show, :show

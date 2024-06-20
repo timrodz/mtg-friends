@@ -11,7 +11,9 @@ defmodule MtgFriends.RoundsFixtures do
     {:ok, round} =
       attrs
       |> Enum.into(%{
-
+        status: :inactive,
+        number: 0,
+        started_at: NaiveDateTime.utc_now()
       })
       |> MtgFriends.Rounds.create_round()
 

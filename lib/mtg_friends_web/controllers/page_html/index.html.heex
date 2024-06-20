@@ -1,0 +1,29 @@
+<.flash_group flash={@flash} />
+<main id="landing-page" class="bg-indigo-800 !w-screen !h-screen !max-w-[100vw] !text-white">
+  <div class="max-w-screen-md mx-auto p-10">
+    <div class="flex justify-center items-center">
+      <h1 class="inline text-center !text-3xl lg:!text-5xl bg-indigo-600 rounded-md px-4 py-3">
+        <span>⚔</span> Tie Breaker
+      </h1>
+    </div>
+    <div id="actions" class="mt-10 flex gap-3 justify-center">
+      <.link class="cta" navigate={~p"/users/log_in"}>Host a tournament</.link>
+      <.link class="cta" navigate={~p"/users/log_in"}>How does it work?</.link>
+    </div>
+    <section id="tournaments">
+      <.item_grid
+        id="users"
+        rows={@latest_tournaments}
+        title="Latest tournaments"
+        class="lg:!gap-10"
+      >
+        <:item :let={t}>
+          <h3><%= t.name %></h3>
+          <.date dt={t.date} />
+          <h4><.icon name="hero-map-pin-solid" /> <%= t.location %></h4>
+        </:item>
+      </.item_grid>
+      <.link navigate={~p"/tournaments"} class="cta-subtle">See all tournaments</.link>
+    </section>
+  </div>
+</main>

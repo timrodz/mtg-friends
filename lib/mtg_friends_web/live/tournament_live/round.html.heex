@@ -26,7 +26,7 @@
         This round's pods have been generated! Let players know who they'll be playing against. When all players are ready, press the button below to start the timer.
       </p>
       <.button phx-click="start-round" phx-disable-with="Starting...">
-        <.icon name="hero-rocket-launch-solid" class="mr-1 h-5 w-5" />Start round
+        <.icon name="hero-rocket-launch-solid" class="mr-1" />Start round
       </.button>
     </div>
   <% end %>
@@ -51,7 +51,7 @@
         >
           <p class="flex gap-1 items-center">
             <%= pairing.participant.name %>
-            <.icon :if={pairing.winner} name="hero-trophy" class="h-5 w-5" />
+            <.icon :if={pairing.winner} name="hero-trophy" />
           </p>
           <p>
             Points: <%= pairing.points %>

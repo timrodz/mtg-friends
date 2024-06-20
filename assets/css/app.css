@@ -1,6 +1,7 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+@import "./landing.css";
 
 /* This file is for your main application CSS */
 body {
@@ -49,13 +50,25 @@ h3 {
 }
 
 a {
-  @apply font-medium hover:underline;
+  @apply font-medium hover:underline px-3 py-2 rounded-md;
 }
 
 #description a {
   @apply mx-1 font-semibold;
 }
 
-div#round_countdown_timer {
+.round_countdown_timer {
   @apply p-2 text-3xl my-4 text-left md:text-center;
+}
+
+a.cta {
+  @apply bg-indigo-600 text-white hover:bg-indigo-700;
+}
+
+a.cta-subtle {
+  @apply bg-indigo-50 hover:bg-indigo-100;
+}
+
+.icon-text {
+  @apply flex items-center gap-1;
 }

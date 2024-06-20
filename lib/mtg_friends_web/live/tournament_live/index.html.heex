@@ -2,25 +2,55 @@
   Listing Tournaments
   <:actions>
     <%= if @current_user do %>
-      <.link patch={~p"/tournaments/new"}>
-        <.button>New Tournament</.button>
+      <.link class="cta" patch={~p"/tournaments/new"}>
+        New Tournament
       </.link>
-    <% else %>
-      <.tooltip content="To create a tournament, you must register/log in" variant="arrow">
-        <.button disabled>New Tournament</.button>
-      </.tooltip>
     <% end %>
   </:actions>
 </.header>
 
-<.table
+<.item_grid
+  id="users"
+  rows={@tournaments}
+  title="Latest tournaments"
+  row_click={fn tournament -> JS.navigate(~p"/tournaments/#{tournament}") end}
+  class="min-h-[500px]"
+>
+  <:item :let={t} class="p-4">
+    <h3 class="font-semibold"><%= t.name %></h3>
+    <.date dt={t.date} />
+    <h4 :if={t.location} class="icon-text">
+      <.icon name="hero-map-pin-solid" /> <%= t.location %>
+    </h4>
+    <p class="icon-text">
+      <.icon name="hero-question-mark-circle" /> <%= Utils.render_tournament_status(t.status) %>
+    </p>
+  </:item>
+</.item_grid>
+
+<div id="pagination" class="flex items-center gap-1">
+  <.link
+    :if={@has_previous_page?}
+    class="cta-subtle"
+    navigate={~p"/tournaments?page=#{@page - 1}"}
+  >
+    ← Previous page
+  </.link>
+  <.link :if={@has_next_page?} class="cta-subtle" navigate={~p"/tournaments?page=#{@page + 1}"}>
+    Next page →
+  </.link>
+</div>
+
+<%!-- <.table
   id="tournaments"
   rows={@streams.tournaments}
   row_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end}
 >
   <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
   <:col :let={{_id, tournament}} label="Location"><%= tournament.location %></:col>
-  <:col :let={{_id, tournament}} label="Date"><%= NaiveDateTime.to_string(tournament.date) %></:col>
+  <:col :let={{_id, tournament}} label="Date">
+    <%= NaiveDateTime.to_string(tournament.date) %>
+  </:col>
   <:col :let={{_id, tournament}} label="Status">
     <%= Utils.render_tournament_status(tournament.status) %>
   </:col>
@@ -42,7 +72,7 @@
       </.link>
     <% end %>
   </:action>
-</.table>
+</.table> --%>
 
 <.modal
   :if={@live_action in [:new, :edit]}

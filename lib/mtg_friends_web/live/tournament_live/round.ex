@@ -166,7 +166,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
             else: {0, "00:00"}
 
         raw("""
-        <div id="round_countdown_timer" class="#{cond do
+        <div class="round_countdown_timer" class="#{cond do
           diff_seconds > 60 * 5 and diff_seconds <= 60 * 10 -> "rounded-lg bg-yellow-200"
           diff_seconds >= 60 and diff_seconds <= 60 * 5 -> "rounded-lg bg-orange-200"
           diff_seconds > 0 and diff_seconds < 60 -> "animate-bounce rounded-lg bg-red-200"

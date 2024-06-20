@@ -75,7 +75,7 @@ defmodule MtgFriendsWeb.CoreComponents do
                   class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
                   aria-label={gettext("close")}
                 >
-                  <.icon name="hero-x-mark-solid" class="h-5 w-5" />
+                  <.icon name="hero-x-mark-solid" />
                 </button>
               </div>
               <div id={"#{@id}-content"}>
@@ -126,7 +126,7 @@ defmodule MtgFriendsWeb.CoreComponents do
       </p>
       <p class="mt-2 text-sm leading-5"><%= msg %></p>
       <button type="button" class="group absolute top-1 right-1 p-2" aria-label={gettext("close")}>
-        <.icon name="hero-x-mark-solid" class="h-5 w-5 opacity-40 group-hover:opacity-70" />
+        <.icon name="hero-x-mark-solid" class="opacity-40 group-hover:opacity-70" />
       </button>
     </div>
     """
@@ -417,7 +417,7 @@ defmodule MtgFriendsWeb.CoreComponents do
   def error(assigns) do
     ~H"""
     <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600 phx-no-feedback:hidden">
-      <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
+      <.icon name="hero-exclamation-circle-mini" class="mt-0.5 flex-none" />
       <%= render_slot(@inner_block) %>
     </p>
     """
@@ -435,7 +435,7 @@ defmodule MtgFriendsWeb.CoreComponents do
       "mt-3 flex gap-3 text-sm leading-6 rounded-md p-2 font-medium bg-yellow-200 phx-no-feedback:hidden",
       @class
     ]}>
-      <.icon name="hero-exclamation-triangle" class="mt-0.5 h-5 w-5 flex-none" />
+      <.icon name="hero-exclamation-triangle" class="mt-0.5 flex-none" />
       <%= render_slot(@inner_block) %>
     </p>
     """
@@ -619,7 +619,7 @@ defmodule MtgFriendsWeb.CoreComponents do
 
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
-    <span class={[@name, @class]} />
+    <span class={[@name, "w-5 h-5", @class]} />
     """
   end
 

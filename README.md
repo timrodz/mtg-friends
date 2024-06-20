@@ -17,3 +17,9 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 - Docs: https://hexdocs.pm/phoenix
 - Forum: https://elixirforum.com/c/phoenix-forum
 - Source: https://github.com/phoenixframework/phoenix
+
+```elixir
+mix phx.gen.live BankAccounts BankAccount bank_accounts identifier description currency user_id:references:users
+mix phx.gen.live BankStatements Statement bank_statements filename status source_headers header_account_number header_description header_date header_credit header_debit header_balance bank_account_id:references:bank_accounts
+mix phx.gen.live BankStatements.Entry StatementEntry bank_statement_entries date:date description debit:float credit:float balance:float bank_statement_id:references:bank_statements
+```

@@ -38,9 +38,9 @@
   <h2 class="font-bold">Participants & Standings</h2>
   <div
     id="participant-header"
-    class="mb-4 mt-10 md:mt-4 grid grid-cols-7 md:grid-cols-8 text-sm md:text-md text-zinc-500"
+    class="mb-4 mt-10 md:mt-4 grid grid-cols-7 md:grid-cols-9 text-sm md:text-md text-zinc-500"
   >
-    <p class="col-span-1"><.icon name="hero-trophy" class="h-5 w-5" /></p>
+    <p class="col-span-1"><.icon name="hero-trophy" /></p>
     <p class="col-span-2">Name</p>
     <p class="col-span-2">Points / Winrate</p>
     <p class="col-span-2">Commander / Decklist</p>
@@ -52,9 +52,10 @@
       :for={{p, index} <- Enum.with_index(@participant_forms.params["participants"])}
       id={"data-#{p["id"]}"}
       class={[
-        "grid grid-cols-7 md:grid-cols-8 text-sm md:text-md px-1",
+        "grid grid-cols-7 md:grid-cols-9 text-sm md:text-md px-1",
         @tournament.status == :finished && index == 0 &&
-          "py-1 bg-green-200 border rounded-lg border-green-200"
+          "py-1 bg-green-200 border rounded-lg border-green-200",
+        p["is_dropped"] && "bg-red-200"
       ]}
     >
       <input type="hidden" name={"participant-id-#{p["id"]}"} value={p["id"]} />
@@ -112,18 +113,33 @@
           Delete
         </.link>
       </div>
+      <div
+        :if={not p["is_dropped"] and (@current_user_owner or @current_user_admin)}
+        class="hidden col-span-0 md:col-span-1 md:flex md:justify-center md:items-center"
+      >
+        <.link
+          phx-click={
+            JS.push("drop-participant", value: %{id: p["id"]})
+            |> hide("##{p["id"]}")
+          }
+          data-confirm={"Are you sure? You're about to drop #{p["name"]}"}
+          class="text-zinc-400 font-medium"
+        >
+          Drop
+        </.link>
+      </div>
     </div>
     <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
       <.button
         phx-disable-with="Saving..."
         data-confirm="Are you sure? You won't be able to edit names afterwards (this is a test feature to prevent cheating)"
       >
-        <.icon name="hero-table-cells-solid" class="mr-1 w-5 h-5" /> Save changes
+        <.icon name="hero-table-cells-solid" class="mr-1" /> Save changes
       </.button>
     </:actions>
     <:actions :if={@current_user_owner and length(@rounds) == 0}>
       <.button phx-click="create-participant" phx-disable-with="Creating...">
-        <.icon name="hero-plus" class="mr-1 w-5 h-5" /> Add participant
+        <.icon name="hero-plus" class="mr-1" /> Add participant
       </.button>
     </:actions>
   </.simple_form>
@@ -192,10 +208,9 @@
           }
         >
           <%= if length(@rounds) == 0 do %>
-            <.icon name="hero-rocket-launch-solid" class="mr-1 w-5 h-5" />
-            Begin tournament (1st round)
+            <.icon name="hero-rocket-launch-solid" class="mr-1" /> Begin tournament (1st round)
           <% else %>
-            <.icon name="hero-plus" class="mr-1 w-5 h-5" />
+            <.icon name="hero-plus" class="mr-1" />
             Begin <%= (@tournament.round_count == length(@rounds) + 1 && "last") || "new" %> round
           <% end %>
         </.button>

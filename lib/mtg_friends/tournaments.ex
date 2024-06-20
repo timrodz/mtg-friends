@@ -10,6 +10,10 @@ defmodule MtgFriends.Tournaments do
   alias MtgFriends.Rounds.Round
   alias MtgFriends.Participants.Participant
 
+  def get_most_recent_tournaments(limit) do
+    from(t in Tournament, order_by: [desc: :date], limit: ^limit) |> Repo.all()
+  end
+
   @doc """
   Returns the list of tournaments.
 
@@ -30,6 +34,43 @@ defmodule MtgFriends.Tournaments do
       _ ->
         Repo.all(Tournament, order_by: [desc: :date])
     end
+  end
+
+  def list_tournaments_paginated(limit \\ 6, page \\ 1, params \\ {}) do
+    offset = limit * (page - 1)
+    IO.puts("Listing tournaments for range #{offset - limit} to #{offset}")
+
+    case params do
+      "filter-inactive" ->
+        from(t in Tournament,
+          where: t.status in [:inactive, :finished],
+          offset: ^limit * ^page,
+          limit: ^limit
+        )
+        |> Repo.all()
+
+      "filter-active" ->
+        from(t in Tournament,
+          where: t.status == :active,
+          select: t,
+          offset: ^limit * ^page,
+          limit: ^limit
+        )
+        |> Repo.all()
+
+      _ ->
+        from(t in Tournament,
+          select: t,
+          order_by: [desc: :date],
+          limit: ^limit,
+          offset: ^offset
+        )
+        |> Repo.all()
+    end
+  end
+
+  def get_tournament_count() do
+    Repo.aggregate(Tournament, :count, :id)
   end
 
   def list_tournaments_admin() do

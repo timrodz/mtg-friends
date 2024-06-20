@@ -50,6 +50,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
               "name" => participant.name,
               "decklist" => participant.decklist,
               "is_tournament_winner" => participant.is_tournament_winner,
+              "is_dropped" => participant.is_dropped,
               "scores" => Map.get(participant_score_lookup, participant.id, nil)
             }
           end)
@@ -178,6 +179,15 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   def handle_event("delete-participant", %{"id" => id}, socket) do
     participant = Participants.get_participant!(id)
     {:ok, _} = Participants.delete_participant(participant)
+
+    {:noreply, reload_page(socket)}
+  end
+
+  @impl true
+  def handle_event("drop-participant", %{"id" => id}, socket) do
+    participant = Participants.get_participant!(id)
+    IO.puts("dropping #{id}")
+    {:ok, _} = Participants.update_participant(participant, %{"is_dropped" => true})
 
     {:noreply, reload_page(socket)}
   end

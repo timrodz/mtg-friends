@@ -87,6 +87,7 @@ defmodule MtgFriendsWeb do
       import Phoenix.HTML
       # Core UI components and translation
       import MtgFriendsWeb.CoreComponents
+      import MtgFriendsWeb.ExtendedCoreComponents
       import MtgFriendsWeb.Gettext
 
       # Shortcut for generating JS commands

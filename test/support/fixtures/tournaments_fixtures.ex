@@ -20,35 +20,4 @@ defmodule MtgFriends.TournamentsFixtures do
 
     tournament
   end
-
-  @doc """
-  Generate a tournament.
-  """
-  def tournament_fixture(attrs \\ %{}) do
-    {:ok, tournament} =
-      attrs
-      |> Enum.into(%{
-        date: ~D[2023-11-02],
-        location: "some location"
-      })
-      |> MtgFriends.Tournaments.create_tournament()
-
-    tournament
-  end
-
-  @doc """
-  Generate a tournament.
-  """
-  def tournament_fixture(attrs \\ %{}) do
-    {:ok, tournament} =
-      attrs
-      |> Enum.into(%{
-        active: true,
-        date: ~D[2023-11-02],
-        location: "some location"
-      })
-      |> MtgFriends.Tournaments.create_tournament()
-
-    tournament
-  end
 end
