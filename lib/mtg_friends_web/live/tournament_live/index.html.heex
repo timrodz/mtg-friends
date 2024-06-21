@@ -15,6 +15,7 @@
   title="Latest tournaments"
   row_click={fn tournament -> JS.navigate(~p"/tournaments/#{tournament}") end}
   class="min-h-[500px]"
+  grid_class="lg:gap-6"
 >
   <:item :let={t} class="p-4">
     <h3 class="font-semibold"><%= t.name %></h3>
@@ -23,7 +24,10 @@
       <.icon name="hero-map-pin-solid" /> <%= t.location %>
     </h4>
     <p class="icon-text">
-      <.icon name="hero-question-mark-circle" /> <%= Utils.render_tournament_status(t.status) %>
+      <.icon name="hero-question-mark-circle" /> <%= Utils.render_status(t.status) %>
+    </p>
+    <p class="icon-text">
+      <.icon name="hero-chevron-right" /> <%= t.game.name %>
     </p>
   </:item>
 </.item_grid>
@@ -52,7 +56,7 @@
     <%= NaiveDateTime.to_string(tournament.date) %>
   </:col>
   <:col :let={{_id, tournament}} label="Status">
-    <%= Utils.render_tournament_status(tournament.status) %>
+    <%= Utils.render_status(tournament.status) %>
   </:col>
   <:action :let={{_id, tournament}}>
     <%= if @current_user && @current_user.id == tournament.user_id do %>

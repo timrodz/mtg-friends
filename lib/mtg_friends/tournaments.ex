@@ -11,7 +11,7 @@ defmodule MtgFriends.Tournaments do
   alias MtgFriends.Participants.Participant
 
   def get_most_recent_tournaments(limit) do
-    from(t in Tournament, order_by: [desc: :date], limit: ^limit) |> Repo.all()
+    from(t in Tournament, order_by: [desc: :date], limit: ^limit, preload: [:game]) |> Repo.all()
   end
 
   @doc """
@@ -36,37 +36,18 @@ defmodule MtgFriends.Tournaments do
     end
   end
 
-  def list_tournaments_paginated(limit \\ 6, page \\ 1, params \\ {}) do
+  def list_tournaments_paginated(limit \\ 6, page \\ 1) do
     offset = limit * (page - 1)
     IO.puts("Listing tournaments for range #{offset - limit} to #{offset}")
 
-    case params do
-      "filter-inactive" ->
-        from(t in Tournament,
-          where: t.status in [:inactive, :finished],
-          offset: ^limit * ^page,
-          limit: ^limit
-        )
-        |> Repo.all()
-
-      "filter-active" ->
-        from(t in Tournament,
-          where: t.status == :active,
-          select: t,
-          offset: ^limit * ^page,
-          limit: ^limit
-        )
-        |> Repo.all()
-
-      _ ->
-        from(t in Tournament,
-          select: t,
-          order_by: [desc: :date],
-          limit: ^limit,
-          offset: ^offset
-        )
-        |> Repo.all()
-    end
+    from(t in Tournament,
+      select: t,
+      order_by: [desc: :date],
+      limit: ^limit,
+      offset: ^offset,
+      preload: [:game]
+    )
+    |> Repo.all()
   end
 
   def get_tournament_count() do
@@ -170,6 +151,7 @@ defmodule MtgFriends.Tournaments do
       _ ->
         tournament
         |> Tournament.changeset(attrs)
+        |> Ecto.Changeset.put_change(:description_html, "")
         |> Repo.update()
     end
   end

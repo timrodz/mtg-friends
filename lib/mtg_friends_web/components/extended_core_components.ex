@@ -24,6 +24,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
   attr(:row_id, :any, default: nil, doc: "the function for generating the row id")
   attr(:row_click, :any, default: nil, doc: "the function for handling phx-click on each row")
   attr(:class, :string, default: nil)
+  attr(:grid_class, :string, default: nil)
 
   attr(:row_item, :any,
     default: &Function.identity/1,
@@ -48,7 +49,10 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
       <div
         id={@id}
         phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}
-        class="item-grid-contents overflow-y-auto sm:overflow-visible sm:px-0 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-2"
+        class={[
+          "item-grid-contents overflow-y-auto sm:overflow-visible sm:px-0 grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-2",
+          @grid_class
+        ]}
       >
         <div
           :for={row <- @rows}
@@ -75,11 +79,12 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
   attr(:dt, :string, required: true)
   attr(:label, :string, default: nil)
   attr(:class, :string, default: nil)
+  attr(:no_icon, :boolean, default: false)
 
   def datetime(assigns) do
     ~H"""
     <p id="date-time" class={["icon-text", @class]}>
-      <CoreComponents.icon name="hero-clock-solid" />
+      <CoreComponents.icon :if={not @no_icon} name="hero-clock-solid" />
       <%= @label %>
       <span><%= @dt |> DateUtils.render_naive_datetime_full() %></span>
     </p>
@@ -89,11 +94,12 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
   attr(:dt, :string, required: true)
   attr(:label, :string, default: nil)
   attr(:class, :string, default: nil)
+  attr(:no_icon, :boolean, default: false)
 
   def date(assigns) do
     ~H"""
     <p class={["icon-text", @class]}>
-      <CoreComponents.icon name="hero-calendar-solid" />
+      <CoreComponents.icon :if={not @no_icon} name="hero-calendar-solid" />
       <%= @label %>
       <span><%= @dt |> DateUtils.render_naive_datetime_date() %></span>
     </p>

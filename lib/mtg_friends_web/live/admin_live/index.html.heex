@@ -1,9 +1,10 @@
 <.header class="mb-2">
   Listing Tournaments
   <:actions>
-    <.link patch={~p"/tournaments/new"}>
-      <.button>New Tournament</.button>
+    <.link patch={~p"/tournaments/new"} class="cta">
+      New Tournament
     </.link>
+    <.link navigate={~p"/admin/games"}>Games portal</.link>
   </:actions>
 </.header>
 

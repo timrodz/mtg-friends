@@ -14,10 +14,11 @@ defmodule MtgFriends.Tournaments.Tournament do
     field :is_top_cut_4, :boolean, default: false
     field :round_count, :integer, default: 4
     field :status, Ecto.Enum, values: [:inactive, :active, :finished], default: :inactive
-    field :format, Ecto.Enum, values: [:edh, :single], default: :edh
-    field :subformat, Ecto.Enum, values: [:bubble_rounds, :swiss], default: :bubble_rounds
+    field :format, Ecto.Enum, values: [:edh, :standard], default: :edh
+    field :subformat, Ecto.Enum, values: [:bubble_rounds, :swiss], default: :swiss
 
     belongs_to :user, MtgFriends.Accounts.User
+    belongs_to :game, MtgFriends.Games.Game
 
     has_many :participants, MtgFriends.Participants.Participant
     has_many :rounds, MtgFriends.Rounds.Round
@@ -30,6 +31,7 @@ defmodule MtgFriends.Tournaments.Tournament do
     tournament
     |> cast(attrs, [
       :user_id,
+      :game_id,
       :name,
       :location,
       :date,
@@ -42,14 +44,16 @@ defmodule MtgFriends.Tournaments.Tournament do
       :subformat,
       :is_top_cut_4
     ])
-    |> ValidationHelper.allow_empty_strings()
+    |> validate_length(:name, min: 5)
+    |> validate_length(:location, min: 5)
+    |> validate_length(:description_raw, min: 20)
     |> validate_required([
       :user_id,
+      :game_id,
       :name,
       :location,
       :date,
-      :description_raw,
-      :description_html
+      :description_raw
     ])
   end
 end

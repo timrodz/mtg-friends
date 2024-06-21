@@ -1,4 +1,5 @@
 defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
+  alias MtgFriends.Games
   alias MtgFriends.Participants
   use MtgFriendsWeb, :live_component
 
@@ -19,19 +20,22 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:name]} type="text" label="Name" />
+        <.input field={@form[:game_code]} type="select" label="Game" options={@game_codes} />
+        <.input field={@form[:format]} type="select" options={@format_options} label="Format" />
+        <.input field={@form[:name]} type="text" label="Name" min="5" />
         <.input field={@form[:location]} type="text" label="Location" />
         <.input field={@form[:date]} type="datetime-local" label="Date" />
+
         <.input
           :if={@action == :edit}
           field={@form[:status]}
           type="select"
+          label="Status"
           options={[
             {"1. Open (registering participants)", "inactive"},
             {"2. In progress (tournament started)", "active"},
             {"3. Finished", "finished"}
           ]}
-          label="Status"
         />
         <.input field={@form[:description_raw]} type="textarea" label="Description" />
         <.input
@@ -48,30 +52,21 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           min="3"
           max="10"
         />
-        <%= if @action == :new do %>
-          <.input
-            field={@form[:participant_count]}
-            type="number"
-            label="Number of participants (Min: 4 / Max: 24)"
-            value={@participant_count}
-            phx-change="update-participant-count"
-            min="4"
-            max="24"
-          />
-          <.input
-            field={@form[:format]}
-            type="select"
-            options={[
-              {"EDH", "edh"}
-            ]}
-            label="Format"
-          />
-        <% end %>
+        <.input
+          :if={@action == :new}
+          field={@form[:participant_count]}
+          type="number"
+          label="Number of participants (Min: 4 / Max: 32)"
+          value={@participant_count}
+          phx-change="update-participant-count"
+          min="4"
+          max="32"
+        />
         <.input
           field={@form[:subformat]}
           type="select"
           options={@subformat_options}
-          label="Round Method"
+          label="Round pairing algorithm"
         />
         <.input
           field={@form[:is_top_cut_4]}
@@ -97,36 +92,57 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         end
       )
 
+    selected_game_code = :mtg
+    selected_format = :edh
+
     {:ok,
      socket
      |> assign(assigns)
-     # EDH is the default format
-     |> assign(:subformat_options, get_subformat_options("edh"))
+     |> assign(:game_codes, get_game_codes())
+     |> assign(:selected_game_code, selected_game_code)
+     |> assign(:format_options, get_format_options(selected_game_code))
+     |> assign(
+       :subformat_options,
+       get_subformat_options(selected_game_code, selected_format)
+     )
      |> assign(:participant_count, 8)
      |> assign_form(changeset)}
   end
 
   @impl true
   def handle_event("validate", %{"tournament" => tournament_params}, socket) do
-    selected_format =
-      case tournament_params["format"] do
-        # No format found in the form's params, that means the taournament already exists
-        nil ->
-          socket.assigns.tournament.format
+    selected_game_code =
+      tournament_params["game_code"] |> String.to_atom() |> IO.inspect(label: "selected_game")
 
-        _ ->
-          tournament_params["format"]
+    format_options = get_format_options(selected_game_code) |> IO.inspect(label: "format_options")
+
+    selected_format =
+      case socket.assigns.selected_game_code != selected_game_code do
+        # Changed games, select the first format option
+        true ->
+          format_options |> Enum.at(0) |> elem(1)
+
+        false ->
+          tournament_params["format"] |> String.to_atom()
       end
+      |> IO.inspect(label: "selected_format")
+
+    subformat_options =
+      get_subformat_options(selected_game_code, selected_format)
+      |> IO.inspect(label: "subformat_options")
 
     changeset =
       socket.assigns.tournament
       |> Tournaments.change_tournament(tournament_params)
       |> Map.put(:action, :validate)
+      |> IO.inspect(label: "changeset")
 
     {:noreply,
      socket
      |> assign_form(changeset)
-     |> assign(:subformat_options, get_subformat_options(selected_format))}
+     |> assign(:selected_game_code, selected_game_code)
+     |> assign(:format_options, format_options)
+     |> assign(:subformat_options, subformat_options)}
   end
 
   @impl true
@@ -145,9 +161,18 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
   end
 
   defp save_tournament(socket, :edit, tournament_params) do
-    case Tournaments.update_tournament(socket.assigns.tournament, tournament_params) do
-      {:ok, tournament} ->
-        notify_parent({:saved, tournament})
+    tournament = socket.assigns.tournament
+
+    # This could be optimized but we're chilling for now
+    game = Games.get_game_by_code!(socket.assigns.selected_game_code)
+
+    tournament_params =
+      tournament_params
+      |> Map.put("game_id", game.id)
+
+    case Tournaments.update_tournament(tournament, tournament_params) do
+      {:ok, updated_tournament} ->
+        notify_parent({:saved, updated_tournament})
 
         {:noreply,
          socket
@@ -160,8 +185,12 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
   end
 
   defp save_tournament(socket, :new, tournament_params) do
+    game = Games.get_game_by_code!(socket.assigns.selected_game_code)
+
     tournament_params =
-      Map.put(tournament_params, "user_id", socket.assigns.current_user.id)
+      tournament_params
+      |> Map.put("user_id", socket.assigns.current_user.id)
+      |> Map.put("game_id", game.id)
 
     case Tournaments.create_tournament(tournament_params) do
       {:ok, tournament} ->
@@ -186,21 +215,43 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
     end
   end
 
-  defp get_subformat_options(subformat) do
-    case to_string(subformat) do
-      "edh" ->
-        [
-          {"Bubble Rounds (Pods are determined by last round standings)", :bubble_rounds},
-          {"Swiss Rounds", :swiss}
-        ]
+  defp get_game_codes() do
+    [
+      {"Magic: The Gathering", :mtg},
+      {"Yu-Gi-Oh!", :yugioh},
+      {"Pokémon", :pokemon}
+    ]
+  end
 
-      "single" ->
-        [
-          {"Swiss Rounds", :swiss}
-        ]
+  defp get_format_options(game_code) do
+    case game_code do
+      :mtg ->
+        [{"Commander (EDH)", :edh}]
 
       _ ->
-        [{"None", :none}]
+        [{"Standard", :standard}]
+    end
+  end
+
+  defp get_subformat_options(game_code, format) do
+    IO.puts("get round pairing options for game #{game_code} and format #{format}")
+
+    # This can expand later on, keep it somewhat "complex" for now
+    case game_code do
+      :mtg ->
+        case format do
+          :edh ->
+            [
+              {"Swiss Rounds", :swiss},
+              {"Bubble Rounds (Pods are determined by last round standings)", :bubble_rounds}
+            ]
+
+          _ ->
+            [{"Swiss Rounds", :swiss}]
+        end
+
+      _ ->
+        [{"Swiss Rounds", :swiss}]
     end
   end
 

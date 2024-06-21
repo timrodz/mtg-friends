@@ -1,8 +1,5 @@
 <.header>
   <%= @tournament.name %>
-  <:subtitle>
-    <b>Status</b>: <%= Utils.render_tournament_status(@tournament.status) %>
-  </:subtitle>
   <:actions :if={@current_user_owner}>
     <.link patch={~p"/tournaments/#{@tournament}/show/edit"} phx-click={JS.push_focus()}>
       <.button_secondary>Edit</.button_secondary>
@@ -10,10 +7,13 @@
   </:actions>
 </.header>
 
-<.back navigate={~p"/tournaments"}>Back to tournaments</.back>
+<.back navigate={~p"/tournaments"}>Tournaments</.back>
+
+<h2>Summary</h2>
 
 <.list>
-  <:item title="When"><%= NaiveDateTime.to_string(@tournament.date) %></:item>
+  <:item title="Status"><%= Utils.render_status(@tournament.status) %></:item>
+  <:item title="When"><.datetime dt={@tournament.date} no_icon /></:item>
   <:item title="Where"><%= @tournament.location %></:item>
   <:item :if={@tournament.format} title="Format">
     <.tooltip content={Utils.render_subformat_description(@tournament.subformat)} variant="arrow">
@@ -24,15 +24,17 @@
   </:item>
   <:item title="Round system">
     <p>
-      <%= @tournament.round_count %> rounds (<%= @tournament.round_length_minutes %> minutes each) <%= (@tournament.is_top_cut_4 &&
-                                                                                                          "with top cut 4") ||
-        "" %>
+      <%= @tournament.round_count %> rounds / <%= @tournament.round_length_minutes %> minutes each <%= if @tournament.is_top_cut_4 do
+        raw("<span class='badge'>Top cut 4 enabled</span>")
+      end %>
     </p>
   </:item>
-  <:item :if={@tournament.description_html} title="Description">
-    <%= raw(@tournament.description_html) %>
-  </:item>
 </.list>
+
+<div class="description">
+  <h2>Description</h2>
+  <p><%= raw(@tournament.description_html) %></p>
+</div>
 
 <div id="participants" class="my-16">
   <h2 class="font-bold">Participants & Standings</h2>

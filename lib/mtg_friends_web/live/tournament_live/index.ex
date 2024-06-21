@@ -13,10 +13,11 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
     {page, ""} = Integer.parse(page_str)
     limit = 6
     offset = limit * (page - 1)
-    tournaments = Tournaments.list_tournaments_paginated(limit, page)
     count = Tournaments.get_tournament_count()
     has_next_page? = count > limit * page
     has_previous_page? = offset > 0
+
+    tournaments = Tournaments.list_tournaments_paginated(limit, page)
 
     {:ok,
      socket

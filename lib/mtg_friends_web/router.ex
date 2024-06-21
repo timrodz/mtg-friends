@@ -99,6 +99,16 @@ defmodule MtgFriendsWeb.Router do
   scope "/admin", MtgFriendsWeb do
     pipe_through [:browser, :require_admin_user]
 
-    live "/", AdminLive.Index
+    live_session :admin_current_user,
+      on_mount: [{MtgFriendsWeb.UserAuth, :mount_current_user}] do
+      live "/", AdminLive.Index
+
+      live "/games", GameLive.Index, :index
+      live "/games/new", GameLive.Index, :new
+      live "/games/:id/edit", GameLive.Index, :edit
+
+      live "/games/:id", GameLive.Show, :show
+      live "/games/:id/show/edit", GameLive.Show, :edit
+    end
   end
 end

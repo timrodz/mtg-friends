@@ -8,7 +8,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
     round(Float.ceil(participant_count / 4))
   end
 
-  def render_tournament_status(status) do
+  def render_status(status) do
     case status do
       :inactive -> "Open"
       :active -> "In progress"
@@ -16,7 +16,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
     end
   end
 
-  def render_tournament_status_extra(status) do
+  def render_status_extra(status) do
     case status do
       :inactive -> "Open 🟢"
       :active -> "In progress 🔵"
@@ -58,7 +58,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
   def render_format(format) do
     case format do
       :edh -> "Commander (EDH)"
-      :single -> "1v1"
+      :standard -> "Standard"
       nil -> ""
     end
   end

@@ -1,0 +1,49 @@
+<.header>
+  Listing Games
+  <:actions>
+    <.link patch={~p"/admin/games/new"}>
+      <.button>New Game</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="games"
+  rows={@streams.games}
+  row_click={fn {_id, game} -> JS.navigate(~p"/admin/games/#{game}") end}
+>
+  <:col :let={{_id, game}} label="Name"><%= game.name %></:col>
+  <:col :let={{_id, game}} label="Url"><%= game.url %></:col>
+  <:action :let={{_id, game}}>
+    <div class="sr-only">
+      <.link navigate={~p"/admin/games/#{game}"}>Show</.link>
+    </div>
+    <.link patch={~p"/admin/games/#{game}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, game}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: game.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.back navigate={~p"/admin"}>Admin dashboard</.back>
+
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="game-modal"
+  show
+  on_cancel={JS.patch(~p"/admin/games")}
+>
+  <.live_component
+    module={MtgFriendsWeb.GameLive.FormComponent}
+    id={@game.id || :new}
+    title={@page_title}
+    action={@live_action}
+    game={@game}
+    patch={~p"/admin/games"}
+  />
+</.modal>

@@ -454,7 +454,7 @@ defmodule MtgFriendsWeb.CoreComponents do
     ~H"""
     <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
       <div>
-        <h1 class="font-semibold leading-8 text-zinc-800">
+        <h1>
           <%= render_slot(@inner_block) %>
         </h1>
         <p :if={@subtitle != []} class="mt-2 leading-6 text-zinc-600">
@@ -579,19 +579,20 @@ defmodule MtgFriendsWeb.CoreComponents do
   """
   attr :navigate, :any, required: true
   attr :class, :string, default: nil
+  attr :with_hr, :boolean, default: false
   slot :inner_block, required: true
 
   def back(assigns) do
     ~H"""
-    <div class={["mt-8", @class]}>
+    <div class={["my-4", @class]}>
       <.link
         navigate={@navigate}
-        class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700"
+        class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700 p-0"
       >
         <.icon name="hero-arrow-left" class="h-3 w-3" />
         <%= render_slot(@inner_block) %>
       </.link>
-      <hr class="mt-2" />
+      <hr :if={@with_hr} class="mt-2" />
     </div>
     """
   end
