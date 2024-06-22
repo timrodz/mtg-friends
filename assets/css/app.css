@@ -26,7 +26,7 @@ main {
 }
 
 hr {
-  @apply mt-2;
+  @apply mb-4;
 }
 
 h1 {
@@ -62,11 +62,11 @@ a {
 }
 
 a.cta {
-  @apply bg-indigo-600 text-white hover:bg-indigo-700;
+  @apply bg-indigo-700 text-white hover:bg-indigo-800;
 }
 
 a.cta-subtle {
-  @apply bg-indigo-50 hover:bg-indigo-100;
+  @apply bg-white text-indigo-900 ring-[1px] ring-slate-200 hover:bg-slate-50;
 }
 
 .icon-text {
@@ -79,12 +79,37 @@ a.cta-subtle {
   a {
     @apply px-1 py-1 hover:bg-indigo-50;
   }
-
-  p {
-    @apply mb-2;
-  }
+}
+p {
+  @apply mt-1 mb-2;
 }
 
 span.badge {
   @apply bg-indigo-400 p-1 rounded-md text-white;
+}
+
+p.subtle {
+  @apply text-gray-600;
+}
+
+#item-grid-tournaments {
+  .item-grid {
+    @apply lg:gap-6;
+
+    .item-container {
+      @apply shadow-sm;
+
+      .item {
+        @apply text-gray-600;
+
+        h3 {
+          @apply font-bold my-0 text-black;
+        }
+
+        .game-name {
+          @apply mb-2;
+        }
+      }
+    }
+  }
 }

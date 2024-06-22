@@ -20,7 +20,13 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:game_code]} type="select" label="Game" options={@game_codes} />
+        <.input
+          field={@form[:game_code]}
+          type="select"
+          label="Game"
+          options={@game_codes}
+          value={@selected_game_code}
+        />
         <.input field={@form[:format]} type="select" options={@format_options} label="Format" />
         <.input field={@form[:name]} type="text" label="Name" min="5" />
         <.input field={@form[:location]} type="text" label="Location" />
@@ -69,6 +75,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           label="Round pairing algorithm"
         />
         <.input
+          :if={@selected_game_code == :mtg}
           field={@form[:is_top_cut_4]}
           type="checkbox"
           label="Top Cut 4 (Has a final round decided by the top 4 players)"
@@ -92,8 +99,11 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         end
       )
 
-    selected_game_code = :mtg
-    selected_format = :edh
+    selected_game_code =
+      tournament.game.code ||
+        :mtg
+
+    selected_format = tournament.format || :edh
 
     {:ok,
      socket
@@ -164,7 +174,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
     tournament = socket.assigns.tournament
 
     # This could be optimized but we're chilling for now
-    game = Games.get_game_by_code!(socket.assigns.selected_game_code)
+    game = Games.get_game_by_code!(socket.assigns.selected_game_code) |> IO.inspect(label: "CODE")
 
     tournament_params =
       tournament_params
@@ -234,8 +244,6 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
   end
 
   defp get_subformat_options(game_code, format) do
-    IO.puts("get round pairing options for game #{game_code} and format #{format}")
-
     # This can expand later on, keep it somewhat "complex" for now
     case game_code do
       :mtg ->

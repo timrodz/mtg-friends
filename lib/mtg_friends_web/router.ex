@@ -3,6 +3,15 @@ defmodule MtgFriendsWeb.Router do
 
   import MtgFriendsWeb.UserAuth
 
+  pipeline :landing do
+    plug :accepts, ["html"]
+    plug :fetch_session
+    plug :fetch_live_flash
+    plug :put_root_layout, {MtgFriendsWeb.Layouts, :landing}
+    plug :protect_from_forgery
+    plug :put_secure_browser_headers
+  end
+
   pipeline :browser do
     plug :accepts, ["html"]
     plug :fetch_session
@@ -37,9 +46,13 @@ defmodule MtgFriendsWeb.Router do
   end
 
   scope "/", MtgFriendsWeb do
-    pipe_through :browser
+    pipe_through :landing
 
-    get "/", PageController, :index
+    get "/", LandingController, :index
+  end
+
+  scope "/", MtgFriendsWeb do
+    pipe_through :browser
 
     live "/tournaments", TournamentLive.Index, :index
     live "/tournaments/:id", TournamentLive.Show, :show

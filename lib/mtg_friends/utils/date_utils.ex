@@ -3,7 +3,7 @@ defmodule MtgFriends.DateUtils do
   Requires {:calendar, "~> 1.0.0"}
   """
 
-  @date_str "%d/%m/%Y"
+  @date_str "%b %d, %Y"
   @time_str "%I:%M %p"
 
   def render_naive_datetime(dt) do

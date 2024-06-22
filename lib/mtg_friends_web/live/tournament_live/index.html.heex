@@ -1,5 +1,5 @@
 <.header class="mb-4">
-  Listing Tournaments
+  Tournaments
   <:actions>
     <%= if @current_user do %>
       <.link class="cta" patch={~p"/tournaments/new"}>
@@ -10,15 +10,13 @@
 </.header>
 
 <.item_grid
-  id="users"
-  rows={@tournaments}
-  title="Latest tournaments"
-  row_click={fn tournament -> JS.navigate(~p"/tournaments/#{tournament}") end}
-  class="min-h-[500px]"
-  grid_class="lg:gap-6"
+  id="tournaments"
+  items={@tournaments}
+  item_click={fn tournament -> JS.navigate(~p"/tournaments/#{tournament}") end}
 >
-  <:item :let={t} class="p-4">
-    <h3 class="font-semibold"><%= t.name %></h3>
+  <:item :let={t}>
+    <h3><%= t.name %></h3>
+    <p class="game-name"><%= t.game.name %></p>
     <.date dt={t.date} />
     <h4 :if={t.location} class="icon-text">
       <.icon name="hero-map-pin-solid" /> <%= t.location %>
@@ -26,57 +24,25 @@
     <p class="icon-text">
       <.icon name="hero-question-mark-circle" /> <%= Utils.render_status(t.status) %>
     </p>
-    <p class="icon-text">
-      <.icon name="hero-chevron-right" /> <%= t.game.name %>
-    </p>
   </:item>
 </.item_grid>
 
 <div id="pagination" class="flex items-center gap-1">
   <.link
     :if={@has_previous_page?}
-    class="cta-subtle"
+    class="cta-subtle icon-text"
     navigate={~p"/tournaments?page=#{@page - 1}"}
   >
-    ← Previous page
+    <.icon name="hero-chevron-left" /> Previous page
   </.link>
-  <.link :if={@has_next_page?} class="cta-subtle" navigate={~p"/tournaments?page=#{@page + 1}"}>
-    Next page →
+  <.link
+    :if={@has_next_page?}
+    class="cta-subtle icon-text"
+    navigate={~p"/tournaments?page=#{@page + 1}"}
+  >
+    Next page <.icon name="hero-chevron-right" />
   </.link>
 </div>
-
-<%!-- <.table
-  id="tournaments"
-  rows={@streams.tournaments}
-  row_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end}
->
-  <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
-  <:col :let={{_id, tournament}} label="Location"><%= tournament.location %></:col>
-  <:col :let={{_id, tournament}} label="Date">
-    <%= NaiveDateTime.to_string(tournament.date) %>
-  </:col>
-  <:col :let={{_id, tournament}} label="Status">
-    <%= Utils.render_status(tournament.status) %>
-  </:col>
-  <:action :let={{_id, tournament}}>
-    <%= if @current_user && @current_user.id == tournament.user_id do %>
-      <div class="sr-only">
-        <.link navigate={~p"/tournaments/#{tournament}"}>Show</.link>
-      </div>
-      <.link patch={~p"/tournaments/#{tournament}/edit"}>Edit</.link>
-    <% end %>
-  </:action>
-  <:action :let={{id, tournament}}>
-    <%= if @current_user && @current_user.id == tournament.user_id do %>
-      <.link
-        phx-click={JS.push("delete", value: %{id: tournament.id}) |> hide("##{id}")}
-        data-confirm="Are you sure?"
-      >
-        Delete
-      </.link>
-    <% end %>
-  </:action>
-</.table> --%>
 
 <.modal
   :if={@live_action in [:new, :edit]}

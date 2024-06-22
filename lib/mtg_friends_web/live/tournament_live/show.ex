@@ -18,7 +18,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   def handle_params(%{"id" => id}, _, socket) do
     tournament = Tournaments.get_tournament!(id)
 
-    num_pairings = Utils.get_num_pairings(length(tournament.participants))
+    num_pairings = Utils.get_num_pairings(length(tournament.participants), tournament.format)
 
     participant_score_lookup =
       Utils.get_overall_scores(tournament.rounds, num_pairings)
@@ -106,32 +106,33 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     round_count = length(tournament.rounds)
     first_round? = round_count == 0
 
-    case Rounds.create_round(
-           tournament.id,
-           round_count
-         ) do
-      {:ok, round} ->
-        case Utils.create_pairings(
-               tournament,
-               round
-             ) do
-          {:ok, _} ->
-            if first_round? do
-              {:ok, _} = Tournaments.update_tournament(tournament, %{"status" => :active})
-            end
+    with {:ok, round} <-
+           Rounds.create_round(
+             tournament.id,
+             round_count
+           ),
+         {:ok, _} <-
+           Utils.create_pairings(
+             tournament,
+             round
+           ) do
+      if first_round? do
+        {:ok, _} = Tournaments.update_tournament(tournament, %{"status" => :active})
+      end
 
-            {:noreply,
-             socket
-             |> put_flash(:info, "Round #{round.number + 1} created successfully")
-             |> push_navigate(to: ~p"/tournaments/#{tournament.id}/rounds/#{round.number + 1}")}
-
-          {:error, _} ->
-            {:noreply,
-             put_flash(socket, :error, "Something wrong happened when creating a round")}
-        end
+      {:noreply,
+       socket
+       |> put_flash(:info, "Round #{round.number + 1} created successfully")
+       |> push_navigate(to: ~p"/tournaments/#{tournament.id}/rounds/#{round.number + 1}")}
+    else
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Something wrong happened when creating a round")}
 
       {:error, %Ecto.Changeset{} = _} ->
         {:noreply, put_flash(socket, :error, "Something wrong happened when creating a round")}
+
+      _ ->
+        nil
     end
   end
 

@@ -12,16 +12,17 @@
 <h2>Summary</h2>
 
 <.list>
-  <:item title="Status"><%= Utils.render_status(@tournament.status) %></:item>
-  <:item title="When"><.datetime dt={@tournament.date} no_icon /></:item>
-  <:item title="Where"><%= @tournament.location %></:item>
-  <:item :if={@tournament.format} title="Format">
+  <:item title="Game"><%= @tournament.game.name %></:item>
+  <:item title="Format">
     <.tooltip content={Utils.render_subformat_description(@tournament.subformat)} variant="arrow">
       <%= Utils.render_format(@tournament.format) %> — <%= Utils.render_subformat(
         @tournament.subformat
       ) %>
     </.tooltip>
   </:item>
+  <:item title="Status"><%= Utils.render_status(@tournament.status) %></:item>
+  <:item title="Date"><.datetime dt={@tournament.date} no_icon /></:item>
+  <:item title="Where"><%= @tournament.location %></:item>
   <:item title="Round system">
     <p>
       <%= @tournament.round_count %> rounds / <%= @tournament.round_length_minutes %> minutes each <%= if @tournament.is_top_cut_4 do
@@ -115,7 +116,8 @@
           Delete
         </.link>
       </div>
-      <div
+      <%!-- Experimental feature, not really necessary? --%>
+      <%!-- <div
         :if={not p["is_dropped"] and (@current_user_owner or @current_user_admin)}
         class="hidden col-span-0 md:col-span-1 md:flex md:justify-center md:items-center"
       >
@@ -129,7 +131,7 @@
         >
           Drop
         </.link>
-      </div>
+      </div> --%>
     </div>
     <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
       <.button

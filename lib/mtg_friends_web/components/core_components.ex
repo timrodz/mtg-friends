@@ -66,7 +66,7 @@ defmodule MtgFriendsWeb.CoreComponents do
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
               phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-              class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white p-6 md:p-14 shadow-lg ring-1 transition"
+              class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl p-6 md:p-14 shadow-lg ring-1 transition"
             >
               <div class="absolute top-6 right-5">
                 <button
@@ -187,7 +187,7 @@ defmodule MtgFriendsWeb.CoreComponents do
   def simple_form(assigns) do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class={["mt-2 space-y-4 bg-white", @class]}>
+      <div class={["mt-2 space-y-4", @class]}>
         <%= render_slot(@inner_block, f) %>
         <%= if @as_flex do %>
           <div class="flex gap-2">
@@ -340,7 +340,7 @@ defmodule MtgFriendsWeb.CoreComponents do
       <select
         id={@id}
         name={@name}
-        class="mt-1 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
+        class="mt-1 block w-full rounded-md border border-gray-300 shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
         multiple={@multiple}
         {@rest}
       >
@@ -589,7 +589,7 @@ defmodule MtgFriendsWeb.CoreComponents do
         navigate={@navigate}
         class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700 p-0"
       >
-        <.icon name="hero-arrow-left" class="h-3 w-3" />
+        <.icon name="hero-chevron-left" class="h-3 w-3" />
         <%= render_slot(@inner_block) %>
       </.link>
       <hr :if={@with_hr} class="mt-2" />

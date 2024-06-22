@@ -12,7 +12,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
 
   ## Examples
 
-      <.item_grid id="users" rows={@users} title="users">
+      <.item_grid id="users" items={@users} title="users">
         <:item :let={user}>
           <p>User ID: <%= user.id %></p>
         </:item>
@@ -20,15 +20,16 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
   """
   attr(:id, :string, required: true)
   attr(:title, :string, default: nil)
-  attr(:rows, :list, required: true)
-  attr(:row_id, :any, default: nil, doc: "the function for generating the row id")
-  attr(:row_click, :any, default: nil, doc: "the function for handling phx-click on each row")
+  attr(:items, :list, required: true)
+  attr(:item_id, :any, default: nil, doc: "the function for generating the item id")
+  attr(:item_click, :any, default: nil, doc: "the function for handling phx-click on each item")
   attr(:class, :string, default: nil)
   attr(:grid_class, :string, default: nil)
+  attr(:item_container_class, :string, default: nil)
 
   attr(:row_item, :any,
     default: &Function.identity/1,
-    doc: "the function for mapping each row before calling the :col and :action slots"
+    doc: "the function for mapping each item before calling the :col and :action slots"
   )
 
   slot :item, required: true do
@@ -37,8 +38,8 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
 
   def item_grid(assigns) do
     assigns =
-      with %{rows: %Phoenix.LiveView.LiveStream{}} <- assigns do
-        assign(assigns, row_id: assigns.row_id || fn {id, _item} -> id end)
+      with %{items: %Phoenix.LiveView.LiveStream{}} <- assigns do
+        assign(assigns, item_id: assigns.item_id || fn {id, _item} -> id end)
       end
 
     ~H"""
@@ -48,27 +49,30 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
       <% end %>
       <div
         id={@id}
-        phx-update={match?(%Phoenix.LiveView.LiveStream{}, @rows) && "stream"}
+        phx-update={match?(%Phoenix.LiveView.LiveStream{}, @items) && "stream"}
         class={[
-          "item-grid-contents overflow-y-auto sm:overflow-visible sm:px-0 grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-2",
+          "item-grid overflow-y-auto sm:overflow-visible sm:px-0 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6",
           @grid_class
         ]}
       >
         <div
-          :for={row <- @rows}
-          id={@row_id && @row_id.(row)}
-          class="item border-[1px] rounded-md bg-white hover:bg-zinc-50 hover:cursor-pointer"
+          :for={item <- @items}
+          id={@item_id && @item_id.(item)}
+          class={[
+            "item-container border-[1px] border-slate-200 bg-white rounded-md hover:bg-slate-50 hover:cursor-pointer",
+            @item_container_class
+          ]}
         >
           <div
             :for={{col, _index} <- Enum.with_index(@item)}
-            phx-click={@row_click && @row_click.(row)}
+            phx-click={@item_click && @item_click.(item)}
             class={[
-              "item-container relative p-4 text-black flex flex-col gap-1",
-              @row_click && "hover:cursor-pointer",
+              "item relative p-4 text-black flex flex-col gap-1",
+              @item_click && "hover:cursor-pointer",
               col[:class]
             ]}
           >
-            <%= render_slot(col, @row_item.(row)) %>
+            <%= render_slot(col, @row_item.(item)) %>
           </div>
         </div>
       </div>

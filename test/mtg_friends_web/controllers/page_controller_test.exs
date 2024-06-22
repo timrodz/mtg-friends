@@ -1,4 +1,4 @@
-defmodule MtgFriendsWeb.PageControllerTest do
+defmodule MtgFriendsWeb.LandingControllerTest do
   use MtgFriendsWeb.ConnCase
 
   test "GET /", %{conn: conn} do
