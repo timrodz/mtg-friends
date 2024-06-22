@@ -19,20 +19,18 @@ main#landing-page {
 
   #about {
     @apply text-lg;
+  }
+}
 
-    #faq-contents {
-      .paper {
-        @apply px-6 py-6 shadow-sm hover:bg-slate-50;
-      }
+#landing-page #about #faq-contents .paper {
+  @apply px-6 py-6 shadow-sm hover:bg-slate-50;
+}
 
-      ul {
-        @apply list-disc list-inside;
+#landing-page #about #faq-contents ul {
+  @apply list-disc list-inside;
 
-        li {
-          @apply ml-2;
-        }
-      }
-    }
+  li {
+    @apply ml-2;
   }
 }
 

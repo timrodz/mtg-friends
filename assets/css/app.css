@@ -80,6 +80,7 @@ a.cta-subtle {
     @apply px-1 py-1 hover:bg-indigo-50;
   }
 }
+
 p {
   @apply mt-1 mb-2;
 }
@@ -92,24 +93,22 @@ p.subtle {
   @apply text-gray-600;
 }
 
-#item-grid-tournaments {
-  .item-grid {
-    @apply lg:gap-6;
+#item-grid-tournaments .item-grid {
+  @apply lg:gap-6;
+}
 
-    .item-container {
-      @apply shadow-sm;
+#item-grid-tournaments .item-container {
+  @apply shadow-sm;
+}
 
-      .item {
-        @apply text-gray-600;
+#item-grid-tournaments .item {
+  @apply text-gray-600;
 
-        h3 {
-          @apply font-bold my-0 text-black;
-        }
+  h3 {
+    @apply font-bold my-0 text-black;
+  }
 
-        .game-name {
-          @apply mb-2;
-        }
-      }
-    }
+  .game-name {
+    @apply mb-2;
   }
 }
