@@ -99,9 +99,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         end
       )
 
-    selected_game_code =
-      tournament.game.code ||
-        :mtg
+    selected_game_code = if tournament.game_id, do: tournament.game.code, else: :mtg
 
     selected_format = tournament.format || :edh
 
