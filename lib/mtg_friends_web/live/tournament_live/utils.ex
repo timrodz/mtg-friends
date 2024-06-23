@@ -252,7 +252,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
         member_3 =
           with m <-
                  matrix
-                 |> Enum.find(fn {a, b, c} ->
+                 |> Enum.find(fn {a, _, c} ->
                    Enum.member?(c, member_1) and Enum.member?(c, member_2) and
                      member_check(taken_ids, a)
                  end),
@@ -269,7 +269,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
         member_3 =
           with m <-
                  matrix
-                 |> Enum.find(fn {a, b, c} ->
+                 |> Enum.find(fn {a, _, c} ->
                    Enum.member?(c, member_1) and Enum.member?(c, member_2) and
                      member_check(taken_ids, a)
                  end),
@@ -283,7 +283,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
         member_4 =
           with m <-
                  matrix
-                 |> Enum.find(fn {a, b, c} ->
+                 |> Enum.find(fn {a, _, c} ->
                    Enum.member?(c, member_1) and Enum.member?(c, member_2) and
                      Enum.member?(c, member_3) and member_check(taken_ids, a)
                  end),
@@ -349,8 +349,7 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
 
     unique_pairings =
       corrected_num_complete_pairings
-      |> Enum.with_index()
-      |> Enum.reduce([], fn {p, i}, acc ->
+      |> Enum.reduce([], fn p, acc ->
         do_thing(player_pairing_matrix, 0, acc, length(p))
       end)
       |> List.flatten()
@@ -444,10 +443,6 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
     else
       best_pairing_round
     end
-  end
-
-  def make_standard_swiss_pairings(tournament, num_pairings) do
-    # Pair on a 1st-last basis, going down to the middle
   end
 
   def get_overall_scores(rounds, num_pairings) do

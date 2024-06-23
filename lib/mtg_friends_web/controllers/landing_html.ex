@@ -26,13 +26,15 @@ defmodule MtgFriendsWeb.LandingHTML do
             item_click={fn tournament -> JS.navigate(~p"/tournaments/#{tournament}") end}
             class="!mt-0"
           >
-            <:item :let={t}>
+            <:item :let={t} class="flex flex-col justify-between">
               <h3 class="!text-indigo-800"><%= t.name %></h3>
-              <p class="game-name"><%= t.game.name %></p>
-              <.date dt={t.date} />
-              <h4 :if={t.location} class="icon-text">
-                <.icon name="hero-map-pin-solid" /> <%= t.location %>
-              </h4>
+              <div>
+                <p class="game-name"><%= t.game.name %></p>
+                <.date dt={t.date} />
+                <h4 :if={t.location} class="icon-text">
+                  <.icon name="hero-map-pin-solid" /> <%= t.location %>
+                </h4>
+              </div>
             </:item>
           </.item_grid>
 

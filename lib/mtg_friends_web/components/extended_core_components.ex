@@ -67,7 +67,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
             :for={{col, _index} <- Enum.with_index(@item)}
             phx-click={@item_click && @item_click.(item)}
             class={[
-              "item relative p-4 text-black flex flex-col gap-1",
+              "item relative p-4 text-black flex flex-col gap-1 h-full",
               @item_click && "hover:cursor-pointer",
               col[:class]
             ]}
