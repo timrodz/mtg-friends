@@ -1,11 +1,11 @@
 defmodule MtgFriendsWeb.TournamentLive.Show do
   use MtgFriendsWeb, :live_view
 
+  alias MtgFriends.TournamentUtils
   alias MtgFriendsWeb.UserAuth
   alias MtgFriends.Tournaments
   alias MtgFriends.Participants
   alias MtgFriends.Rounds
-  alias MtgFriendsWeb.Live.TournamentLive.Utils
 
   on_mount {MtgFriendsWeb.UserAuth, :mount_current_user}
 
@@ -18,10 +18,11 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   def handle_params(%{"id" => id}, _, socket) do
     tournament = Tournaments.get_tournament!(id)
 
-    num_pairings = Utils.get_num_pairings(length(tournament.participants), tournament.format)
+    num_pairings =
+      TournamentUtils.get_num_pairings(length(tournament.participants), tournament.format)
 
     participant_score_lookup =
-      Utils.get_overall_scores(tournament.rounds, num_pairings)
+      TournamentUtils.get_overall_scores(tournament.rounds, num_pairings)
       |> Map.new(fn %{id: id, total_score: total_score, win_rate: win_rate} ->
         {id,
          %{
@@ -112,7 +113,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
              round_count
            ),
          {:ok, _} <-
-           Utils.create_pairings(
+           TournamentUtils.create_pairings(
              tournament,
              round
            ) do

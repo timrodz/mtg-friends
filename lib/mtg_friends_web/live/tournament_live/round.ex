@@ -1,7 +1,6 @@
 defmodule MtgFriendsWeb.TournamentLive.Round do
   use MtgFriendsWeb, :live_view
 
-  alias MtgFriendsWeb.Live.TournamentLive.Utils
   alias MtgFriendsWeb.UserAuth
   alias MtgFriends.Rounds
 

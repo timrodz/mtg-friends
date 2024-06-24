@@ -1,4 +1,4 @@
-defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
+defmodule MtgFriends.TournamentUtils do
   use Phoenix.HTML, :raw
 
   alias MtgFriends.Rounds

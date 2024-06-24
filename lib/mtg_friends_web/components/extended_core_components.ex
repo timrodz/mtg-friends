@@ -4,7 +4,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
   """
   use Phoenix.Component
 
-  alias MtgFriendsWeb.Live.TournamentLive.Utils, as: TournamentUtils
+  alias MtgFriends.TournamentUtils
   alias MtgFriendsWeb.CoreComponents
   alias MtgFriends.DateUtils
 

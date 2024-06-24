@@ -1,7 +1,6 @@
 defmodule MtgFriendsWeb.TournamentLive.Index do
   use MtgFriendsWeb, :live_view
 
-  alias MtgFriendsWeb.Live.TournamentLive.Utils
   alias MtgFriends.Tournaments
   alias MtgFriends.Tournaments.Tournament
 
