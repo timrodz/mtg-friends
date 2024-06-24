@@ -45,10 +45,6 @@ h3 {
   @apply mt-4 max-w-xl mx-auto text-center;
 }
 
-#participant-header p {
-  @apply mx-2 md:mx-1;
-}
-
 a {
   @apply font-medium hover:underline px-3 py-2 rounded-md;
 }
@@ -58,7 +54,7 @@ a {
 }
 
 .round_countdown_timer {
-  @apply p-2 text-3xl my-4 text-left md:text-center;
+  @apply text-3xl md:text-5xl text-left md:text-center;
 }
 
 a.cta {
@@ -111,4 +107,29 @@ p.subtle {
   .game-name {
     @apply mb-2;
   }
+}
+
+#participant-header {
+  @apply h-10 mt-6 md:mt-4;
+}
+
+.participant-grid {
+  @apply text-sm md:text-base text-zinc-500 grid;
+  grid-template-columns: 40px 120px 60px 60px auto;
+
+  @media (min-width: 768px) {
+    grid-template-columns: 40px 160px 60px 60px auto 100px;
+  }
+
+  * {
+    @apply self-center m-0;
+  }
+}
+
+.score {
+  @apply font-mono text-center self-center text-sm;
+}
+
+section {
+  @apply pt-8 md:pt-6 pb-4 md:pb-2;
 }

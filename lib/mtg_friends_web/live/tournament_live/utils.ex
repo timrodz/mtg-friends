@@ -32,9 +32,18 @@ defmodule MtgFriendsWeb.Live.TournamentLive.Utils do
 
   def render_round_status(status) do
     case status do
+      :inactive -> "Pairing players"
+      :active -> "In progress"
+      :finished -> "Finished"
+      _ -> "??"
+    end
+  end
+
+  def render_round_status_extra(status) do
+    case status do
       :inactive -> "Pairing players 🟩"
       :active -> "In progress 🟦"
-      :finished -> "Ended 🟥"
+      :finished -> "Finished 🟥"
     end
   end
 

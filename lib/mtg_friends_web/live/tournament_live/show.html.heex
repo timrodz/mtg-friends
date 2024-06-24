@@ -1,73 +1,73 @@
 <.header>
   <%= @tournament.name %>
   <:actions :if={@current_user_owner}>
-    <.link patch={~p"/tournaments/#{@tournament}/show/edit"} phx-click={JS.push_focus()}>
-      <.button_secondary>Edit</.button_secondary>
+    <.link
+      patch={~p"/tournaments/#{@tournament}/show/edit"}
+      phx-click={JS.push_focus()}
+      class="cta-subtle"
+    >
+      Edit
     </.link>
   </:actions>
 </.header>
 
-<.back navigate={~p"/tournaments"}>Tournaments</.back>
-
-<h2>Summary</h2>
-
-<.list>
-  <:item title="Game"><%= @tournament.game.name %></:item>
-  <:item title="Format">
-    <.tooltip content={Utils.render_subformat_description(@tournament.subformat)} variant="arrow">
-      <%= Utils.render_format(@tournament.format) %> — <%= Utils.render_subformat(
-        @tournament.subformat
-      ) %>
-    </.tooltip>
-  </:item>
-  <:item title="Status"><%= Utils.render_status(@tournament.status) %></:item>
-  <:item title="Date"><.datetime dt={@tournament.date} no_icon /></:item>
-  <:item title="Where"><%= @tournament.location %></:item>
-  <:item title="Round system">
+<section id="summary" class="text-gray-600">
+  <h2>Summary</h2>
+  <hr />
+  <div class="flex flex-col md:flex-row justify-between">
+    <.date dt={@tournament.date} />
     <p>
-      <%= @tournament.round_count %> rounds / <%= @tournament.round_length_minutes %> minutes each <%= if @tournament.is_top_cut_4 do
-        raw("<span class='badge'>Top cut 4 enabled</span>")
-      end %>
+      <.icon name="hero-map-pin-solid" /> <%= @tournament.location %>
     </p>
-  </:item>
-</.list>
-
-<div class="description">
-  <h2>Description</h2>
-  <p><%= raw(@tournament.description_html) %></p>
-</div>
-
-<div id="participants" class="my-16">
-  <h2 class="font-bold">Participants & Standings</h2>
-  <div
-    id="participant-header"
-    class="mb-4 mt-10 md:mt-4 grid grid-cols-7 md:grid-cols-9 text-sm md:text-md text-zinc-500"
-  >
-    <p class="col-span-1"><.icon name="hero-trophy" /></p>
-    <p class="col-span-2">Name</p>
-    <p class="col-span-2">Points / Winrate</p>
-    <p class="col-span-2">Commander / Decklist</p>
-    <p class="hidden col-span-0 md:block md:col-span-1" />
   </div>
-  <hr class="mt-4 mb-6" />
-  <.simple_form for={@participant_forms} phx-submit="update-participants" as_flex>
+  <p class="icon-text">
+    <%= @tournament.game.name %> / <%= Utils.render_format(@tournament.format) %> / <%= Utils.render_subformat(
+      @tournament.subformat
+    ) %> / <%= @tournament.round_count %> rounds (<%= @tournament.round_length_minutes %> minutes each)<%= if @tournament.is_top_cut_4 do
+      raw(" <span class='badge'>Top cut 4 enabled</span>")
+    end %>
+  </p>
+  <p>Status: <.tournament_status value={@tournament.status} /></p>
+  <h3>Description</h3>
+  <%= if @tournament.description_html != "" do %>
+    <p><%= raw(@tournament.description_html) %></p>
+  <% else %>
+    <p><%= @tournament.description_raw %></p>
+  <% end %>
+</section>
+
+<section id="participants">
+  <h2 class="font-bold">Participants & Standings</h2>
+  <div id="participant-header" class="participant-grid">
+    <p><.icon name="hero-trophy" /></p>
+    <p>Name</p>
+    <p class="text-center">Points</p>
+    <p class="text-center">Win %</p>
+    <p>Decklist</p>
+    <p class="hidden md:block" />
+  </div>
+  <hr />
+  <.simple_form
+    for={@participant_forms}
+    phx-submit="update-participants"
+    as_flex
+    class="!space-y-3"
+  >
     <div
       :for={{p, index} <- Enum.with_index(@participant_forms.params["participants"])}
-      id={"data-#{p["id"]}"}
+      id={"form-participant-#{p["id"]}"}
       class={[
-        "grid grid-cols-7 md:grid-cols-9 text-sm md:text-md px-1",
+        "participant-grid px-2 py-1",
         @tournament.status == :finished && index == 0 &&
-          "py-1 bg-green-200 border rounded-lg border-green-200",
+          "bg-green-200 border rounded-lg border-green-200",
         p["is_dropped"] && "bg-red-200"
       ]}
     >
       <input type="hidden" name={"participant-id-#{p["id"]}"} value={p["id"]} />
-      <div class="col-span-1 self-center">
-        <p class="text-zinc-600 font-mono w-[2rem]">
-          #<%= index + 1 %>
-        </p>
-      </div>
-      <div class="col-span-2 self-center mr-2 flex">
+      <p class="text-zinc-600 font-mono w-[2rem]">
+        #<%= index + 1 %>
+      </p>
+      <div class="self-center mr-2 flex">
         <%= if @current_user_admin do %>
           <.input type="text" name={"form-participant-name-#{p["id"]}"} value={p["name"]} />
         <% else %>
@@ -78,23 +78,34 @@
           <% end %>
         <% end %>
       </div>
-      <div class="col-span-2 self-center">
-        <p class="mx-2 md:mx-0">
-          <%= if p["scores"] do %>
-            <%= Decimal.round(p["scores"].total_score, (@toggle_score_decimals && 0) || 3) %> / <%= Decimal.round(
-              p["scores"].win_rate,
-              (@toggle_score_decimals && 0) || 2
-            ) %>%
-          <% else %>
-            <%= if @toggle_score_decimals do %>
-              0 / 0%
-            <% else %>
-              0.000 / 0.00%
-            <% end %>
-          <% end %>
+      <%= if p["scores"] do %>
+        <p class="score">
+          <%= Decimal.round(p["scores"].total_score, (@toggle_score_decimals && 0) || 3) %>
         </p>
-      </div>
-      <div class="col-span-2 self-center">
+        <p class="score">
+          <%= Decimal.round(
+            p["scores"].win_rate,
+            (@toggle_score_decimals && 0) || 2
+          ) %>%
+        </p>
+      <% else %>
+        <%= if @toggle_score_decimals do %>
+          <p class="score">
+            0
+          </p>
+          <p class="score">
+            0%
+          </p>
+        <% else %>
+          <p class="score">
+            0.00
+          </p>
+          <p class="score">
+            0.00%
+          </p>
+        <% end %>
+      <% end %>
+      <div class="self-center">
         <%= if @current_user_owner do %>
           <.input type="text" name={"form-participant-decklist-#{p["id"]}"} value={p["decklist"]} />
         <% else %>
@@ -103,7 +114,7 @@
       </div>
       <div
         :if={@current_user_owner or @current_user_admin}
-        class="hidden col-span-0 md:col-span-1 md:flex md:justify-center md:items-center"
+        class="hidden md:flex md:justify-center md:items-center"
       >
         <.link
           phx-click={
@@ -119,7 +130,7 @@
       <%!-- Experimental feature, not really necessary? --%>
       <%!-- <div
         :if={not p["is_dropped"] and (@current_user_owner or @current_user_admin)}
-        class="hidden col-span-0 md:col-span-1 md:flex md:justify-center md:items-center"
+        class="hidden md:md:flex md:justify-center md:items-center"
       >
         <.link
           phx-click={
@@ -152,34 +163,31 @@
       Toggle score decimals
     </.button_secondary>
   </div>
-</div>
+</section>
 
-<div id="rounds" class="my-16">
+<section id="rounds">
   <h2 class="font-bold">Rounds</h2>
-  <.table
-    id="tournaments"
-    rows={@tournament.rounds}
-    class="my-4"
-    row_click={
+  <.item_grid
+    :if={length(@tournament.rounds) > 0}
+    id="rounds"
+    items={@tournament.rounds}
+    item_click={
       fn round -> JS.navigate(~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}") end
     }
   >
-    <:col :let={round} label="Number">
-      <span class="text-zinc-600 font-mono font-medium text-sm">#<%= round.number + 1 %></span>
-    </:col>
-    <:col :let={round} label="Status">
-      <%= Utils.render_round_status(round.status) %>
-    </:col>
-    <:action :let={round} :if={@current_user_owner}>
-      <.link
-        patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"}
-        class="text-zinc-600 font-medium"
-      >
-        View
+    <:item :let={round}>
+      <div class="flex justify-between">
+        <p>
+          Round
+          #<%= round.number + 1 %>
+        </p>
+        <.round_status value={round.status} />
+      </div>
+      <.link patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"} class="p-0">
+        <.icon name="hero-chevron-right" /> View round
       </.link>
-    </:action>
-    <:action :let={round} :if={@current_user_owner && @tournament.status != :finished}>
       <.link
+        :if={@current_user_owner && @tournament.status != :finished}
         phx-click={
           JS.push("delete-round", value: %{id: round.id})
           |> hide("##{round.id}")
@@ -189,8 +197,8 @@
       >
         Delete
       </.link>
-    </:action>
-  </.table>
+    </:item>
+  </.item_grid>
   <%= if @current_user_owner && @tournament.status != :finished do %>
     <div class="space-y-4">
       <.warning :if={not @has_enough_participants?}>
@@ -221,7 +229,7 @@
       </div>
     </div>
   <% end %>
-  <div :if={@current_user_owner} class="mt-4 p-2 bg-emerald-100 flex flex-col space-y-2">
+  <div :if={@current_user_owner} class="mt-4 p-2 rounded-md bg-yellow-50 flex flex-col space-y-2">
     <p>
       Note to organizers: This app lets you organize tournaments <b>YOUR WAY</b>, so you can assign round points however you want.
     </p>
@@ -230,7 +238,7 @@
     </p>
     <p>The sky is the limit!</p>
   </div>
-</div>
+</section>
 
 <.modal
   :if={@live_action == :edit}
@@ -265,3 +273,5 @@
     patch={~p"/tournaments/#{@tournament.id}/show/end"}
   />
 </.modal>
+
+<.back navigate={~p"/tournaments"}>All tournaments</.back>

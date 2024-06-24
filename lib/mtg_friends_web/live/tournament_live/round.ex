@@ -97,7 +97,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
       round_number: round.number,
       round_status: round.status,
       round_finish_time: round_finish_time,
-      round_countdown_timer: render_countdown_timer(round_finish_time),
+      round_countdown_timer: get_countdown_timer(round_finish_time),
       tournament_id: round.tournament.id,
       tournament_name: round.tournament.name,
       tournament_rounds: round.tournament.rounds,
@@ -106,10 +106,10 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
       page_title:
         case action do
           :index ->
-            "Round #{round.number + 1} - Tournament #{round.tournament.name}"
+            "#{round.tournament.name} / Round #{round.number + 1}"
 
           :edit ->
-            "Edit Pairing #{socket.assigns.selected_pairing_number} - Round #{round.number + 1} - Tournament #{round.tournament.name}"
+            "#{round.tournament.name} / Round #{round.number + 1} / Pod ##{socket.assigns.selected_pairing_number}"
         end,
       num_pairings: round(Float.ceil(length(round.tournament.participants) / 4)),
       forms: forms
@@ -124,7 +124,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
   def handle_info(:tick, socket) do
     {:noreply,
      assign(socket,
-       round_countdown_timer: render_countdown_timer(socket.assigns.round_finish_time)
+       round_countdown_timer: get_countdown_timer(socket.assigns.round_finish_time)
      )}
   end
 
@@ -152,7 +152,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
      |> reload_page}
   end
 
-  defp render_countdown_timer(round_end_time) do
+  defp get_countdown_timer(round_end_time) do
     case round_end_time do
       nil ->
         ""
@@ -160,23 +160,11 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
       _ ->
         time_diff = NaiveDateTime.diff(round_end_time, NaiveDateTime.utc_now())
 
-        {diff_seconds, rendered_time} =
-          if time_diff > 0,
-            do: {time_diff, Seconds.to_hh_mm_ss(time_diff)},
-            else: {0, "00:00"}
-
-        raw("""
-        <div class="round_countdown_timer" class="#{cond do
-          diff_seconds > 60 * 5 and diff_seconds <= 60 * 10 -> "rounded-lg bg-yellow-200"
-          diff_seconds >= 60 and diff_seconds <= 60 * 5 -> "rounded-lg bg-orange-200"
-          diff_seconds > 0 and diff_seconds < 60 -> "animate-bounce rounded-lg bg-red-200"
-          diff_seconds <= 0 -> "rounded-lg bg-red-200"
-          true -> ""
-        end}"
-        >
-          Round time: <span class="font-mono">#{rendered_time}</span>
-        </div>
-        """)
+        if time_diff > 0 do
+          {time_diff, Seconds.to_hh_mm_ss(time_diff)}
+        else
+          {0, "00:00"}
+        end
     end
   end
 

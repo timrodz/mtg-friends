@@ -23,7 +23,7 @@ main#landing-page {
 }
 
 #landing-page #about #faq-contents .paper {
-  @apply px-6 py-6 shadow-sm hover:bg-slate-50;
+  @apply px-6 py-6 hover:bg-slate-50;
 }
 
 #landing-page #about #faq-contents ul {

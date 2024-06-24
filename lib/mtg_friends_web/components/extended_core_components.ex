@@ -4,6 +4,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
   """
   use Phoenix.Component
 
+  alias MtgFriendsWeb.Live.TournamentLive.Utils, as: TournamentUtils
   alias MtgFriendsWeb.CoreComponents
   alias MtgFriends.DateUtils
 
@@ -43,7 +44,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
       end
 
     ~H"""
-    <div id={"item-grid-#{@id}"} class={["item-grid mt-10 mb-6", @class]}>
+    <div id={"item-grid-#{@id}"} class={["item-grid mt-6 mb-6", @class]}>
       <%= if @title do %>
         <h3 class="text-xl font-bold mb-4"><%= @title %></h3>
       <% end %>
@@ -59,7 +60,8 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
           :for={item <- @items}
           id={@item_id && @item_id.(item)}
           class={[
-            "item-container border-[1px] border-slate-200 bg-white rounded-md hover:bg-slate-50 hover:cursor-pointer",
+            "item-container border-[1px] border-slate-200 bg-white rounded-md shadow-sm",
+            @item_click && "hover:bg-slate-50 hover:cursor-pointer",
             @item_container_class
           ]}
         >
@@ -107,6 +109,95 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
       <%= @label %>
       <span><%= @dt |> DateUtils.render_naive_datetime_date() %></span>
     </p>
+    """
+  end
+
+  @doc """
+  Generates a generic badge message.
+  """
+  attr :class, :string, default: nil
+  slot :inner_block, required: true
+
+  def badge(assigns) do
+    ~H"""
+    <span class={[
+      "self-center inline-flex items-center rounded-md px-2 py-1 font-medium text-zinc-700 ring-1 ring-inset ring-slate-200",
+      @class
+    ]}>
+      <%= render_slot(@inner_block) %>
+    </span>
+    """
+  end
+
+  attr :value, :string, required: true
+
+  def tournament_status(assigns) do
+    case assigns.value do
+      :inactive ->
+        ~H"""
+        <.badge class="!ring-emerald-200"><%= TournamentUtils.render_status(@value) %></.badge>
+        """
+
+      :active ->
+        ~H"""
+        <.badge class="!ring-blue-500"><%= TournamentUtils.render_status(@value) %></.badge>
+        """
+
+      :finished ->
+        ~H"""
+        <.badge class="!ring-red-200"><%= TournamentUtils.render_status(@value) %></.badge>
+        """
+
+      _ ->
+        ""
+    end
+  end
+
+  attr :value, :string, required: true
+
+  def round_status(assigns) do
+    case assigns.value do
+      :inactive ->
+        ~H"""
+        <.badge class="!ring-emerald-200"><%= TournamentUtils.render_round_status(@value) %></.badge>
+        """
+
+      :active ->
+        ~H"""
+        <.badge class="!ring-blue-500"><%= TournamentUtils.render_round_status(@value) %></.badge>
+        """
+
+      :finished ->
+        ~H"""
+        <.badge class="!ring-red-200"><%= TournamentUtils.render_round_status(@value) %></.badge>
+        """
+
+      _ ->
+        ""
+    end
+  end
+
+  attr :time_left, :string, required: true
+  attr :seconds_left, :float, required: true
+
+  def round_timer(assigns) do
+    ds = assigns.seconds_left
+
+    timer_class =
+      cond do
+        ds > 60 * 5 and ds <= 60 * 10 -> "rounded-lg bg-yellow-200"
+        ds >= 60 and ds <= 60 * 5 -> "rounded-lg bg-orange-200"
+        ds > 0 and ds < 60 -> "animate-bounce rounded-lg bg-red-200"
+        ds <= 0 -> "rounded-lg bg-red-200"
+        true -> ""
+      end
+
+    assigns = assign(assigns, :timer_class, timer_class)
+
+    ~H"""
+    <div class="round_countdown_timer" class={["", @timer_class]}>
+      Round time: <span class="font-mono"><%= @time_left %></span>
+    </div>
     """
   end
 end

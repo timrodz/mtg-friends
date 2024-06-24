@@ -452,7 +452,10 @@ defmodule MtgFriendsWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "flex items-center justify-between gap-6", @class]}>
+    <header class={[
+      @actions != [] && "flex flex-col md:flex-row md:items-center justify-between gap-6",
+      @class
+    ]}>
       <div>
         <h1>
           <%= render_slot(@inner_block) %>
@@ -461,7 +464,7 @@ defmodule MtgFriendsWeb.CoreComponents do
           <%= render_slot(@subtitle) %>
         </p>
       </div>
-      <div class="flex flex-col gap-2"><%= render_slot(@actions) %></div>
+      <div class="flex flex-col items-start gap-2"><%= render_slot(@actions) %></div>
     </header>
     """
   end
@@ -621,23 +624,6 @@ defmodule MtgFriendsWeb.CoreComponents do
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
     <span class={[@name, "w-5 h-5", @class]} />
-    """
-  end
-
-  @doc """
-  Generates a generic badge message.
-  """
-  attr :class, :string, default: nil
-  slot :inner_block, required: true
-
-  def badge(assigns) do
-    ~H"""
-    <span class={[
-      "inline-flex items-center rounded-md bg-teal-300 px-2 py-1 text-xs font-medium text-zinc-700 ring-1 ring-inset ring-teal-900/10",
-      @class
-    ]}>
-      <%= render_slot(@inner_block) %>
-    </span>
     """
   end
 
