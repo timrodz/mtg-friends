@@ -4,6 +4,41 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
+
+    <%!-- Open graph --%>
+    <meta property="og:site_name" content="Roast My Site" />
+    <meta property="og:title" content="Tie Breaker" />
+    <meta property="og:description" content="TCG tournaments made easy" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:url" content="https://www.timrodz.dev" />
+    <meta property="og:image" content="https://mtg-friends.fly.dev/images/landing.jpg" />
+    <meta property="og:image:alt" content="Tie Breaker - TCG tournaments made easy" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <%!-- Twitter Graph --%>
+    <meta property="twitter:title" content="TiBreaker" />
+    <meta property="twitter:description" content="TCG tournaments made easy" />
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:domain" content="www.timrodz.dev" />
+    <meta property="twitter:url" content="https://www.timrodz.dev" />
+    <meta property="twitter:image" content="https://mtg-friends.fly.dev/images/landing.jpg" />
+    <meta property="twitter:image:alt" content="Tie Breaker - TCG tournaments made easy" />
+    <meta property="twitter:image:width" content="1200" />
+    <meta property="twitter:image:height" content="630" />
+    <meta property="twitter:site" content="@timrodz" />
+    <meta property="twitter:creator" content="@timrodz" />
+    <meta property="twitter:creator:id" content="timrodz" />
+
+    <%!-- Analytics by https://beamanalytics.io --%>
+    <script
+      src="https://beamanalytics.b-cdn.net/beam.min.js"
+      data-token="308008b2-6185-4337-9bb4-6697be781e80"
+      async
+    >
+    </script>
+
     <.live_title suffix=" - MTG Friends">
       <%= assigns[:page_title] || "MtgFriends" %>
     </.live_title>

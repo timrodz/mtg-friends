@@ -13,7 +13,7 @@ defmodule MtgFriendsWeb.LandingHTML do
             ⚔ Tie Breaker
           </h1>
         </div>
-        <p class="mt-2 text-center italic">TCG tournament hosting made easy</p>
+        <p class="mt-2 text-center italic">TCG tournaments made easy</p>
         <div id="actions" class="mt-8 flex gap-3 justify-center">
           <.link class="cta" patch={~p"/tournaments/new"}>Host a tournament</.link>
           <.link class="cta" navigate="#about">Learn more</.link>
@@ -62,7 +62,7 @@ defmodule MtgFriendsWeb.LandingHTML do
           </div>
         </section>
         <section id="about">
-          <h2>What is TieBreaker?</h2>
+          <h2>What is Tie Breaker?</h2>
           <hr />
           <p>
             This project was born out of love for competitive EDH, a multiplayer format for Magic: The Gathering (MTG). It all started when my friends introduced me to MTG, and I got instantly hooked with the game. We would often organize events and tournaments, but I noticed we had difficulty when hosting tournaments:
