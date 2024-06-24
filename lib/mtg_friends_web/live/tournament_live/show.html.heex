@@ -1,6 +1,6 @@
 <.header>
   <%= @tournament.name %>
-  <:actions :if={@current_user_owner}>
+  <:actions :if={@current_user_owner or @current_user_admin}>
     <.link
       patch={~p"/tournaments/#{@tournament}/show/edit"}
       phx-click={JS.push_focus()}
