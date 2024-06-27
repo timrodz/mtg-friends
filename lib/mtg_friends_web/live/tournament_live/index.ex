@@ -3,6 +3,7 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
 
   alias MtgFriends.Tournaments
   alias MtgFriends.Tournaments.Tournament
+  alias MtgFriends.TournamentUtils
 
   on_mount {MtgFriendsWeb.UserAuth, :mount_current_user}
 
