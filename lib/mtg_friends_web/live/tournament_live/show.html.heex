@@ -11,7 +11,7 @@
   </:actions>
 </.header>
 
-<section id="summary" class="text-gray-600">
+<section id="summary" class="text-zinc-600">
   <h2>Summary</h2>
   <hr />
   <div class="flex flex-col md:flex-row justify-between">
@@ -38,7 +38,7 @@
 
 <section id="participants">
   <h2 class="font-bold">Participants & Standings</h2>
-  <div id="participant-header" class="participant-grid">
+  <div id="participant-header" class="participant-grid-header participant-grid">
     <p><.icon name="hero-trophy" /></p>
     <p>Name</p>
     <p class="text-center">Points</p>
@@ -159,9 +159,9 @@
     </:actions>
   </.simple_form>
   <div class="mt-2">
-    <.button_secondary phx-click="toggle-score-decimals" phx-disable-with="Toggling...">
+    <.button phx-click="toggle-score-decimals" phx-disable-with="Toggling..." class="cta-subtle">
       Toggle score decimals
-    </.button_secondary>
+    </.button>
   </div>
 </section>
 
@@ -177,17 +177,20 @@
   >
     <:item :let={round}>
       <div class="flex justify-between">
-        <p>
+        <p class={round.status == :finished && "text-zinc-500"}>
           Round
           #<%= round.number + 1 %>
         </p>
         <.round_status value={round.status} />
       </div>
-      <.link patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"} class="p-0">
+      <.link
+        patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"}
+        class={["p-0", round.status == :finished && "text-zinc-500"]}
+      >
         <.icon name="hero-chevron-right" /> View round
       </.link>
       <.link
-        :if={@current_user_owner && @tournament.status != :finished}
+        :if={@current_user_owner && @tournament.status != :finished && round.status != :finished}
         phx-click={
           JS.push("delete-round", value: %{id: round.id})
           |> hide("##{round.id}")
@@ -208,7 +211,7 @@
         In order to begin the tournament, all participants must have names assigned to them
       </.warning>
       <.warning :if={@is_current_round_active?}>
-        You must finish the current round before starting a new one
+        There can only be 1 active round at a time
       </.warning>
       <div class="flex gap-2 flex-col md:flex-row">
         <.button
@@ -220,24 +223,16 @@
           }
         >
           <%= if length(@rounds) == 0 do %>
-            <.icon name="hero-rocket-launch-solid" class="mr-1" /> Begin tournament (1st round)
+            <.icon name="hero-rocket-launch-solid" class="mr-1" />
+            Create 1st round (start tournament)
           <% else %>
             <.icon name="hero-plus" class="mr-1" />
-            Begin <%= (@tournament.round_count == length(@rounds) + 1 && "last") || "new" %> round
+            Create <%= (@tournament.round_count == length(@rounds) + 1 && "last") || "new" %> round
           <% end %>
         </.button>
       </div>
     </div>
   <% end %>
-  <div :if={@current_user_owner} class="mt-4 p-2 rounded-md bg-yellow-50 flex flex-col space-y-2">
-    <p>
-      Note to organizers: This app lets you organize tournaments <b>YOUR WAY</b>, so you can assign round points however you want.
-    </p>
-    <p>
-      If you want the round to end when a player wins, and "winners get 4 points, draws give 1 point to each player, and losers get 0 points", go for it. The same goes if you want to host tournaments where players get points based on their round standings (1st place: 4 points; 2nd place: 3 points; 3rd place: 2 points; 4th place: 1 point).
-    </p>
-    <p>The sky is the limit!</p>
-  </div>
 </section>
 
 <.modal

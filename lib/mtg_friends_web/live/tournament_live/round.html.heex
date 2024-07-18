@@ -14,21 +14,20 @@
   </section>
 <% end %>
 <%= if @current_user_owner and @round_status == :inactive do %>
-  <section id="summary">
-    <div class="mt-4">
-      <quote class="mb-2">
-        This round's pods have been generated! Let players know who they'll be playing against. When all players are ready, press the button below to start the timer.
-      </quote>
-      <.button phx-click="start-round" phx-disable-with="Starting...">
-        <.icon name="hero-rocket-launch-solid" class="mr-1" />Start round
-      </.button>
-    </div>
+  <section id="summary" class="p-2 bg-blue-50 rounded-md">
+    <p class="mb-2 text-xl">
+      🎉 This round's pods have been generated! Let players know who they'll be playing against.
+    </p>
+    <p class="mb-4 text-xl">When all players are ready, click on <b>Start round</b> below.</p>
+    <.button phx-click="start-round" phx-disable-with="Starting...">
+      <.icon name="hero-rocket-launch-solid" class="mr-1" />Start round
+    </.button>
   </section>
 <% end %>
 
 <section id="pairings">
   <h2>Pairings</h2>
-  <.item_grid id="pairingZ" items={@pairing_groups}>
+  <.item_grid id="pairing" items={@pairing_groups}>
     <:item :let={{pairing_number, pairing_group}} class="justify-between">
       <div>
         <h3 class="font-semibold">
@@ -72,7 +71,7 @@
   </.item_grid>
 </section>
 
-<div :if={@current_user_owner} class="p-2 bg-yellow-50 flex flex-col space-y-3">
+<%!-- <div :if={@current_user_owner} class="p-2 bg-yellow-50 flex flex-col space-y-3">
   <p>
     Note to organizers: This app lets you organize tournaments <b>YOUR WAY</b>, so you can assign round points however you want.
   </p>
@@ -80,7 +79,7 @@
     If you want the round to end when a player wins, and "winners get 4 points, draws give 1 point to each player, and losers get 0 points", go. The same goes if you want to host tournaments where players get points based on their round standings (1st place: 4 points; 2nd place: 3 points; 3rd place: 2 points; 4th place: 1 point).
   </p>
   <p>The sky is the limit!</p>
-</div>
+</div> --%>
 
 <.modal
   :if={@live_action == :edit}

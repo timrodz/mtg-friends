@@ -13,7 +13,7 @@ defmodule MtgFriendsWeb.LandingHTML do
             ⚔ Tie Breaker
           </h1>
         </div>
-        <p class="mt-2 text-center italic">TCG tournaments made easy</p>
+        <p class="mt-2 text-lg text-center italic">TCG tournaments made easy</p>
         <div id="actions" class="mt-8 flex gap-3 justify-center">
           <.link class="cta" patch={~p"/tournaments/new"}>Host a tournament</.link>
           <.link class="cta" navigate="#about">Learn more</.link>
@@ -44,10 +44,25 @@ defmodule MtgFriendsWeb.LandingHTML do
             </.link>
           </div>
         </section>
+        <section id="about">
+          <h2>What is Tie Breaker?</h2>
+          <hr />
+          <p>
+            This project was born out of love for competitive EDH, a multiplayer format for Magic: The Gathering (MTG). It all started when my friends introduced me to MTG, and I got instantly hooked with the game. We would often organize events and tournaments, but I noticed we had difficulty when hosting tournaments:
+            <i>from pairings to score-keeping, I knew what to do</i>
+            💡
+          </p>
+          <p>
+            Since this is a side project, I'm always open to new ideas, no matter how wonky they might seem. Contact me via
+            <a href="mailto:juan@timrodz.dev" class="p-0">juan@timrodz.dev</a>
+            and we'll cook up something together.
+          </p>
+        </section>
         <section id="supporters">
           <h2>Our supporters</h2>
           <hr />
-          <div class="mt-6 lg:mt-3 supporter-carousel grid grid-cols-2 md:grid-cols-3 gap-10 justify-items-center">
+          <p class="text-lg">Trusted by WPN stores & streamers alike—Tie Breaker meets your needs</p>
+          <div class="mt-6 lg:mt-3 mb-8 supporter-carousel grid grid-cols-2 md:grid-cols-3 gap-10 justify-items-center">
             <%= for s <- @supporters do %>
               <.link
                 :if={s.image}
@@ -60,35 +75,37 @@ defmodule MtgFriendsWeb.LandingHTML do
               </.link>
             <% end %>
           </div>
+          <div>
+            <blockquote class="px-4 py-2 my-4 border-l-4 border-gray-300 text-zinc-800">
+              I've been testing different methods of pairing for a long time, and this app is exactly what I've been looking for. It offers an intuitive and streamlined process for organizing matches and tournaments, with an easy and user-friendly interface. Also, it's updated regularly with bug fixes and improvements. Recommended!
+            </blockquote>
+            <p class="text-zinc-700">Jorge Ortíz — Data Engineer & MTG Streamer (DankConfidants)</p>
+          </div>
         </section>
-        <section id="about">
-          <h2>What is Tie Breaker?</h2>
-          <hr />
-          <p>
-            This project was born out of love for competitive EDH, a multiplayer format for Magic: The Gathering (MTG). It all started when my friends introduced me to MTG, and I got instantly hooked with the game. We would often organize events and tournaments, but I noticed we had difficulty when hosting tournaments:
-            <i>from pairings to score-keeping, I knew what to do</i>
-            💡
-          </p>
+        <section id="faq">
           <h2 class="mt-8">Frequently Asked Questions</h2>
           <hr />
+
           <div id="faq-contents" class="mt-3 flex flex-col gap-3">
             <.paper>
               <.accordion id="event_types">
                 <:header>
                   <.typography margin={false} variant="h3">
-                    What type of events can I run?
+                    What type of events can I run? (Games supported)
                   </.typography>
                 </:header>
                 <:panel min_size="100px">
-                  <p>
-                    You can run the following events:
-                  </p>
                   <dp>
                     <p>Magic: The Gathering</p>
                     <ul>
-                      <li>Commander</li>
+                      <li>Multiplayer / EDH</li>
+                      <li>1v1 / Standard</li>
                     </ul>
                     <p>Pokémon</p>
+                    <ul>
+                      <li>Standard</li>
+                    </ul>
+                    <p>Yu-Gi-Oh!</p>
                     <ul>
                       <li>Standard</li>
                     </ul>
@@ -119,7 +136,7 @@ defmodule MtgFriendsWeb.LandingHTML do
                 </:header>
                 <:panel max_size="100px">
                   <p>
-                    As of <%= DateTime.utc_now() |> DateUtils.render_naive_datetime_date() %>, this app is completely free. All I ask of you is to shout me out in support, and if you're OK, you can share your (or your store's) socials in the supporter's page
+                    TieBreaker is free of use. It was a passion project I started working on, and I don't plan to monetize it at the moment. You're more than welcome to provide feedback and share this app with others!
                   </p>
                 </:panel>
               </.accordion>
@@ -132,7 +149,7 @@ defmodule MtgFriendsWeb.LandingHTML do
     <footer>
       <div class="max-w-screen-sm mx-auto flex justify-center items-center pt-8 pb-12 px-4 lg:px-0">
         <p class="text-center">
-          Built by <.link href="https://www.timrodz.dev" target="_blank" class="font-medium">Juan Alejandro Morais</.link>, with the support of many early stage adopters
+          &copy; 2024 <.link href="https://www.timrodz.dev" target="_blank" class="font-medium">Juan Rodríguez Morais</.link>. Brought to you with the support of many early stage adopters
           <.icon name="hero-heart-solid" />
         </p>
       </div>

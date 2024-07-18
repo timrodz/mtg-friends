@@ -228,31 +228,7 @@ defmodule MtgFriendsWeb.CoreComponents do
         "phx-submit-loading:opacity-75 rounded-lg bg-indigo-600 enabled:hover:underline py-2 px-3",
         "text-sm font-semibold leading-6 text-white active:text-white/80",
         "flex items-center",
-        "disabled:bg-zinc-300 disabled:text-gray-600",
-        @class
-      ]}
-      {@rest}
-    >
-      <%= render_slot(@inner_block) %>
-    </button>
-    """
-  end
-
-  attr :type, :string, default: nil
-  attr :class, :string, default: nil
-  attr :rest, :global, include: ~w(disabled form name value)
-
-  slot :inner_block, required: true
-
-  def button_secondary(assigns) do
-    ~H"""
-    <button
-      type={@type}
-      class={[
-        "phx-submit-loading:opacity-75 rounded-lg bg-zinc-700 hover:underline py-2 px-3",
-        "text-sm font-semibold leading-6 text-white active:text-white/80",
-        "flex items-center",
-        "disabled:bg-zinc-300 disabled:text-gray-600",
+        "disabled:bg-zinc-300 disabled:text-zinc-600",
         @class
       ]}
       {@rest}

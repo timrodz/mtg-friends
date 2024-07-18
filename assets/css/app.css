@@ -65,12 +65,16 @@ a.cta-subtle {
   @apply bg-white text-indigo-900 ring-[1px] ring-slate-200 hover:bg-slate-50;
 }
 
+button.cta-subtle {
+  @apply bg-white text-indigo-900 ring-[1px] ring-slate-200 hover:bg-slate-50;
+}
+
 .icon-text {
   @apply flex items-center gap-1;
 }
 
 .description {
-  @apply mt-8 text-gray-700;
+  @apply mt-8 text-zinc-700;
 
   a {
     @apply px-1 py-1 hover:bg-indigo-50;
@@ -86,7 +90,7 @@ span.badge {
 }
 
 p.subtle {
-  @apply text-gray-600;
+  @apply text-zinc-600;
 }
 
 #item-grid-tournaments .item-grid {
@@ -98,7 +102,7 @@ p.subtle {
 }
 
 #item-grid-tournaments .item {
-  @apply text-gray-600;
+  @apply text-zinc-600;
 
   h3 {
     @apply font-bold my-0 text-black;
@@ -110,15 +114,15 @@ p.subtle {
 }
 
 #participant-header {
-  @apply h-10 mt-6 md:mt-4;
+  @apply h-10 mt-6 md:mt-4 px-2 py-1;
 }
 
 .participant-grid {
-  @apply text-sm md:text-base text-zinc-500 grid;
+  @apply text-sm md:text-base text-zinc-700 grid;
   grid-template-columns: 40px 120px 60px 60px auto;
 
   @media (min-width: 768px) {
-    grid-template-columns: 40px 160px 60px 60px auto 100px;
+    grid-template-columns: 35px 160px 65px 65px auto 100px;
   }
 
   * {

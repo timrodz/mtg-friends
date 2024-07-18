@@ -14,19 +14,15 @@ main#landing-page {
   }
 
   section {
-    @apply py-14;
-  }
-
-  #about {
-    @apply text-lg;
+    @apply py-8 text-lg;
   }
 }
 
-#landing-page #about #faq-contents .paper {
+#landing-page #faq #faq-contents .paper {
   @apply px-6 py-6 hover:bg-slate-50;
 }
 
-#landing-page #about #faq-contents ul {
+#landing-page #faq #faq-contents ul {
   @apply list-disc list-inside;
 
   li {
