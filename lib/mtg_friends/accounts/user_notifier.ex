@@ -8,12 +8,14 @@ defmodule MtgFriends.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"MtgFriends", "contact@example.com"})
+      |> from({"Juan from MTG Friends", "timrodz@icloud.com"})
       |> subject(subject)
       |> text_body(body)
 
     with {:ok, _metadata} <- Mailer.deliver(email) do
       {:ok, email}
+    else
+      err -> IO.inspect(err, label: "Error sending email")
     end
   end
 

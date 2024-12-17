@@ -53,8 +53,10 @@ defmodule MtgFriends.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:httpoison, "~> 2.0"},
       {:poison, "~> 5.0"},
+      {:tzdata, "~> 1.1.2"},
       {:phoenix_ui, "~> 0.1.9"},
-      {:calendar, "~> 1.0.0"}
+      {:calendar, "~> 1.0.0"},
+      {:gen_smtp, "~> 1.1"}
     ]
   end
 

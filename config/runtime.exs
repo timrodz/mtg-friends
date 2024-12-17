@@ -63,6 +63,13 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  config :mtg_friends, MtgFriends.Mailer,
+    adapter: Swoosh.Adapters.SMTP,
+    relay: System.get_env("MAILER_SMTP_RELAY") || "",
+    username: System.get_env("MAILER_SMTP_USERNAME") || "",
+    password: System.get_env("MAILER_SMTP_PASSWORD") || "",
+    port: System.get_env("MAILER_SMTP_PORT") || 1
+
   # ## SSL Support
   #
   # To get SSL working, you will need to add the `https` key
