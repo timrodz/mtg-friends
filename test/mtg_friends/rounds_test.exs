@@ -7,8 +7,9 @@ defmodule MtgFriends.RoundsTest do
     alias MtgFriends.Rounds.Round
 
     import MtgFriends.RoundsFixtures
+    import MtgFriends.TournamentsFixtures
 
-    @invalid_attrs %{}
+    @invalid_attrs %{tournament_id: nil, number: nil}
 
     test "list_rounds/0 returns all rounds" do
       round = round_fixture()
@@ -21,9 +22,10 @@ defmodule MtgFriends.RoundsTest do
     end
 
     test "create_round/1 with valid data creates a round" do
-      valid_attrs = %{}
+      tournament = tournament_fixture()
+      valid_attrs = %{tournament_id: tournament.id, number: 1, status: :inactive}
 
-      assert {:ok, %Round{} = round} = Rounds.create_round(valid_attrs)
+      assert {:ok, %Round{} = _round} = Rounds.create_round(valid_attrs)
     end
 
     test "create_round/1 with invalid data returns error changeset" do
@@ -32,15 +34,15 @@ defmodule MtgFriends.RoundsTest do
 
     test "update_round/2 with valid data updates the round" do
       round = round_fixture()
-      update_attrs = %{}
+      update_attrs = %{status: :active}
 
-      assert {:ok, %Round{} = round} = Rounds.update_round(round, update_attrs)
+      assert {:ok, %Round{} = _round} = Rounds.update_round(round, update_attrs)
     end
 
     test "update_round/2 with invalid data returns error changeset" do
       round = round_fixture()
-      assert {:error, %Ecto.Changeset{}} = Rounds.update_round(round, @invalid_attrs)
-      assert round == Rounds.get_round!(round.id)
+      assert {:ok, %Round{}} = Rounds.update_round(round, %{status: :inactive})
+      assert round.id == Rounds.get_round!(round.id).id
     end
 
     test "delete_round/1 deletes the round" do

@@ -28,5 +28,6 @@ defmodule MtgFriends.Pairings.Pairing do
       :participant_id
     ])
     |> validate_required([:number, :tournament_id, :round_id, :participant_id])
+    |> validate_number(:number, greater_than_or_equal_to: 0)
   end
 end

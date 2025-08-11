@@ -72,7 +72,13 @@ defmodule MtgFriends.Rounds do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_round(tournament_id, tournament_rounds) do
+  def create_round(attrs \\ %{}) do
+    %Round{}
+    |> Round.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  def create_round_for_tournament(tournament_id, tournament_rounds) do
     %Round{}
     |> Round.changeset(%{
       tournament_id: tournament_id,

@@ -1,8 +1,6 @@
 defmodule MtgFriendsWeb.LandingHTML do
   use MtgFriendsWeb, :html
 
-  alias MtgFriends.DateUtils
-
   def index(assigns) do
     ~H"""
     <.flash_group flash={@flash} />

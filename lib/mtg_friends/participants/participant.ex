@@ -19,7 +19,6 @@ defmodule MtgFriends.Participants.Participant do
   def changeset(participant, attrs) do
     participant
     |> cast(attrs, [:name, :points, :decklist, :tournament_id, :is_tournament_winner, :is_dropped])
-    |> IO.inspect(label: "participant changeset")
     |> allow_empty_strings()
     |> validate_required([:tournament_id])
   end

@@ -4,7 +4,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
   """
   use Phoenix.Component
 
-  alias MtgFriends.TournamentUtils
+  alias MtgFriends.TournamentRenderer
   alias MtgFriendsWeb.CoreComponents
   alias MtgFriends.DateUtils
 
@@ -135,17 +135,17 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     case assigns.value do
       :inactive ->
         ~H"""
-        <.badge class="!ring-emerald-200"><%= TournamentUtils.render_status(@value) %></.badge>
+        <.badge class="!ring-emerald-200"><%= TournamentRenderer.render_status(@value) %></.badge>
         """
 
       :active ->
         ~H"""
-        <.badge class="!ring-blue-500"><%= TournamentUtils.render_status(@value) %></.badge>
+        <.badge class="!ring-blue-500"><%= TournamentRenderer.render_status(@value) %></.badge>
         """
 
       :finished ->
         ~H"""
-        <.badge class="!ring-red-200"><%= TournamentUtils.render_status(@value) %></.badge>
+        <.badge class="!ring-red-200"><%= TournamentRenderer.render_status(@value) %></.badge>
         """
 
       _ ->
@@ -159,17 +159,17 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     case assigns.value do
       :inactive ->
         ~H"""
-        <.badge class="!ring-emerald-200"><%= TournamentUtils.render_round_status(@value) %></.badge>
+        <.badge class="!ring-emerald-200"><%= TournamentRenderer.render_round_status(@value) %></.badge>
         """
 
       :active ->
         ~H"""
-        <.badge class="!ring-blue-500"><%= TournamentUtils.render_round_status(@value) %></.badge>
+        <.badge class="!ring-blue-500"><%= TournamentRenderer.render_round_status(@value) %></.badge>
         """
 
       :finished ->
         ~H"""
-        <.badge class="!ring-red-200"><%= TournamentUtils.render_round_status(@value) %></.badge>
+        <.badge class="!ring-red-200"><%= TournamentRenderer.render_round_status(@value) %></.badge>
         """
 
       _ ->
@@ -199,5 +199,40 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
       Round time: <span class="font-mono"><%= @time_left %></span>
     </div>
     """
+  end
+
+  @doc """
+  Renders a participant's decklist with proper styling.
+  Replaces the raw HTML generation that was in TournamentUtils.
+  """
+  attr :decklist, :string, required: true
+
+  def participant_decklist(assigns) do
+    case assigns.decklist do
+      nil ->
+        ~H"""
+        <p class="text-orange-300">---</p>
+        """
+
+      decklist when is_binary(decklist) ->
+        case TournamentRenderer.validate_url(decklist) do
+          true ->
+            ~H"""
+            <span class="inline-flex items-center rounded-md bg-orange-200 px-2 py-1 text-xs font-medium text-zinc-700 ring-1 ring-inset ring-teal-900/10">
+              <a href={@decklist} target="_blank">Decklist</a>
+            </span>
+            """
+
+          false ->
+            ~H"""
+            <p><%= @decklist %></p>
+            """
+        end
+
+      _ ->
+        ~H"""
+        <p class="text-orange-300">---</p>
+        """
+    end
   end
 end

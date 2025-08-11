@@ -7,8 +7,11 @@ defmodule MtgFriends.PairingsTest do
     alias MtgFriends.Pairings.Pairing
 
     import MtgFriends.PairingsFixtures
+    import MtgFriends.TournamentsFixtures
+    import MtgFriends.RoundsFixtures
+    import MtgFriends.ParticipantsFixtures
 
-    @invalid_attrs %{}
+    @invalid_attrs %{number: -1}
 
     test "list_pairings/0 returns all pairings" do
       pairing = pairing_fixture()
@@ -21,9 +24,12 @@ defmodule MtgFriends.PairingsTest do
     end
 
     test "create_pairing/1 with valid data creates a pairing" do
-      valid_attrs = %{}
+      tournament = tournament_fixture()
+      round = round_fixture(%{tournament: tournament})
+      participant = participant_fixture(%{tournament: tournament})
+      valid_attrs = %{number: 1, tournament_id: tournament.id, round_id: round.id, participant_id: participant.id}
 
-      assert {:ok, %Pairing{} = pairing} = Pairings.create_pairing(valid_attrs)
+      assert {:ok, %Pairing{} = _pairing} = Pairings.create_pairing(valid_attrs)
     end
 
     test "create_pairing/1 with invalid data returns error changeset" do
@@ -32,9 +38,11 @@ defmodule MtgFriends.PairingsTest do
 
     test "update_pairing/2 with valid data updates the pairing" do
       pairing = pairing_fixture()
-      update_attrs = %{}
+      update_attrs = %{points: 3, winner: true}
 
       assert {:ok, %Pairing{} = pairing} = Pairings.update_pairing(pairing, update_attrs)
+      assert pairing.points == 3
+      assert pairing.winner == true
     end
 
     test "update_pairing/2 with invalid data returns error changeset" do
