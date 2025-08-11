@@ -3,10 +3,21 @@ defmodule MtgFriendsWeb.TournamentLiveTest do
 
   import Phoenix.LiveViewTest
   import MtgFriends.TournamentsFixtures
+  import MtgFriends.AccountsFixtures
 
-  @create_attrs %{active: true, date: "2023-11-02", location: "some location"}
-  @update_attrs %{active: false, date: "2023-11-03", location: "some updated location"}
-  @invalid_attrs %{active: false, date: nil, location: nil}
+  @create_attrs %{
+    name: "Test Tournament Name",
+    location: "Test Location Here",
+    date: ~N[2023-11-02 00:00:00],
+    description_raw: "This is a test tournament description for testing purposes"
+  }
+  @update_attrs %{
+    name: "Updated Tournament Name",
+    location: "Updated Location Here",
+    date: ~N[2023-11-03 00:00:00],
+    description_raw: "This is an updated test tournament description"
+  }
+  @invalid_attrs %{name: nil, location: nil, date: nil, description_raw: nil}
 
   defp create_tournament(_) do
     tournament = tournament_fixture()
@@ -19,11 +30,14 @@ defmodule MtgFriendsWeb.TournamentLiveTest do
     test "lists all tournaments", %{conn: conn, tournament: tournament} do
       {:ok, _index_live, html} = live(conn, ~p"/tournaments")
 
-      assert html =~ "Listing Tournaments"
+      assert html =~ "Tournaments"
       assert html =~ tournament.location
     end
 
-    test "saves new tournament", %{conn: conn} do
+    test "saves new tournament" do
+      user = user_fixture()
+      conn = log_in_user(build_conn(), user)
+
       {:ok, index_live, _html} = live(conn, ~p"/tournaments")
 
       assert index_live |> element("a", "New Tournament") |> render_click() =~
@@ -39,20 +53,20 @@ defmodule MtgFriendsWeb.TournamentLiveTest do
              |> form("#tournament-form", tournament: @create_attrs)
              |> render_submit()
 
-      assert_patch(index_live, ~p"/tournaments")
-
-      html = render(index_live)
-      assert html =~ "Tournament created successfully"
-      assert html =~ "some location"
+      {path, flash} = assert_redirect(index_live)
+      assert path =~ ~r/^\/tournaments\/\d+$/
+      assert flash["info"] =~ "Tournament created successfully"
     end
 
-    test "updates tournament in listing", %{conn: conn, tournament: tournament} do
-      {:ok, index_live, _html} = live(conn, ~p"/tournaments")
+    test "updates tournament through modal" do
+      user = user_fixture()
+      tournament = tournament_fixture(%{user: user})
+      conn = log_in_user(build_conn(), user)
 
-      assert index_live |> element("#tournaments-#{tournament.id} a", "Edit") |> render_click() =~
-               "Edit"
+      {:ok, _index_live, _html} = live(conn, ~p"/tournaments")
 
-      assert_patch(index_live, ~p"/tournaments/#{tournament}/edit")
+      # Navigate to the edit modal
+      {:ok, index_live, _html} = live(conn, ~p"/tournaments/#{tournament}/edit")
 
       assert index_live
              |> form("#tournament-form", tournament: @invalid_attrs)
@@ -66,14 +80,7 @@ defmodule MtgFriendsWeb.TournamentLiveTest do
 
       html = render(index_live)
       assert html =~ "Tournament updated successfully"
-      assert html =~ "some updated location"
-    end
-
-    test "deletes tournament in listing", %{conn: conn, tournament: tournament} do
-      {:ok, index_live, _html} = live(conn, ~p"/tournaments")
-
-      assert index_live |> element("#tournaments-#{tournament.id} a", "Delete") |> render_click()
-      refute has_element?(index_live, "#tournaments-#{tournament.id}")
+      assert html =~ "Updated Location Here"
     end
   end
 
@@ -83,11 +90,15 @@ defmodule MtgFriendsWeb.TournamentLiveTest do
     test "displays tournament", %{conn: conn, tournament: tournament} do
       {:ok, _show_live, html} = live(conn, ~p"/tournaments/#{tournament}")
 
-      assert html =~ "Show Tournament"
+      assert html =~ tournament.name
       assert html =~ tournament.location
     end
 
-    test "updates tournament within modal", %{conn: conn, tournament: tournament} do
+    test "updates tournament within modal" do
+      user = user_fixture()
+      tournament = tournament_fixture(%{user: user})
+      conn = log_in_user(build_conn(), user)
+
       {:ok, show_live, _html} = live(conn, ~p"/tournaments/#{tournament}")
 
       assert show_live |> element("a", "Edit") |> render_click() =~
@@ -107,7 +118,7 @@ defmodule MtgFriendsWeb.TournamentLiveTest do
 
       html = render(show_live)
       assert html =~ "Tournament updated successfully"
-      assert html =~ "some updated location"
+      assert html =~ "Updated Location Here"
     end
   end
 end

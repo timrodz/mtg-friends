@@ -3,7 +3,7 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
 
   alias MtgFriends.Tournaments
   alias MtgFriends.Tournaments.Tournament
-  alias MtgFriends.TournamentUtils
+  alias MtgFriends.TournamentRenderer
 
   on_mount {MtgFriendsWeb.UserAuth, :mount_current_user}
 
@@ -21,7 +21,7 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
 
     {:ok,
      socket
-     |> assign(:tournaments, tournaments)
+     |> stream(:tournaments, tournaments)
      |> assign(page: page, has_next_page?: has_next_page?, has_previous_page?: has_previous_page?)}
   end
 
@@ -53,7 +53,9 @@ defmodule MtgFriendsWeb.TournamentLive.Index do
         {MtgFriendsWeb.TournamentLive.TournamentEditFormComponent, {:saved, tournament}},
         socket
       ) do
-    {:noreply, stream_insert(socket, :tournaments, tournament)}
+    # Preload the game association to avoid template errors
+    tournament_with_game = Tournaments.get_tournament!(tournament.id)
+    {:noreply, stream_insert(socket, :tournaments, tournament_with_game)}
   end
 
   @impl true

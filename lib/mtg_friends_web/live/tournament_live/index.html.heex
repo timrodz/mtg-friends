@@ -11,10 +11,10 @@
 
 <.item_grid
   id="tournaments"
-  items={@tournaments}
-  item_click={fn tournament -> JS.navigate(~p"/tournaments/#{tournament}") end}
+  items={@streams.tournaments}
+  item_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end}
 >
-  <:item :let={t} class="flex flex-col justify-between">
+  <:item :let={{_id, t}} class="flex flex-col justify-between">
     <h3><%= t.name %></h3>
     <div>
       <p class="game-name"><%= t.game.name %></p>
@@ -23,7 +23,7 @@
         <.icon name="hero-map-pin-solid" /> <%= t.location %>
       </h4>
       <p class="icon-text">
-        <.icon name="hero-question-mark-circle" /> <%= TournamentUtils.render_status(t.status) %>
+        <.icon name="hero-question-mark-circle" /> <%= TournamentRenderer.render_status(t.status) %>
       </p>
     </div>
   </:item>

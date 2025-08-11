@@ -20,11 +20,11 @@
       <.icon name="hero-map-pin-solid" /> <%= @tournament.location %>
     </p>
   </div>
-  <p class="icon-text">
-    <%= @tournament.game.name %> / <%= TournamentUtils.render_format(@tournament.format) %> / <%= TournamentUtils.render_subformat(
+  <p>
+    <%= @tournament.game.name %> / <%= TournamentRenderer.render_format(@tournament.format) %> / <%= TournamentRenderer.render_subformat(
       @tournament.subformat
-    ) %> / <%= @tournament.round_count %> rounds (<%= @tournament.round_length_minutes %> minutes each)<%= if @tournament.is_top_cut_4 do
-      raw(" <span class='badge'>Top cut 4 enabled</span>")
+    ) %> / <%= @tournament.round_count %> rounds (<%= @tournament.round_length_minutes %> minutes each) <%= if @tournament.is_top_cut_4 do
+      raw(" <span class='inline-block badge'>Top cut 4 enabled</span>")
     end %>
   </p>
   <p>Status: <.tournament_status value={@tournament.status} /></p>
@@ -109,7 +109,7 @@
         <%= if @current_user_owner do %>
           <.input type="text" name={"form-participant-decklist-#{p["id"]}"} value={p["decklist"]} />
         <% else %>
-          <%= TournamentUtils.render_decklist(p["decklist"]) %>
+          <.participant_decklist decklist={p["decklist"]} />
         <% end %>
       </div>
       <div

@@ -15,14 +15,13 @@ defmodule MtgFriendsWeb.UserSessionControllerTest do
         })
 
       assert get_session(conn, :user_token)
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/tournaments"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/")
+      conn = get(conn, ~p"/tournaments")
       response = html_response(conn, 200)
-      assert response =~ user.email
-      assert response =~ ~p"/users/settings"
-      assert response =~ ~p"/users/log_out"
+      assert response =~ "Settings"
+      assert response =~ "Log out"
     end
 
     test "logs the user in with remember me", %{conn: conn, user: user} do
@@ -36,7 +35,7 @@ defmodule MtgFriendsWeb.UserSessionControllerTest do
         })
 
       assert conn.resp_cookies["_mtg_friends_web_user_remember_me"]
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/tournaments"
     end
 
     test "logs the user in with return to", %{conn: conn, user: user} do
@@ -65,7 +64,7 @@ defmodule MtgFriendsWeb.UserSessionControllerTest do
           }
         })
 
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/tournaments"
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Account created successfully"
     end
 

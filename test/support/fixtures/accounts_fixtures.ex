@@ -15,12 +15,21 @@ defmodule MtgFriends.AccountsFixtures do
   end
 
   def user_fixture(attrs \\ %{}) do
+    admin = Map.get(attrs, :admin, false)
+    attrs = Map.delete(attrs, :admin)
+
     {:ok, user} =
       attrs
       |> valid_user_attributes()
       |> MtgFriends.Accounts.register_user()
 
-    user
+    if admin do
+      user
+      |> Ecto.Changeset.change(%{admin: true})
+      |> MtgFriends.Repo.update!()
+    else
+      user
+    end
   end
 
   def extract_user_token(fun) do

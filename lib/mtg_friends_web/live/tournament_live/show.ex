@@ -1,7 +1,7 @@
 defmodule MtgFriendsWeb.TournamentLive.Show do
   use MtgFriendsWeb, :live_view
 
-  alias MtgFriends.TournamentUtils
+  alias MtgFriends.{TournamentUtils, TournamentRenderer}
   alias MtgFriendsWeb.UserAuth
   alias MtgFriends.Tournaments
   alias MtgFriends.Participants
@@ -108,7 +108,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     first_round? = round_count == 0
 
     with {:ok, round} <-
-           Rounds.create_round(
+           Rounds.create_round_for_tournament(
              tournament.id,
              round_count
            ),

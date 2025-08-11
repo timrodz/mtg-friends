@@ -37,6 +37,7 @@ defmodule MtgFriends.Games do
   """
   def get_game!(id), do: Repo.get!(Game, id)
   def get_game_by_code!(code), do: Repo.get_by!(Game, code: code)
+  def get_game_by_code(code), do: Repo.get_by(Game, code: code)
 
   @doc """
   Creates a game.

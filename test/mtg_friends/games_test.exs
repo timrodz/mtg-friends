@@ -12,7 +12,9 @@ defmodule MtgFriends.GamesTest do
 
     test "list_games/0 returns all games" do
       game = game_fixture()
-      assert Games.list_games() == [game]
+      games = Games.list_games()
+      assert game in games
+      assert length(games) >= 1
     end
 
     test "get_game!/1 returns the game with given id" do

@@ -7,8 +7,9 @@ defmodule MtgFriends.ParticipantsTest do
     alias MtgFriends.Participants.Participant
 
     import MtgFriends.ParticipantsFixtures
+    import MtgFriends.TournamentsFixtures
 
-    @invalid_attrs %{name: nil, points: nil, decklist: nil}
+    @invalid_attrs %{name: nil, points: nil, decklist: nil, tournament_id: nil}
 
     test "list_participants/0 returns all participants" do
       participant = participant_fixture()
@@ -21,7 +22,14 @@ defmodule MtgFriends.ParticipantsTest do
     end
 
     test "create_participant/1 with valid data creates a participant" do
-      valid_attrs = %{name: "some name", points: 42, decklist: "some decklist"}
+      tournament = tournament_fixture()
+
+      valid_attrs = %{
+        name: "some name",
+        points: 42,
+        decklist: "some decklist",
+        tournament_id: tournament.id
+      }
 
       assert {:ok, %Participant{} = participant} = Participants.create_participant(valid_attrs)
       assert participant.name == "some name"
@@ -37,7 +45,9 @@ defmodule MtgFriends.ParticipantsTest do
       participant = participant_fixture()
       update_attrs = %{name: "some updated name", points: 43, decklist: "some updated decklist"}
 
-      assert {:ok, %Participant{} = participant} = Participants.update_participant(participant, update_attrs)
+      assert {:ok, %Participant{} = participant} =
+               Participants.update_participant(participant, update_attrs)
+
       assert participant.name == "some updated name"
       assert participant.points == 43
       assert participant.decklist == "some updated decklist"
@@ -45,7 +55,10 @@ defmodule MtgFriends.ParticipantsTest do
 
     test "update_participant/2 with invalid data returns error changeset" do
       participant = participant_fixture()
-      assert {:error, %Ecto.Changeset{}} = Participants.update_participant(participant, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Participants.update_participant(participant, @invalid_attrs)
+
       assert participant == Participants.get_participant!(participant.id)
     end
 
