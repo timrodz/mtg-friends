@@ -46,7 +46,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     ~H"""
     <div id={"item-grid-#{@id}"} class={["item-grid mt-6 mb-6", @class]}>
       <%= if @title do %>
-        <h3 class="text-xl font-bold mb-4"><%= @title %></h3>
+        <h3 class="text-xl font-bold mb-4">{@title}</h3>
       <% end %>
       <div
         id={@id}
@@ -60,8 +60,9 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
           :for={item <- @items}
           id={@item_id && @item_id.(item)}
           class={[
-            "item-container border-[1px] border-slate-200 bg-white rounded-md shadow-sm",
-            @item_click && "hover:bg-slate-50 hover:cursor-pointer",
+            "card card-border bg-base-200 rounded-md shadow-sm",
+            @item_click &&
+              "hover:bg-base-300 hover:cursor-pointer",
             @item_container_class
           ]}
         >
@@ -69,12 +70,12 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
             :for={{col, _index} <- Enum.with_index(@item)}
             phx-click={@item_click && @item_click.(item)}
             class={[
-              "item relative p-4 text-black flex flex-col gap-1 h-full",
+              "item relative p-4 text-base-content flex flex-col gap-1 h-full",
               @item_click && "hover:cursor-pointer",
               col[:class]
             ]}
           >
-            <%= render_slot(col, @row_item.(item)) %>
+            {render_slot(col, @row_item.(item))}
           </div>
         </div>
       </div>
@@ -91,8 +92,8 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     ~H"""
     <p id="date-time" class={["icon-text", @class]}>
       <CoreComponents.icon :if={not @no_icon} name="hero-clock-solid" />
-      <%= @label %>
-      <span><%= @dt |> DateUtils.render_naive_datetime_full() %></span>
+      {@label}
+      <span>{@dt |> DateUtils.render_naive_datetime_full()}</span>
     </p>
     """
   end
@@ -106,8 +107,8 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     ~H"""
     <p class={["icon-text", @class]}>
       <CoreComponents.icon :if={not @no_icon} name="hero-calendar-solid" />
-      <%= @label %>
-      <span><%= @dt |> DateUtils.render_naive_datetime_date() %></span>
+      {@label}
+      <span>{@dt |> DateUtils.render_naive_datetime_date()}</span>
     </p>
     """
   end
@@ -121,10 +122,10 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
   def badge(assigns) do
     ~H"""
     <span class={[
-      "self-center inline-flex items-center rounded-md px-2 py-1 font-medium text-zinc-700 ring-1 ring-inset ring-slate-200",
+      "badge",
       @class
     ]}>
-      <%= render_slot(@inner_block) %>
+      {render_slot(@inner_block)}
     </span>
     """
   end
@@ -135,17 +136,17 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     case assigns.value do
       :inactive ->
         ~H"""
-        <.badge class="!ring-emerald-200"><%= TournamentRenderer.render_status(@value) %></.badge>
+        <.badge class="badge-info">{TournamentRenderer.render_status(@value)}</.badge>
         """
 
       :active ->
         ~H"""
-        <.badge class="!ring-blue-500"><%= TournamentRenderer.render_status(@value) %></.badge>
+        <.badge class="badge-success">{TournamentRenderer.render_status(@value)}</.badge>
         """
 
       :finished ->
         ~H"""
-        <.badge class="!ring-red-200"><%= TournamentRenderer.render_status(@value) %></.badge>
+        <.badge class="badge-secondary">{TournamentRenderer.render_status(@value)}</.badge>
         """
 
       _ ->
@@ -159,17 +160,17 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     case assigns.value do
       :inactive ->
         ~H"""
-        <.badge class="!ring-emerald-200"><%= TournamentRenderer.render_round_status(@value) %></.badge>
+        <.badge class="badge-info">{TournamentRenderer.render_round_status(@value)}</.badge>
         """
 
       :active ->
         ~H"""
-        <.badge class="!ring-blue-500"><%= TournamentRenderer.render_round_status(@value) %></.badge>
+        <.badge class="badge-success">{TournamentRenderer.render_round_status(@value)}</.badge>
         """
 
       :finished ->
         ~H"""
-        <.badge class="!ring-red-200"><%= TournamentRenderer.render_round_status(@value) %></.badge>
+        <.badge class="badge-secondary">{TournamentRenderer.render_round_status(@value)}</.badge>
         """
 
       _ ->
@@ -196,7 +197,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
 
     ~H"""
     <div class="round_countdown_timer" class={["", @timer_class]}>
-      Round time: <span class="font-mono"><%= @time_left %></span>
+      Round time: <span class="font-mono">{@time_left}</span>
     </div>
     """
   end
@@ -225,7 +226,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
 
           false ->
             ~H"""
-            <p><%= @decklist %></p>
+            <p>{@decklist}</p>
             """
         end
 

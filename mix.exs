@@ -5,11 +5,12 @@ defmodule MtgFriends.MixProject do
     [
       app: :mtg_friends,
       version: "0.1.0",
-      elixir: "~> 1.14",
+      elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+      compilers: [:phoenix_live_view] ++ Mix.compilers()
     ]
   end
 
@@ -32,19 +33,27 @@ defmodule MtgFriends.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:igniter, "~> 0.6", only: [:dev, :test]},
       {:bcrypt_elixir, "~> 3.0"},
-      {:phoenix, "~> 1.7.2"},
-      {:phoenix_ecto, "~> 4.4"},
+      {:phoenix, "~> 1.8.0"},
+      {:phoenix_ecto, "~> 4.5"},
       {:ecto_sql, "~> 3.6"},
       {:postgrex, ">= 0.0.0"},
-      {:phoenix_html, "~> 3.3"},
+      {:phoenix_html, "~> 4.1"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:phoenix_live_view, "~> 0.20.1"},
-      {:floki, ">= 0.30.0", only: :test},
+      {:phoenix_live_view, "~> 1.1"},
+      {:lazy_html, ">= 0.0.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
-      {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
-      {:swoosh, "~> 1.3"},
+      {:esbuild, "~> 0.9", runtime: Mix.env() == :dev},
+      {:tailwind, "~> 0.3", runtime: Mix.env() == :dev},
+      {:heroicons,
+       github: "tailwindlabs/heroicons",
+       tag: "v2.1.1",
+       sparse: "optimized",
+       app: false,
+       compile: false,
+       depth: 1},
+      {:swoosh, "~> 1.16"},
       {:finch, "~> 0.13"},
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
@@ -54,7 +63,6 @@ defmodule MtgFriends.MixProject do
       {:httpoison, "~> 2.0"},
       {:poison, "~> 5.0"},
       {:tzdata, "~> 1.1.2"},
-      {:phoenix_ui, "~> 0.1.9"},
       {:calendar, "~> 1.0.0"},
       {:gen_smtp, "~> 1.1"}
     ]
