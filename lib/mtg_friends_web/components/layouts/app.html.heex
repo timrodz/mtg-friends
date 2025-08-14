@@ -1,17 +1,17 @@
-<header class="px-4 sm:px-6 lg:px-8">
-  <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
+<nav class="px-4 sm:px-6 lg:px-8 bg-base-200">
+  <div class="flex items-center justify-between py-3 text-sm">
     <.link class="px-2 py-0 hover:no-underline" href={~p"/"} target="_blank">
-      <span class="text-lg md:text-2xl text-indigo-700 font-bold">
+      <span class="text-lg md:text-2xl text-primary font-bold">
         ⚔ Tie Breaker
       </span>
     </.link>
-    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
+    <div class="flex items-center gap-4 font-semibold leading-6">
       <ul class="relative z-10 flex items-center gap-5 px-4 sm:px-6 lg:px-8 justify-end">
         <%= if @current_user do %>
           <li>
             <.link
               href={~p"/users/settings"}
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              class="nav-link"
             >
               Settings
             </.link>
@@ -20,7 +20,7 @@
             <.link
               href={~p"/users/log_out"}
               method="delete"
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              class="nav-link"
             >
               Log out
             </.link>
@@ -29,7 +29,7 @@
           <li>
             <.link
               href={~p"/users/register"}
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              class="nav-link"
             >
               Register
             </.link>
@@ -37,19 +37,20 @@
           <li>
             <.link
               href={~p"/users/log_in"}
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
+              class="nav-link"
             >
               Log in
             </.link>
           </li>
         <% end %>
       </ul>
+      <.theme_toggle />
     </div>
   </div>
-</header>
+</nav>
 <main class="px-4 py-20 sm:px-6 lg:px-8">
   <div class="mx-auto max-w-2xl">
     <.flash_group flash={@flash} />
-    <%= @inner_content %>
+    {@inner_content}
   </div>
 </main>
