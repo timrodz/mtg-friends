@@ -4,14 +4,14 @@
     <.link
       patch={~p"/tournaments/#{@tournament}/show/edit"}
       phx-click={JS.push_focus()}
-      class="cta-subtle"
+      class="btn btn-primary btn-soft"
     >
       Edit
     </.link>
   </:actions>
 </.header>
 
-<section id="summary" class="text-zinc-600">
+<section id="summary">
   <h2>Summary</h2>
   <hr />
   <div class="flex flex-col md:flex-row justify-between">
@@ -36,34 +36,6 @@
   <% end %>
 </section>
 
-<div class="overflow-x-auto">
-  <table class="table">
-    <!-- head -->
-    <thead>
-      <tr>
-        <th><.icon name="hero-trophy" /></th>
-        <th>Name</th>
-        <th>Points</th>
-        <th>Win %</th>
-        <th>Decklist</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      <%!-- TODO: Fill this up elsewhere --%>
-      <tr
-        :for={{p, index} <- Enum.with_index(@participant_forms.params["participants"])}
-        id={"form-participant-#{p["id"]}"}
-      >
-        <th>#{index + 1}</th>
-        <td>{p["name"]}</td>
-        <td>{p["score"]}</td>
-        <td>{p["decklist"]}</td>
-      </tr>
-    </tbody>
-  </table>
-</div>
-
 <section id="participants">
   <h2 class="font-bold">Participants & Standings</h2>
   <div id="participant-header" class="participant-grid-header participant-grid">
@@ -79,7 +51,6 @@
     for={@participant_forms}
     phx-submit="update-participants"
     as_flex
-    class="!space-y-3"
   >
     <div
       :for={{p, index} <- Enum.with_index(@participant_forms.params["participants"])}
@@ -87,12 +58,12 @@
       class={[
         "participant-grid px-2 py-1",
         @tournament.status == :finished && index == 0 &&
-          "bg-green-200 border rounded-lg border-green-200",
-        p["is_dropped"] && "bg-red-200"
+          "bg-success border rounded-lg border-success",
+        p["is_dropped"] && "bg-error"
       ]}
     >
-      <input type="hidden" name={"participant-id-#{p["id"]}"} value={p["id"]} />
-      <p class="text-zinc-600 font-mono w-[2rem]">
+      <input type="hidden" name={"participant-id-#{p["id"]}"} value={p["id"]} class="input" />
+      <p class="font-mono w-[2rem]">
         #{index + 1}
       </p>
       <div class="self-center mr-2 flex">
@@ -149,10 +120,10 @@
             JS.push("delete-participant", value: %{id: p["id"]})
             |> hide("##{p["id"]}")
           }
-          data-confirm={"Are you sure? You're about to delete #{p["name"]}"}
-          class="text-zinc-400 font-medium"
+          data-confirm={"Are you sure? You're about to remove #{p["name"]} from the tournament."}
+          class="font-medium"
         >
-          Delete
+          Remove
         </.link>
       </div>
     </div>
@@ -165,19 +136,25 @@
       </.button>
     </:actions>
     <:actions :if={@current_user_owner and length(@rounds) == 0}>
-      <.button phx-click="create-participant" phx-disable-with="Creating...">
+      <.button
+        phx-click="create-participant"
+        phx-disable-with="Creating..."
+      >
         <.icon name="hero-plus" class="mr-1" /> Add participant
       </.button>
     </:actions>
   </.simple_form>
   <div class="mt-2">
-    <.button phx-click="toggle-score-decimals" phx-disable-with="Toggling..." class="cta-subtle">
+    <.button
+      phx-click="toggle-score-decimals"
+      phx-disable-with="Toggling..."
+    >
       Toggle score decimals
     </.button>
   </div>
 </section>
 
-<section id="rounds">
+<section id="rounds-section">
   <h2 class="font-bold">Rounds</h2>
   <.item_grid
     :if={length(@tournament.rounds) > 0}
@@ -189,7 +166,7 @@
   >
     <:item :let={round}>
       <div class="flex justify-between">
-        <p class={round.status == :finished && "text-zinc-500"}>
+        <p class={round.status == :finished && "text-success"}>
           Round
           #{round.number + 1}
         </p>
@@ -197,7 +174,7 @@
       </div>
       <.link
         patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"}
-        class={["p-0", round.status == :finished && "text-zinc-500"]}
+        class={["p-0 btn btn-info", round.status == :finished && ""]}
       >
         <.icon name="hero-chevron-right" /> View round
       </.link>
@@ -208,7 +185,7 @@
           |> hide("##{round.id}")
         }
         data-confirm="Are you sure? This action is irreversible."
-        class="text-zinc-400 font-medium"
+        class="btn btn-error btn-soft"
       >
         Delete
       </.link>
@@ -223,7 +200,7 @@
         In order to begin the tournament, all participants must have names assigned to them
       </.warning>
       <.warning :if={@is_current_round_active?}>
-        There can only be 1 active round at a time
+        Finish the current round before starting a new one
       </.warning>
       <div class="flex gap-2 flex-col md:flex-row">
         <.button
@@ -233,6 +210,7 @@
             not @all_participants_have_names? or @is_current_round_active? or
               not @has_enough_participants?
           }
+          class="btn-primary"
         >
           <%= if length(@rounds) == 0 do %>
             <.icon name="hero-rocket-launch-solid" class="mr-1" />

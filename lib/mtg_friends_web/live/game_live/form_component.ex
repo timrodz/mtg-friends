@@ -8,7 +8,7 @@ defmodule MtgFriendsWeb.GameLive.FormComponent do
     ~H"""
     <div>
       <.header>
-        <%= @title %>
+        {@title}
         <:subtitle>Use this form to manage game records in your database.</:subtitle>
       </.header>
 
@@ -62,7 +62,7 @@ defmodule MtgFriendsWeb.GameLive.FormComponent do
         {:noreply,
          socket
          |> put_flash(:info, "Game updated successfully")
-         |> push_patch(to: socket.assigns.patch)}
+         |> push_navigate(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign_form(socket, changeset)}
@@ -77,7 +77,7 @@ defmodule MtgFriendsWeb.GameLive.FormComponent do
         {:noreply,
          socket
          |> put_flash(:info, "Game created successfully")
-         |> push_patch(to: socket.assigns.patch)}
+         |> push_navigate(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign_form(socket, changeset)}

@@ -10,7 +10,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
     ~H"""
     <div>
       <.header>
-        <%= @title %>
+        {@title}
       </.header>
 
       <.simple_form
@@ -185,7 +185,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         {:noreply,
          socket
          |> put_flash(:info, "Tournament updated successfully")
-         |> push_patch(to: socket.assigns.patch)}
+         |> push_navigate(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign_form(socket, changeset)}

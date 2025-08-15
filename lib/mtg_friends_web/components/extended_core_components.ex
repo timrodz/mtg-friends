@@ -136,17 +136,17 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     case assigns.value do
       :inactive ->
         ~H"""
-        <.badge class="badge-info">{TournamentRenderer.render_status(@value)}</.badge>
+        <.badge class="badge-neutral">{TournamentRenderer.render_status(@value)}</.badge>
         """
 
       :active ->
         ~H"""
-        <.badge class="badge-success">{TournamentRenderer.render_status(@value)}</.badge>
+        <.badge class="badge-info">{TournamentRenderer.render_status(@value)}</.badge>
         """
 
       :finished ->
         ~H"""
-        <.badge class="badge-secondary">{TournamentRenderer.render_status(@value)}</.badge>
+        <.badge class="badge-error">{TournamentRenderer.render_status(@value)}</.badge>
         """
 
       _ ->
