@@ -1,7 +1,7 @@
-<.header>
-  <%= @tournament_name %> / Round #<%= @round_number + 1 %>
+<.header class="mb-4">
+  {@tournament_name}
   <:subtitle>
-    Round Status: <.round_status value={@round_status} />
+    Round #{@round_number + 1} / <.round_status value={@round_status} />
   </:subtitle>
 </.header>
 
@@ -14,12 +14,12 @@
   </section>
 <% end %>
 <%= if @current_user_owner and @round_status == :inactive do %>
-  <section id="summary" class="p-2 bg-blue-50 rounded-md">
+  <section id="summary" class="p-2 alert alert-vertical alert-info alert-soft rounded-md">
     <p class="mb-2 text-xl">
       🎉 This round's pods have been generated! Let players know who they'll be playing against.
     </p>
     <p class="mb-4 text-xl">When all players are ready, click on <b>Start round</b> below.</p>
-    <.button phx-click="start-round" phx-disable-with="Starting...">
+    <.button phx-click="start-round" phx-disable-with="Starting..." class="btn-primary">
       <.icon name="hero-rocket-launch-solid" class="mr-1" />Start round
     </.button>
   </section>
@@ -31,23 +31,24 @@
     <:item :let={{pairing_number, pairing_group}} class="justify-between">
       <div>
         <h3 class="font-semibold">
-          Pod #<%= pairing_number + 1 %> — <%= (pairing_group.active && "In progress") ||
-            "Finished" %>
+          Pod #{pairing_number + 1} — {(@round_status == :inactive && "Waiting for start") ||
+            (pairing_group.active && "In progress") ||
+            "Finished"}
         </h3>
         <div
           :for={pairing <- Enum.sort_by(pairing_group.pairings, fn p -> p.points end, :desc)}
           id={"tournament-#{@tournament_id}-round-#{@round_id}-pairing-number-#{pairing_number}-#{pairing.id}"}
           class={[
             "flex justify-between items-center gap-2 py-1 px-2 rounded-md",
-            (pairing.winner && "font-bold bg-emerald-100") || ""
+            (pairing.winner && "font-bold bg-success text-success-content") || ""
           ]}
         >
           <p class="flex gap-1 items-center">
-            <%= pairing.participant.name %>
+            {pairing.participant.name}
             <.icon :if={pairing.winner} name="hero-trophy" />
           </p>
           <p>
-            Points: <%= pairing.points %>
+            Points: {pairing.points}
           </p>
         </div>
       </div>
@@ -58,10 +59,10 @@
             ~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}/pairing/#{pairing_number + 1}/edit"
           }
           phx-click={JS.push_focus()}
-          class="cta-subtle self-start"
+          class="self-start btn btn-primary"
         >
           <%= if pairing_group.active do %>
-            Add pod results
+            Assign pod results
           <% else %>
             Update pod results
           <% end %>
@@ -88,7 +89,7 @@
   on_cancel={JS.patch(~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}")}
 >
   <.live_component
-    module={MtgFriendsWeb.TournamentLive.RoundEditFormComponent}
+    module={MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent}
     current_user={@current_user}
     id={@selected_pairing_number}
     title={@page_title}

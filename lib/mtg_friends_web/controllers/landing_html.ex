@@ -10,12 +10,11 @@ defmodule MtgFriendsWeb.LandingHTML do
           <h1>
             ⚔ Tie Breaker
           </h1>
-          <.theme_toggle />
         </div>
         <p class="mt-2 text-lg text-center italic">TCG tournaments made easy</p>
         <div id="actions" class="mt-8 flex gap-3 justify-center">
-          <.link class="cta" patch={~p"/tournaments/new"}>Host a tournament</.link>
-          <.link class="cta" navigate="#about">Learn more</.link>
+          <.link class="btn btn-primary" patch={~p"/tournaments/new"}>Host a tournament</.link>
+          <.link class="btn btn-primary btn-soft" navigate="#about">Learn more</.link>
         </div>
         <section id="tournaments">
           <h2>Latest tournaments</h2>
@@ -26,19 +25,20 @@ defmodule MtgFriendsWeb.LandingHTML do
             class="!mt-0"
           >
             <:item :let={t} class="flex flex-col justify-between">
-              <h3 class="text-primary">{t.name}</h3>
+              <h3 class="truncate font-semibold !my-0 !mb-1">{t.name}</h3>
               <div>
                 <p class="game-name">{t.game.name}</p>
                 <.date dt={t.date} />
                 <h4 :if={t.location} class="icon-text">
                   <.icon name="hero-map-pin-solid" /> {t.location}
                 </h4>
+                <.tournament_status value={t.status} />
               </div>
             </:item>
           </.item_grid>
 
           <div class="inline-block">
-            <.link navigate={~p"/tournaments"} class="icon-text btn btn-primary">
+            <.link navigate={~p"/tournaments"} class="icon-text btn btn-info">
               <.icon name="hero-chevron-right" /> See all tournaments
             </.link>
           </div>
@@ -60,7 +60,7 @@ defmodule MtgFriendsWeb.LandingHTML do
         <section id="supporters">
           <h2>Our supporters</h2>
           <hr />
-          <p class="text-lg">Trusted by WPN stores & streamers alike—Tie Breaker meets your needs</p>
+          <p class="text-lg">Trusted by WPN stores & streamers alike—Tie Breaker meets your needs.</p>
           <div class="mt-6 lg:mt-3 mb-8 supporter-carousel grid grid-cols-2 md:grid-cols-3 gap-10 justify-items-center">
             <%= for s <- @supporters do %>
               <.link
@@ -75,7 +75,7 @@ defmodule MtgFriendsWeb.LandingHTML do
             <% end %>
           </div>
           <div>
-            <blockquote class="px-4 py-2 my-4 border-l-4 border-base-300 text-base-100">
+            <blockquote class="px-4 py-2 my-4 border-l-4 border-accent">
               I've been testing different methods of pairing for a long time, and this app is exactly what I've been looking for. It offers an intuitive and streamlined process for organizing matches and tournaments, with an easy and user-friendly interface. Also, it's updated regularly with bug fixes and improvements. Recommended!
             </blockquote>
             <p class="text-base-100">Jorge Ortíz — Data Engineer & MTG Streamer (DankConfidants)</p>

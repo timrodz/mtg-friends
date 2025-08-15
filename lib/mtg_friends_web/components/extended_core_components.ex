@@ -146,7 +146,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
 
       :finished ->
         ~H"""
-        <.badge class="badge-secondary">{TournamentRenderer.render_status(@value)}</.badge>
+        <.badge class="badge-error">{TournamentRenderer.render_status(@value)}</.badge>
         """
 
       _ ->
@@ -210,29 +210,26 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
 
   def participant_decklist(assigns) do
     case assigns.decklist do
-      nil ->
-        ~H"""
-        <p class="text-orange-300">---</p>
-        """
-
       decklist when is_binary(decklist) ->
         case TournamentRenderer.validate_url(decklist) do
           true ->
             ~H"""
-            <span class="inline-flex items-center rounded-md bg-orange-200 px-2 py-1 text-xs font-medium text-zinc-700 ring-1 ring-inset ring-teal-900/10">
-              <a href={@decklist} target="_blank">Decklist</a>
-            </span>
+            <p>
+              <.link href={@decklist} target="_blank" class="link link-neutral link-hover font-mono truncate">
+                Decklist
+              </.link>
+            </p>
             """
 
           false ->
             ~H"""
-            <p>{@decklist}</p>
+            <p class="font-mono">{@decklist}</p>
             """
         end
 
       _ ->
         ~H"""
-        <p class="text-orange-300">---</p>
+        <p class="text-warning">No decklist</p>
         """
     end
   end

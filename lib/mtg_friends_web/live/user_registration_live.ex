@@ -11,7 +11,7 @@ defmodule MtgFriendsWeb.UserRegistrationLive do
         Register for an account
         <:subtitle>
           Already registered?
-          <.link navigate={~p"/users/log_in"} class="font-semibold text-brand hover:underline">
+          <.link navigate={~p"/users/log_in"} class="link link-hover font-bold">
             Sign in
           </.link>
           to your account now.
@@ -35,7 +35,9 @@ defmodule MtgFriendsWeb.UserRegistrationLive do
         <.input field={@form[:password]} type="password" label="Password" required />
 
         <:actions>
-          <.button phx-disable-with="Creating account..." class="w-full">Create an account</.button>
+          <.button phx-disable-with="Creating account..." class="btn btn-primary w-full">
+            Create an account
+          </.button>
         </:actions>
       </.simple_form>
     </div>

@@ -1,5 +1,7 @@
-defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
+defmodule MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent do
   use MtgFriendsWeb, :live_component
+
+  require Logger
 
   alias MtgFriends.Pairings
   alias MtgFriends.Participants
@@ -10,9 +12,11 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
   def render(assigns) do
     ~H"""
     <div>
-      <.header>
-        <%= @title %>
-        <:subtitle>Update this pod when you have all the results</:subtitle>
+      <.header class="mb-4">
+        {@title}
+        <:subtitle>
+          If your pod has finished, give points to players based on their performance
+        </:subtitle>
       </.header>
 
       <.simple_form for={@form} id={"edit-pairing-#{@id}"} phx-target={@myself} phx-submit="save">
@@ -24,7 +28,7 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
             class="flex justify-between items-center"
             id={"pairing-participant-#{p.id}"}
           >
-            <p class="font-semibold"><%= p.name %></p>
+            <p class="font-semibold">{p.name}</p>
             <div class="flex items-center gap-2">
               <p>Points:</p>
               <.input
@@ -39,7 +43,7 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
           </div>
         </div>
         <:actions>
-          <.button phx-disable-with="Saving...">Submit changes</.button>
+          <.button phx-disable-with="Saving..." class="btn-primary">Submit changes</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -85,14 +89,17 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
             {:noreply,
              socket
              |> put_flash(:info, "Pod updated successfully")
-             |> push_patch(to: socket.assigns.patch)}
+             |> push_navigate(to: socket.assigns.patch)}
         end
 
       false ->
+        # Debugging line
+        socket.assigns.patch |> IO.inspect(label: "socket.assigns.patch")
+
         {:noreply,
          socket
          |> put_flash(:info, "Pod updated successfully")
-         |> push_patch(to: socket.assigns.patch)}
+         |> push_navigate(to: socket.assigns.patch)}
     end
   end
 
