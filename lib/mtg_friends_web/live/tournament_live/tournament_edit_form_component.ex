@@ -58,16 +58,6 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           min="3"
           max="10"
         />
-        <%!-- <.input
-          :if={@action == :new}
-          field={@form[:participant_count]}
-          type="number"
-          label="Number of participants (Min: 4 / Max: 32)"
-          value={@participant_count}
-          phx-change="update-participant-count"
-          min="4"
-          max="32"
-        /> --%>
         <.input
           :if={@action == :new}
           required
@@ -124,7 +114,6 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
        :subformat_options,
        get_subformat_options(selected_game_code, selected_format)
      )
-     |> assign(:participant_count, 8)
      |> assign(:initial_participants, "")
      |> assign_form(changeset)}
   end
@@ -164,17 +153,6 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
      |> assign(:format_options, format_options)
      |> assign(:subformat_options, subformat_options)}
   end
-
-  # @impl true
-  # def handle_event(
-  #       "update-participant-count",
-  #       %{"tournament" => %{"participant_count" => count}},
-  #       socket
-  #     ) do
-  #   {:noreply,
-  #    socket
-  #    |> assign(:participant_count, count)}
-  # end
 
   def handle_event("save", %{"tournament" => tournament_params}, socket) do
     save_tournament(socket, socket.assigns.action, tournament_params)

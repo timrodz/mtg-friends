@@ -132,7 +132,7 @@ defmodule MtgFriendsWeb.CoreComponents do
           class={[
             "btn btn-soft btn-circle btn-sm",
             @kind === :info && "btn-info",
-            @kind == :error && "btn-error-content"
+            @kind == :error && "btn-error"
           ]}
         >
           <.icon name="hero-x-mark-solid" class="h-4 w-4" />

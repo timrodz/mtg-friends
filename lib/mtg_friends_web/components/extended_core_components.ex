@@ -61,8 +61,6 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
           id={@item_id && @item_id.(item)}
           class={[
             "card card-border bg-base-200 rounded-md shadow-sm",
-            @item_click &&
-              "hover:bg-base-300 hover:cursor-pointer",
             @item_container_class
           ]}
         >
@@ -141,12 +139,16 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
 
       :active ->
         ~H"""
-        <.badge class="badge-success">{TournamentRenderer.render_status(@value)}</.badge>
+        <.badge class="badge-success">
+          {TournamentRenderer.render_status(@value)}
+        </.badge>
         """
 
       :finished ->
         ~H"""
-        <.badge class="badge-error">{TournamentRenderer.render_status(@value)}</.badge>
+        <.badge class="badge-error">
+          {TournamentRenderer.render_status(@value)}
+        </.badge>
         """
 
       _ ->
@@ -215,7 +217,11 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
           true ->
             ~H"""
             <p>
-              <.link href={@decklist} target="_blank" class="link link-neutral link-hover font-mono truncate">
+              <.link
+                href={@decklist}
+                target="_blank"
+                class="link link-primary link-hover font-mono truncate"
+              >
                 Decklist
               </.link>
             </p>
@@ -229,7 +235,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
 
       _ ->
         ~H"""
-        <p class="text-warning">No decklist</p>
+        <p class="badge badge-warning">No decklist</p>
         """
     end
   end

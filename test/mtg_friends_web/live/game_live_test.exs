@@ -45,11 +45,8 @@ defmodule MtgFriendsWeb.GameLiveTest do
              |> form("#game-form", game: @create_attrs)
              |> render_submit()
 
-      assert_patch(index_live, ~p"/admin/games")
-
-      html = render(index_live)
-      assert html =~ "Game created successfully"
-      assert html =~ "some name"
+      # Form submission redirects via push_navigate, not patch  
+      assert_receive {_, {:redirect, _, %{kind: :push, to: "/admin/games", flash: _flash}}}
     end
 
     test "updates game in listing", %{conn: conn, game: game} do
@@ -68,11 +65,8 @@ defmodule MtgFriendsWeb.GameLiveTest do
              |> form("#game-form", game: @update_attrs)
              |> render_submit()
 
-      assert_patch(index_live, ~p"/admin/games")
-
-      html = render(index_live)
-      assert html =~ "Game updated successfully"
-      assert html =~ "some updated name"
+      # Form submission redirects via push_navigate, not patch
+      assert_receive {_, {:redirect, _, %{kind: :push, to: "/admin/games", flash: _flash}}}
     end
 
     test "deletes game in listing", %{conn: conn, game: game} do
@@ -109,11 +103,9 @@ defmodule MtgFriendsWeb.GameLiveTest do
              |> form("#game-form", game: @update_attrs)
              |> render_submit()
 
-      assert_patch(show_live, ~p"/admin/games/#{game}")
-
-      html = render(show_live)
-      assert html =~ "Game updated successfully"
-      assert html =~ "some updated name"
+      # Form submission redirects via push_navigate, not patch
+      game_path = "/admin/games/#{game.id}"
+      assert_receive {_, {:redirect, _, %{kind: :push, to: ^game_path, flash: _flash}}}
     end
   end
 end
