@@ -373,7 +373,7 @@ end
 
 ```elixir
 # Round editing component
-defmodule MtgFriendsWeb.TournamentLive.RoundEditFormComponent do
+defmodule MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent do
   def update(%{round: round}, socket) do
     changeset = Rounds.change_round(round)
 

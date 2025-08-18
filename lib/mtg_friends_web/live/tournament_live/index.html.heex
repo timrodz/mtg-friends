@@ -2,8 +2,8 @@
   Tournaments
   <:actions>
     <%= if @current_user do %>
-      <.link class="cta" patch={~p"/tournaments/new"}>
-        New Tournament
+      <.link class="btn btn-primary" patch={~p"/tournaments/new"}>
+        Create new tournament
       </.link>
     <% end %>
   </:actions>
@@ -15,16 +15,14 @@
   item_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end}
 >
   <:item :let={{_id, t}} class="flex flex-col justify-between">
-    <h3><%= t.name %></h3>
+    <h3 class="truncate font-semibold !my-0 !mb-1">{t.name}</h3>
     <div>
-      <p class="game-name"><%= t.game.name %></p>
+      <p class="game-name">{t.game.name}</p>
       <.date dt={t.date} />
-      <h4 class="icon-text">
-        <.icon name="hero-map-pin-solid" /> <%= t.location %>
+      <h4 class="icon-text truncate">
+        <.icon name="hero-map-pin-solid" /> {t.location}
       </h4>
-      <p class="icon-text">
-        <.icon name="hero-question-mark-circle" /> <%= TournamentRenderer.render_status(t.status) %>
-      </p>
+      <.tournament_status value={t.status} />
     </div>
   </:item>
 </.item_grid>
@@ -32,14 +30,14 @@
 <div id="pagination" class="flex items-center gap-1">
   <.link
     :if={@has_previous_page?}
-    class="cta-subtle icon-text"
+    class="btn btn-primary btn-soft"
     navigate={~p"/tournaments?page=#{@page - 1}"}
   >
     <.icon name="hero-chevron-left" /> Previous page
   </.link>
   <.link
     :if={@has_next_page?}
-    class="cta-subtle icon-text"
+    class="btn btn-primary btn-soft"
     navigate={~p"/tournaments?page=#{@page + 1}"}
   >
     Next page <.icon name="hero-chevron-right" />

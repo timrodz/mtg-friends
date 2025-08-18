@@ -71,16 +71,16 @@ defmodule MtgFriends.Participants do
   def create_x_participants(tournament_id, participants) do
     now = NaiveDateTime.local_now()
 
-    {participant_count, ""} = Integer.parse(participants)
-
     multi =
-      Enum.reduce(1..participant_count, Ecto.Multi.new(), fn index, multi ->
+      participants
+      |> Enum.with_index()
+      |> Enum.reduce(Ecto.Multi.new(), fn {participant, index}, multi ->
         changeset =
           %Participant{}
           |> Participant.changeset(%{
             inserted_at: now,
             updated_at: now,
-            name: "",
+            name: participant |> String.trim() |> String.capitalize(),
             points: 0,
             decklist: "",
             tournament_id: tournament_id

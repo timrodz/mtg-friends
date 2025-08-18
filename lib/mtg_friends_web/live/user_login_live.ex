@@ -1,6 +1,8 @@
 defmodule MtgFriendsWeb.UserLoginLive do
   use MtgFriendsWeb, :live_view
 
+  alias Phoenix.Flash
+
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-sm">
@@ -21,12 +23,12 @@ defmodule MtgFriendsWeb.UserLoginLive do
 
         <:actions>
           <.input field={@form[:remember_me]} type="checkbox" label="Keep me logged in" />
-          <.link href={~p"/users/reset_password"} class="text-sm font-semibold">
+          <.link href={~p"/users/reset_password"} class="link link-hover">
             Forgot your password?
           </.link>
         </:actions>
         <:actions>
-          <.button phx-disable-with="Signing in..." class="w-full">
+          <.button phx-disable-with="Signing in..." class="btn btn-primary w-full">
             Sign in <span aria-hidden="true">→</span>
           </.button>
         </:actions>
@@ -36,7 +38,9 @@ defmodule MtgFriendsWeb.UserLoginLive do
   end
 
   def mount(_params, _session, socket) do
-    email = live_flash(socket.assigns.flash, :email)
+    # Deprecated: use `Flash.get/2` instead of `live_flash/2`
+    # email = live_flash(socket.assigns.flash, :email)
+    email = Flash.get(socket.assigns.flash, :email)
     form = to_form(%{"email" => email}, as: "user")
     {:ok, assign(socket, form: form), temporary_assigns: [form: form]}
   end

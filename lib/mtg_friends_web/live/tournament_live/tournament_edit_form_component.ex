@@ -10,7 +10,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
     ~H"""
     <div>
       <.header>
-        <%= @title %>
+        {@title}
       </.header>
 
       <.simple_form
@@ -60,13 +60,14 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         />
         <.input
           :if={@action == :new}
-          field={@form[:participant_count]}
-          type="number"
-          label="Number of participants (Min: 4 / Max: 32)"
-          value={@participant_count}
-          phx-change="update-participant-count"
-          min="4"
-          max="32"
+          required
+          type="textarea"
+          label="Participants (One per line)"
+          value={@initial_participants}
+          field={@form[:initial_participants]}
+          placeholder="John Doe
+    Jane Doe
+    ---"
         />
         <.input
           field={@form[:subformat]}
@@ -81,7 +82,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           label="Top Cut 4 (Has a final round decided by the top 4 players)"
         />
         <:actions>
-          <.button phx-disable-with="Saving...">Submit Tournament</.button>
+          <.button phx-disable-with="Saving..." class="btn btn-primary">Submit Tournament</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -113,7 +114,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
        :subformat_options,
        get_subformat_options(selected_game_code, selected_format)
      )
-     |> assign(:participant_count, 8)
+     |> assign(:initial_participants, "")
      |> assign_form(changeset)}
   end
 
@@ -153,17 +154,6 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
      |> assign(:subformat_options, subformat_options)}
   end
 
-  @impl true
-  def handle_event(
-        "update-participant-count",
-        %{"tournament" => %{"participant_count" => count}},
-        socket
-      ) do
-    {:noreply,
-     socket
-     |> assign(:participant_count, count)}
-  end
-
   def handle_event("save", %{"tournament" => tournament_params}, socket) do
     save_tournament(socket, socket.assigns.action, tournament_params)
   end
@@ -185,7 +175,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         {:noreply,
          socket
          |> put_flash(:info, "Tournament updated successfully")
-         |> push_patch(to: socket.assigns.patch)}
+         |> push_navigate(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign_form(socket, changeset)}
@@ -206,7 +196,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
 
         case Participants.create_x_participants(
                tournament.id,
-               tournament_params["participant_count"]
+               tournament_params["initial_participants"]
+               |> String.split("\n", trim: true)
              ) do
           {:ok, _} ->
             {:noreply,

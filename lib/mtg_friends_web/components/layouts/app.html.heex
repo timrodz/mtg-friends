@@ -1,55 +1,64 @@
-<header class="px-4 sm:px-6 lg:px-8">
-  <div class="flex items-center justify-between border-b border-zinc-100 py-3 text-sm">
-    <.link class="px-2 py-0 hover:no-underline" href={~p"/"} target="_blank">
-      <span class="text-lg md:text-2xl text-indigo-700 font-bold">
+<div class="navbar bg-base-100 shadow-sm">
+  <div class="navbar-start">
+    <.link
+      href={
+        case is_nil(@current_user) do
+          true -> ~p"/"
+          false -> ~p"/tournaments"
+        end
+      }
+      target={if is_nil(@current_user), do: "_blank", else: ""}
+    >
+      <span class="text-lg md:text-2xl text-primary font-bold">
         ⚔ Tie Breaker
       </span>
     </.link>
-    <div class="flex items-center gap-4 font-semibold leading-6 text-zinc-900">
-      <ul class="relative z-10 flex items-center gap-5 px-4 sm:px-6 lg:px-8 justify-end">
-        <%= if @current_user do %>
-          <li>
-            <.link
-              href={~p"/users/settings"}
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-            >
-              Settings
-            </.link>
-          </li>
-          <li>
-            <.link
-              href={~p"/users/log_out"}
-              method="delete"
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-            >
-              Log out
-            </.link>
-          </li>
-        <% else %>
-          <li>
-            <.link
-              href={~p"/users/register"}
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-            >
-              Register
-            </.link>
-          </li>
-          <li>
-            <.link
-              href={~p"/users/log_in"}
-              class="text-[0.8125rem] leading-6 text-zinc-900 font-semibold hover:text-zinc-700"
-            >
-              Log in
-            </.link>
-          </li>
-        <% end %>
-      </ul>
-    </div>
   </div>
-</header>
+  <div class="navbar-end">
+    <ul class="menu menu-horizontal">
+      <%= if @current_user do %>
+        <li>
+          <.link href={~p"/users/settings"}>
+            Settings
+          </.link>
+        </li>
+        <li>
+          <.link
+            href={~p"/users/log_out"}
+            method="delete"
+          >
+            Log out
+          </.link>
+        </li>
+      <% else %>
+        <li>
+          <.link href={~p"/users/register"}>
+            Register
+          </.link>
+        </li>
+        <li>
+          <.link href={~p"/users/log_in"}>
+            Log in
+          </.link>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</div>
 <main class="px-4 py-20 sm:px-6 lg:px-8">
   <div class="mx-auto max-w-2xl">
     <.flash_group flash={@flash} />
-    <%= @inner_content %>
+    {@inner_content}
   </div>
 </main>
+<footer class="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4 bottom-0">
+  <aside>
+    <p>
+      Copyright © {DateTime.utc_now().year} —
+      <.link href="https://timrodz.dev" target="_blank" class="link link-hover">
+        Juan Morais
+      </.link>
+    </p>
+    <.theme_toggle />
+  </aside>
+</footer>

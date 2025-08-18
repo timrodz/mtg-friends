@@ -93,7 +93,6 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
         length(tournament.participants) >= 4
       )
       |> assign(:participant_forms, participant_forms)
-      |> assign(:toggle_score_decimals, true)
     }
   end
 
@@ -209,12 +208,6 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
     {:ok, _} = Tournaments.update_tournament(tournament, %{"status" => :finished})
 
     {:noreply, socket |> put_flash(:info, "Tournament is now finished") |> reload_page()}
-  end
-
-  @impl true
-  def handle_event("toggle-score-decimals", _, socket) do
-    {:noreply,
-     assign(socket, :toggle_score_decimals, not Map.get(socket.assigns, :toggle_score_decimals))}
   end
 
   defp reload_page(socket) do

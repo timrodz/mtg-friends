@@ -1,149 +1,160 @@
 <.header>
-  <%= @tournament.name %>
-  <:actions :if={@current_user_owner or @current_user_admin}>
+  {@tournament.name}
+  <:actions>
     <.link
+      href="#rounds"
+      class="btn btn-secondary btn-soft"
+    >
+      Go to rounds
+    </.link>
+    <.link
+      :if={@current_user_owner or @current_user_admin}
       patch={~p"/tournaments/#{@tournament}/show/edit"}
       phx-click={JS.push_focus()}
-      class="cta-subtle"
+      class="btn btn-primary btn-soft"
     >
       Edit
     </.link>
   </:actions>
 </.header>
 
-<section id="summary" class="text-zinc-600">
+<section id="summary" class="space-y-1">
   <h2>Summary</h2>
   <hr />
-  <div class="flex flex-col md:flex-row justify-between">
-    <.date dt={@tournament.date} />
-    <p>
-      <.icon name="hero-map-pin-solid" /> <%= @tournament.location %>
-    </p>
-  </div>
+  <.date dt={@tournament.date} />
   <p>
-    <%= @tournament.game.name %> / <%= TournamentRenderer.render_format(@tournament.format) %> / <%= TournamentRenderer.render_subformat(
-      @tournament.subformat
-    ) %> / <%= @tournament.round_count %> rounds (<%= @tournament.round_length_minutes %> minutes each) <%= if @tournament.is_top_cut_4 do
-      raw(" <span class='inline-block badge'>Top cut 4 enabled</span>")
-    end %>
+    <.icon name="hero-map-pin-solid" /> {@tournament.location}
   </p>
-  <p>Status: <.tournament_status value={@tournament.status} /></p>
-  <h3>Description</h3>
+  <p>
+    <.tournament_status value={@tournament.status} />
+    {if @tournament.is_top_cut_4 do
+      raw("/ <span class='badge badge-neutral'>Top cut 4 enabled</span>")
+    end}
+  </p>
+  <p>
+    {@tournament.game.name} / {TournamentRenderer.render_format(@tournament.format)} / {TournamentRenderer.render_subformat(
+      @tournament.subformat
+    )} / {@tournament.round_count} rounds ({@tournament.round_length_minutes} minutes each)
+  </p>
   <%= if @tournament.description_html != "" do %>
-    <p><%= raw(@tournament.description_html) %></p>
+    <p>{raw(@tournament.description_html)}</p>
   <% else %>
-    <p><%= @tournament.description_raw %></p>
+    <p>{@tournament.description_raw}</p>
   <% end %>
 </section>
 
 <section id="participants">
   <h2 class="font-bold">Participants & Standings</h2>
-  <div id="participant-header" class="participant-grid-header participant-grid">
-    <p><.icon name="hero-trophy" /></p>
-    <p>Name</p>
-    <p class="text-center">Points</p>
-    <p class="text-center">Win %</p>
-    <p>Decklist</p>
-    <p class="hidden md:block" />
-  </div>
-  <hr />
   <.simple_form
     for={@participant_forms}
     phx-submit="update-participants"
     as_flex
-    class="!space-y-3"
+    class="space-y-4"
   >
     <div
       :for={{p, index} <- Enum.with_index(@participant_forms.params["participants"])}
       id={"form-participant-#{p["id"]}"}
       class={[
-        "participant-grid px-2 py-1",
+        "card bg-base-100 shadow-md",
         @tournament.status == :finished && index == 0 &&
-          "bg-green-200 border rounded-lg border-green-200",
-        p["is_dropped"] && "bg-red-200"
+          "border-2 border-success",
+        p["is_dropped"] && "bg-error"
       ]}
     >
-      <input type="hidden" name={"participant-id-#{p["id"]}"} value={p["id"]} />
-      <p class="text-zinc-600 font-mono w-[2rem]">
-        #<%= index + 1 %>
-      </p>
-      <div class="self-center mr-2 flex">
-        <%= if @current_user_admin do %>
-          <.input type="text" name={"form-participant-name-#{p["id"]}"} value={p["name"]} />
-        <% else %>
-          <%= if p["name"] do %>
-            <p><%= p["name"] %></p>
+      <div class="card-body">
+        <input type="hidden" name={"participant-id-#{p["id"]}"} value={p["id"]} class="input" />
+        <span class={[
+          "badge font-mono",
+          case index do
+            0 ->
+              if @tournament.status == :finished do
+                "badge-success font-bold"
+              else
+                "badge-success"
+              end
+
+            _ ->
+              "badge-secondary"
+          end
+        ]}>
+          <%= if @tournament.status == :finished do %>
+            Winner
           <% else %>
-            <.input type="text" name={"form-participant-name-#{p["id"]}"} value={p["name"]} />
+            #{index + 1}
           <% end %>
+        </span>
+        <div class="flex justify-between">
+          <p class="font-semibold">
+            {if p["name"] do
+              "Name: #{p["name"]}"
+            else
+              "No name"
+            end}
+          </p>
+          <p class="self-end grow-0">
+            Win rate:
+            <%= if p["scores"] do %>
+              <span>
+                {Decimal.round(p["scores"].total_score, 2)} / {Decimal.round(
+                  p["scores"].win_rate,
+                  2
+                )}%
+              </span>
+            <% else %>
+              <span>
+                0.00 / 0.00%
+              </span>
+            <% end %>
+          </p>
+        </div>
+        <.participant_decklist decklist={p["decklist"]} />
+        <%= if @current_user_owner or @current_user_admin do %>
+          <div>
+            <p class="divider font-mono">Admin actions</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <.input
+                type="text"
+                label="Participant name"
+                id={"form-participant-name-#{p["id"]}"}
+                name={"form-participant-name-#{p["id"]}"}
+                value={p["name"]}
+                placeholder="Enter a name here"
+              />
+              <.input
+                type="url"
+                label="Decklist URL"
+                id={"form-participant-decklist-#{p["id"]}"}
+                name={"form-participant-decklist-#{p["id"]}"}
+                value={p["decklist"]}
+                placeholder="Enter a decklist here"
+              />
+            </div>
+            <.link
+              phx-click={
+                JS.push("delete-participant", value: %{id: p["id"]})
+                |> hide("##{p["id"]}")
+              }
+              data-confirm={"Are you sure? You're about to remove #{p["name"]} from the tournament."}
+              class="btn btn-error btn-outline"
+            >
+              Delete from tournament
+            </.link>
+            <%!-- TODO: Implement drop logic --%>
+            <%!-- <.link
+              phx-click={
+                JS.push("drop-participant", value: %{id: p["id"]})
+                |> hide("##{p["id"]}")
+              }
+              data-confirm={"Are you sure? You're about to remove #{p["name"]} from the tournament."}
+              class="btn btn-error btn-outline"
+            >
+              Drop from tournament
+            </.link> --%>
+          </div>
         <% end %>
       </div>
-      <%= if p["scores"] do %>
-        <p class="score">
-          <%= Decimal.round(p["scores"].total_score, (@toggle_score_decimals && 0) || 3) %>
-        </p>
-        <p class="score">
-          <%= Decimal.round(
-            p["scores"].win_rate,
-            (@toggle_score_decimals && 0) || 2
-          ) %>%
-        </p>
-      <% else %>
-        <%= if @toggle_score_decimals do %>
-          <p class="score">
-            0
-          </p>
-          <p class="score">
-            0%
-          </p>
-        <% else %>
-          <p class="score">
-            0.00
-          </p>
-          <p class="score">
-            0.00%
-          </p>
-        <% end %>
-      <% end %>
-      <div class="self-center">
-        <%= if @current_user_owner do %>
-          <.input type="text" name={"form-participant-decklist-#{p["id"]}"} value={p["decklist"]} />
-        <% else %>
-          <.participant_decklist decklist={p["decklist"]} />
-        <% end %>
-      </div>
-      <div
-        :if={@current_user_owner or @current_user_admin}
-        class="hidden md:flex md:justify-center md:items-center"
-      >
-        <.link
-          phx-click={
-            JS.push("delete-participant", value: %{id: p["id"]})
-            |> hide("##{p["id"]}")
-          }
-          data-confirm={"Are you sure? You're about to delete #{p["name"]}"}
-          class="text-zinc-400 font-medium"
-        >
-          Delete
-        </.link>
-      </div>
-      <%!-- Experimental feature, not really necessary? --%>
-      <%!-- <div
-        :if={not p["is_dropped"] and (@current_user_owner or @current_user_admin)}
-        class="hidden md:md:flex md:justify-center md:items-center"
-      >
-        <.link
-          phx-click={
-            JS.push("drop-participant", value: %{id: p["id"]})
-            |> hide("##{p["id"]}")
-          }
-          data-confirm={"Are you sure? You're about to drop #{p["name"]}"}
-          class="text-zinc-400 font-medium"
-        >
-          Drop
-        </.link>
-      </div> --%>
     </div>
+    <p class="mt-8 mb-6 divider">Actions</p>
     <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
       <.button
         phx-disable-with="Saving..."
@@ -153,19 +164,17 @@
       </.button>
     </:actions>
     <:actions :if={@current_user_owner and length(@rounds) == 0}>
-      <.button phx-click="create-participant" phx-disable-with="Creating...">
+      <.button
+        phx-click="create-participant"
+        phx-disable-with="Creating..."
+      >
         <.icon name="hero-plus" class="mr-1" /> Add participant
       </.button>
     </:actions>
   </.simple_form>
-  <div class="mt-2">
-    <.button phx-click="toggle-score-decimals" phx-disable-with="Toggling..." class="cta-subtle">
-      Toggle score decimals
-    </.button>
-  </div>
 </section>
 
-<section id="rounds">
+<section id="rounds-section">
   <h2 class="font-bold">Rounds</h2>
   <.item_grid
     :if={length(@tournament.rounds) > 0}
@@ -176,16 +185,16 @@
     }
   >
     <:item :let={round}>
-      <div class="flex justify-between">
-        <p class={round.status == :finished && "text-zinc-500"}>
+      <div class="flex justify-between mb-2">
+        <p>
           Round
-          #<%= round.number + 1 %>
+          #{round.number + 1}
         </p>
         <.round_status value={round.status} />
       </div>
       <.link
         patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"}
-        class={["p-0", round.status == :finished && "text-zinc-500"]}
+        class={["p-0 btn btn-info btn-soft", round.status == :finished && ""]}
       >
         <.icon name="hero-chevron-right" /> View round
       </.link>
@@ -196,7 +205,7 @@
           |> hide("##{round.id}")
         }
         data-confirm="Are you sure? This action is irreversible."
-        class="text-zinc-400 font-medium"
+        class="btn btn-error btn-soft"
       >
         Delete
       </.link>
@@ -211,7 +220,7 @@
         In order to begin the tournament, all participants must have names assigned to them
       </.warning>
       <.warning :if={@is_current_round_active?}>
-        There can only be 1 active round at a time
+        Finish the current round before starting a new one
       </.warning>
       <div class="flex gap-2 flex-col md:flex-row">
         <.button
@@ -221,13 +230,14 @@
             not @all_participants_have_names? or @is_current_round_active? or
               not @has_enough_participants?
           }
+          class="btn-primary btn-wide btn-lg"
         >
           <%= if length(@rounds) == 0 do %>
             <.icon name="hero-rocket-launch-solid" class="mr-1" />
             Create 1st round (start tournament)
           <% else %>
             <.icon name="hero-plus" class="mr-1" />
-            Create <%= (@tournament.round_count == length(@rounds) + 1 && "last") || "new" %> round
+            Begin {(@tournament.round_count == length(@rounds) + 1 && "last") || "new"} round
           <% end %>
         </.button>
       </div>
