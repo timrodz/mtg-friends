@@ -131,3 +131,52 @@ Create `.env` file with required configurations, then run `source .env` before s
 - LiveView integration tests for user workflows
 - Fixtures in `test/support/fixtures/` provide test data
 - Database isolation per test with `DataCase`
+
+## Code Quality & Linting
+
+### Code Formatting
+```bash
+# Format code (run before committing)
+mix format
+
+# Check if code is formatted
+mix format --check-formatted
+```
+
+### Linting & Type Checking
+```bash
+# Run Credo for code analysis
+mix credo
+
+# Run Dialyzer for type checking (after first setup)
+mix dialyzer
+
+# Setup Dialyzer PLT files (first time only)
+mix dialyzer --plt
+```
+
+## Development Guidelines
+
+### Phoenix Conventions
+- Follow Phoenix context patterns for domain separation
+- Use LiveView components for interactive UI elements
+- Keep business logic in context modules, not LiveViews
+- Use `assigns` pattern for LiveView state management
+
+### Database Guidelines
+- Always create migrations for schema changes
+- Use descriptive migration names with timestamps
+- Add database constraints for data integrity
+- Test migrations both up and down
+
+### Testing Best Practices
+- Write tests before implementing features (TDD)
+- Test context functions separately from LiveViews
+- Use factory functions from fixtures for test data
+- Test both happy path and error scenarios
+
+### Git Workflow
+- Use feature branches for all changes
+- Write descriptive commit messages
+- Run tests before pushing code
+- Keep commits focused and atomic
