@@ -96,20 +96,6 @@
 @custom-variant phx-submit-loading ([".phx-submit-loading&", ".phx-submit-loading &"]);
 @custom-variant phx-change-loading ([".phx-change-loading&", ".phx-change-loading &"]);
 
-/* This file is for your main application CSS */
-/* body {
-  @apply antialiased relative bg-slate-200 font-sans;
-}
-
-nav {
-  @apply py-3 px-6 flex justify-end;
-}
-nav ul {
-  @apply flex items-center justify-between gap-4;
-}
-nav ul li {
-  @apply text-base text-slate-700;
-} */
 .nav-link {
   @apply text-[0.8125rem] leading-6 font-semibold text-base-content hover:text-secondary-content
 }
@@ -146,9 +132,6 @@ h3 {
   }
 }
 
-/* .score {
-  @apply font-mono text-center self-center text-sm;
-} */
 
 hr {
   @apply mb-4;
@@ -161,84 +144,3 @@ ul {
     @apply ml-2;
   }
 }
-/* 
-main {
-  @apply max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8;
-}
-
-
-
-#controls {
-  @apply mt-4 max-w-xl mx-auto text-center;
-}
-
-a {
-  @apply font-medium hover:underline px-3 py-2 rounded-md;
-}
-
-#description a {
-  @apply mx-1 font-semibold;
-}
-
-.round_countdown_timer {
-  @apply text-3xl md:text-5xl text-left md:text-center;
-}
-
-a.cta {
-  @apply bg-indigo-700 text-white hover:bg-indigo-800;
-}
-
-a.cta-subtle {
-  @apply bg-white text-indigo-900 ring-[1px] ring-slate-200 hover:bg-slate-50;
-}
-
-button.cta-subtle {
-  @apply bg-white text-indigo-900 ring-[1px] ring-slate-200 hover:bg-slate-50;
-}
-
-
-.description {
-  @apply mt-8 text-zinc-700;
-
-  a {
-    @apply px-1 py-1 hover:bg-indigo-50;
-  }
-}
-
-p {
-  @apply mt-1 mb-2;
-}
-
-span.badge {
-  @apply bg-indigo-400 p-1 rounded-md text-white;
-}
-
-p.subtle {
-  @apply text-zinc-600;
-}
-
-#item-grid-tournaments .item-grid {
-  @apply lg:gap-6;
-}
-
-#item-grid-tournaments .item-container {
-  @apply shadow-sm;
-}
-
-#item-grid-tournaments .item {
-  @apply text-zinc-600;
-
-  h3 {
-    @apply font-bold my-0 text-black;
-  }
-
-  .game-name {
-    @apply mb-2;
-  }
-}
-
-
-
-section {
-  @apply pt-8 md:pt-6 pb-4 md:pb-2;
-} */

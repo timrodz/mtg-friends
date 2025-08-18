@@ -92,10 +92,10 @@
             end}
           </p>
           <p class="self-end grow-0">
-            Win rate:
+            Points
             <%= if p["scores"] do %>
               <span>
-                {Decimal.round(p["scores"].total_score, 2)} / {Decimal.round(
+                {Decimal.round(p["scores"].total_score, 2)} / Win rate: {Decimal.round(
                   p["scores"].win_rate,
                   2
                 )}%
@@ -129,18 +129,19 @@
                 placeholder="Enter a decklist here"
               />
             </div>
-            <.link
-              phx-click={
-                JS.push("delete-participant", value: %{id: p["id"]})
-                |> hide("##{p["id"]}")
-              }
-              data-confirm={"Are you sure? You're about to remove #{p["name"]} from the tournament."}
-              class="btn btn-error btn-outline"
-            >
-              Delete from tournament
-            </.link>
-            <%!-- TODO: Implement drop logic --%>
-            <%!-- <.link
+            <div class="mt-1">
+              <.link
+                phx-click={
+                  JS.push("delete-participant", value: %{id: p["id"]})
+                  |> hide("##{p["id"]}")
+                }
+                data-confirm={"Are you sure? You're about to remove #{p["name"]} from the tournament."}
+                class="btn btn-error btn-outline"
+              >
+                Delete from tournament
+              </.link>
+              <%!-- TODO: Implement drop logic --%>
+              <%!-- <.link
               phx-click={
                 JS.push("drop-participant", value: %{id: p["id"]})
                 |> hide("##{p["id"]}")
@@ -150,16 +151,14 @@
             >
               Drop from tournament
             </.link> --%>
+            </div>
           </div>
         <% end %>
       </div>
     </div>
     <p class="mt-8 mb-6 divider">Actions</p>
     <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
-      <.button
-        phx-disable-with="Saving..."
-        data-confirm="Are you sure? You won't be able to edit names afterwards (this is a test feature to prevent cheating)"
-      >
+      <.button phx-disable-with="Saving...">
         <.icon name="hero-table-cells-solid" class="mr-1" /> Save changes
       </.button>
     </:actions>
@@ -174,7 +173,7 @@
   </.simple_form>
 </section>
 
-<section id="rounds-section">
+<section id="rounds">
   <h2 class="font-bold">Rounds</h2>
   <.item_grid
     :if={length(@tournament.rounds) > 0}
@@ -230,7 +229,7 @@
             not @all_participants_have_names? or @is_current_round_active? or
               not @has_enough_participants?
           }
-          class="btn-primary btn-wide btn-lg"
+          class="btn-primary btn-lg"
         >
           <%= if length(@rounds) == 0 do %>
             <.icon name="hero-rocket-launch-solid" class="mr-1" />

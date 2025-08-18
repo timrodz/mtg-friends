@@ -387,7 +387,7 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent do
     case Rounds.update_round(socket.assigns.round, round_params) do
       {:ok, round} ->
         notify_parent({:saved, round})
-        {:noreply, socket |> put_flash(:info, "Round updated successfully")}
+        {:noreply, socket |> put_flash(:success, "Round updated successfully")}
       {:error, changeset} ->
         {:noreply, assign(socket, form: to_form(changeset))}
     end

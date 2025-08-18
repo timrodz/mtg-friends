@@ -8,7 +8,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEndFormComponent do
     ~H"""
     <div>
       <.header>
-        <%= @title %>
+        {@title}
         <:subtitle>Use this form below to select the winner of this tournament</:subtitle>
       </.header>
 
@@ -63,7 +63,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEndFormComponent do
     with {:ok, _} <-
            Participants.update_participant(participant, %{"is_tournament_winner" => true}),
          {:ok, _} <- Tournaments.update_tournament(tournament, %{"status" => :finished}) do
-      {:noreply, socket |> put_flash(:info, "This tournament is now finished!") |> reload_page()}
+      {:noreply,
+       socket |> put_flash(:success, "This tournament is now finished!") |> reload_page()}
     else
       _ ->
         nil

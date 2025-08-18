@@ -80,9 +80,12 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           field={@form[:is_top_cut_4]}
           type="checkbox"
           label="Top Cut 4 (Has a final round decided by the top 4 players)"
+          class="mt-2"
         />
         <:actions>
-          <.button phx-disable-with="Saving..." class="btn btn-primary">Submit Tournament</.button>
+          <.button phx-disable-with="Saving..." class="mt-2 btn btn-primary">
+            Submit Tournament
+          </.button>
         </:actions>
       </.simple_form>
     </div>
@@ -174,7 +177,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Tournament updated successfully")
+         |> put_flash(:success, "Tournament updated successfully")
          |> push_navigate(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -202,7 +205,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           {:ok, _} ->
             {:noreply,
              socket
-             |> put_flash(:info, "Tournament created successfully")
+             |> put_flash(:success, "Tournament created successfully")
              |> push_navigate(to: "/tournaments/#{tournament.id}")}
 
           _ ->

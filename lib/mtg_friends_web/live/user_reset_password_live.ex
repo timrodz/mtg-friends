@@ -60,7 +60,7 @@ defmodule MtgFriendsWeb.UserResetPasswordLive do
       {:ok, _} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Password reset successfully.")
+         |> put_flash(:success, "Password reset successfully.")
          |> redirect(to: ~p"/users/log_in")}
 
       {:error, changeset} ->

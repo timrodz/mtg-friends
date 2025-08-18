@@ -1,4 +1,4 @@
-<div class="navbar bg-base-100 shadow-sm">
+<div class="navbar bg-base-200 border-b-2 border-base-300 px-4 lg:px-10">
   <div class="navbar-start">
     <.link
       href={
@@ -15,7 +15,7 @@
     </.link>
   </div>
   <div class="navbar-end">
-    <ul class="menu menu-horizontal">
+    <ul class="menu menu-vertical lg:menu-horizontal">
       <%= if @current_user do %>
         <li>
           <.link href={~p"/users/settings"}>

@@ -112,12 +112,13 @@ defmodule MtgFriendsWeb.CoreComponents do
       id={@id}
       phx-click={JS.push("lv:clear-flash", value: %{key: @kind}) |> hide("##{@id}")}
       role="alert"
-      class="toast toast-top toast-end"
+      class="z-100 toast toast-top toast-end"
       {@rest}
     >
       <div class={[
         "alert alert-vertical sm:alert-horizontal",
         @kind == :info && "alert-info",
+        @kind == :success && "alert-success",
         @kind == :error && "alert-error"
       ]}>
         <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
@@ -233,16 +234,10 @@ defmodule MtgFriendsWeb.CoreComponents do
     ~H"""
     <button
       type={@type}
-      class={
-        [
-          "btn",
-          # "phx-submit-loading:opacity-75 rounded-lg bg-indigo-600 enabled:hover:underline py-2 px-3",
-          # "text-sm font-semibold leading-6 text-white active:text-white/80",
-          # "flex items-center",
-          # "disabled:bg-zinc-300 disabled:text-zinc-600",
-          @class
-        ]
-      }
+      class={[
+        "btn",
+        @class
+      ]}
       {@rest}
     >
       {render_slot(@inner_block)}
@@ -302,7 +297,7 @@ defmodule MtgFriendsWeb.CoreComponents do
       assign_new(assigns, :checked, fn -> Phoenix.HTML.Form.normalize_value("checkbox", value) end)
 
     ~H"""
-    <div phx-feedback-for={@name}>
+    <div phx-feedback-for={@name} class={@class}>
       <label class="label">
         <input type="hidden" name={@name} value="false" />
         <input
@@ -325,14 +320,13 @@ defmodule MtgFriendsWeb.CoreComponents do
     ~H"""
     <div phx-feedback-for={@name}>
       <fieldset class="fieldset">
-        <legend class="fieldset-legend">
+        <legend class="fieldset-legend text-lg">
           {@label}
         </legend>
-        <%!-- <.label for={@id}>{@label}</.label> --%>
         <select
           id={@id}
           name={@name}
-          class="select"
+          class="select w-full"
           multiple={@multiple}
           {@rest}
         >
@@ -349,12 +343,12 @@ defmodule MtgFriendsWeb.CoreComponents do
     ~H"""
     <div phx-feedback-for={@name}>
       <fieldset class="fieldset">
-        <legend class="fieldset-legend">{@label}</legend>
+        <legend class="fieldset-legend text-lg">{@label}</legend>
         <textarea
           id={@id}
           name={@name}
           class={[
-            "textarea",
+            "textarea w-full",
             @errors != [] && "border-error focus:border-error"
           ]}
           {@rest}
@@ -370,17 +364,16 @@ defmodule MtgFriendsWeb.CoreComponents do
     ~H"""
     <div phx-feedback-for={@name} class={@class}>
       <fieldset class="fieldset">
-        <legend class="fieldset-legend">
+        <legend class="fieldset-legend text-lg">
           {@label}
         </legend>
-        <%!-- <.label for={@id}>{@label}</.label> --%>
         <input
           type={@type}
           name={@name}
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
           class={[
-            "input",
+            "input w-full",
             @errors != [] && "input-error"
           ]}
           {@rest}
@@ -413,7 +406,7 @@ defmodule MtgFriendsWeb.CoreComponents do
 
   def error(assigns) do
     ~H"""
-    <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600 phx-no-feedback:hidden">
+    <p class="mt-1 flex gap-3 text-sm leading-6 text-error phx-no-feedback:hidden">
       <.icon name="hero-exclamation-circle-mini" class="mt-0.5 flex-none" />
       {render_slot(@inner_block)}
     </p>
@@ -504,7 +497,7 @@ defmodule MtgFriendsWeb.CoreComponents do
     ~H"""
     <div class={["overflow-y-auto px-4 sm:overflow-visible sm:px-0", @class]}>
       <table class="w-[40rem] sm:w-full">
-        <thead class="text-sm text-left leading-6 text-zinc-500">
+        <thead class="text-sm text-left leading-6 text-info">
           <tr>
             <th :for={col <- @col} class="p-0 pr-6 pb-4 font-normal">{col[:label]}</th>
             <th class="relative p-0 pb-4"><span class="sr-only">{gettext("Actions")}</span></th>

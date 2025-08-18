@@ -122,7 +122,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
 
       {:noreply,
        socket
-       |> put_flash(:info, "Round #{round.number + 1} created successfully")
+       |> put_flash(:success, "Round #{round.number + 1} created successfully")
        |> push_navigate(to: ~p"/tournaments/#{tournament.id}/rounds/#{round.number + 1}")}
     else
       {:error, _} ->
@@ -144,7 +144,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
       {:ok, _} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Participant created successfully")
+         |> put_flash(:success, "Participant created successfully")
          |> reload_page()}
 
       {:error, %Ecto.Changeset{} = _} ->
@@ -165,7 +165,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
       {:ok, _} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Tournament updated successfully")
+         |> put_flash(:success, "Tournament updated successfully")
          |> reload_page()}
 
       {:error, _, error, _} ->
@@ -207,7 +207,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
 
     {:ok, _} = Tournaments.update_tournament(tournament, %{"status" => :finished})
 
-    {:noreply, socket |> put_flash(:info, "Tournament is now finished") |> reload_page()}
+    {:noreply, socket |> put_flash(:success, "The tournament has ended") |> reload_page()}
   end
 
   defp reload_page(socket) do

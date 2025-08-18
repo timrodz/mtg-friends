@@ -61,7 +61,7 @@ defmodule MtgFriendsWeb.GameLive.FormComponent do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Game updated successfully")
+         |> put_flash(:success, "Game updated successfully")
          |> push_navigate(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -76,7 +76,7 @@ defmodule MtgFriendsWeb.GameLive.FormComponent do
 
         {:noreply,
          socket
-         |> put_flash(:info, "Game created successfully")
+         |> put_flash(:success, "Game created successfully")
          |> push_navigate(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
