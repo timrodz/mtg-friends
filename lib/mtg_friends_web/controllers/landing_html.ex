@@ -4,8 +4,8 @@ defmodule MtgFriendsWeb.LandingHTML do
   def index(assigns) do
     ~H"""
     <.flash_group flash={@flash} />
-    <main id="landing-page">
-      <div class="max-w-screen-md mx-auto">
+    <main id="landing-page" class="mb-12">
+      <div class="max-w-screen-md mx-auto px-4">
         <div id="hero" class="pt-12 flex justify-center items-center">
           <h1>
             ⚔ Tie Breaker
@@ -38,7 +38,7 @@ defmodule MtgFriendsWeb.LandingHTML do
           </.item_grid>
 
           <div class="inline-block">
-            <.link navigate={~p"/tournaments"} class="icon-text btn btn-info">
+            <.link navigate={~p"/tournaments"} class="icon-text btn btn-accent">
               <.icon name="hero-chevron-right" /> See all tournaments
             </.link>
           </div>
@@ -69,8 +69,13 @@ defmodule MtgFriendsWeb.LandingHTML do
                 href={s.url}
                 target="_blank"
                 rel="noopener noreferrer"
+                alt={s.name}
               >
-                <img src={"/images/#{s.image}"} alt={s.name} class="object-contain rounded-md" />
+                <img
+                  src={"/images/#{s.image}"}
+                  alt={ "#{s.name} Image"}
+                  class="object-contain rounded-md"
+                />
               </.link>
             <% end %>
           </div>
@@ -78,7 +83,7 @@ defmodule MtgFriendsWeb.LandingHTML do
             <blockquote class="px-4 py-2 my-4 border-l-4 border-accent">
               I've been testing different methods of pairing for a long time, and this app is exactly what I've been looking for. It offers an intuitive and streamlined process for organizing matches and tournaments, with an easy and user-friendly interface. Also, it's updated regularly with bug fixes and improvements. Recommended!
             </blockquote>
-            <p class="text-base-100">Jorge Ortíz — Data Engineer & MTG Streamer (DankConfidants)</p>
+            <p>Jorge Ortíz — Data Engineer & MTG Streamer (DankConfidants)</p>
           </div>
         </section>
         <section id="faq">
@@ -119,13 +124,16 @@ defmodule MtgFriendsWeb.LandingHTML do
       </div>
     </main>
 
-    <footer class="footer">
-      <div class="max-w-screen-sm mx-auto flex justify-center items-center pt-8 pb-12 px-4 lg:px-0">
-        <p class="text-center">
-          &copy; 2024 <.link href="https://www.timrodz.dev" target="_blank" class="font-medium">Juan Rodríguez Morais</.link>. Brought to you with the support of many early stage adopters
-          <.icon name="hero-heart-solid" />
+    <footer class="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4 bottom-0">
+      <aside>
+        <p>
+          Copyright © {DateTime.utc_now().year} —
+          <.link href="https://timrodz.dev" target="_blank" class="link link-hover">
+            Juan Morais
+          </.link>
         </p>
-      </div>
+        <.theme_toggle />
+      </aside>
     </footer>
     """
   end
@@ -138,13 +146,13 @@ defmodule MtgFriendsWeb.LandingHTML do
   def theme_toggle(assigns) do
     ~H"""
     <div class="card relative flex flex-row items-center border-2 border-base-300 bg-base-300 rounded-full">
-      <div class="absolute w-[33%] h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=corporate]_&]:left-[33%] [[data-theme=dark]_&]:left-[66%] transition-[left]" />
+      <div class="absolute w-[33%] h-full rounded-full border-1 border-base-200 bg-base-100 brightness-200 left-0 [[data-theme=light]_&]:left-[33%] [[data-theme=dark]_&]:left-[66%] transition-[left]" />
 
       <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "system"})} class="flex p-2">
         <.icon name="hero-computer-desktop-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
 
-      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "corporate"})} class="flex p-2">
+      <button phx-click={JS.dispatch("phx:set-theme", detail: %{theme: "light"})} class="flex p-2">
         <.icon name="hero-sun-micro" class="size-4 opacity-75 hover:opacity-100" />
       </button>
 

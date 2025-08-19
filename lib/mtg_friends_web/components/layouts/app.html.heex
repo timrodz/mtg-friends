@@ -1,7 +1,7 @@
-<div class="navbar bg-base-200 border-b-2 border-base-300 px-4 lg:px-10">
+<div class="navbar bg-base-300 border-b-2 border-base-300 px-4 lg:px-10">
   <div class="navbar-start">
     <.link
-      href={
+      navigate={
         case is_nil(@current_user) do
           true -> ~p"/"
           false -> ~p"/tournaments"
@@ -18,13 +18,13 @@
     <ul class="menu menu-vertical lg:menu-horizontal">
       <%= if @current_user do %>
         <li>
-          <.link href={~p"/users/settings"}>
+          <.link navigate={~p"/users/settings"}>
             Settings
           </.link>
         </li>
         <li>
           <.link
-            href={~p"/users/log_out"}
+            navigate={~p"/users/log_out"}
             method="delete"
           >
             Log out
@@ -32,12 +32,12 @@
         </li>
       <% else %>
         <li>
-          <.link href={~p"/users/register"}>
+          <.link navigate={~p"/users/register"}>
             Register
           </.link>
         </li>
         <li>
-          <.link href={~p"/users/log_in"}>
+          <.link navigate={~p"/users/log_in"}>
             Log in
           </.link>
         </li>
@@ -55,7 +55,7 @@
   <aside>
     <p>
       Copyright © {DateTime.utc_now().year} —
-      <.link href="https://timrodz.dev" target="_blank" class="link link-hover">
+      <.link navigate="https://timrodz.dev" target="_blank" class="link link-hover">
         Juan Morais
       </.link>
     </p>

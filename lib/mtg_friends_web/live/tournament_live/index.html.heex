@@ -1,29 +1,30 @@
-<.header class="mb-4">
+<.header>
   Tournaments
   <:actions>
     <%= if @current_user do %>
-      <.link class="btn btn-primary" patch={~p"/tournaments/new"}>
+      <.link class="btn btn-accent" patch={~p"/tournaments/new"}>
         Create new tournament
       </.link>
     <% end %>
   </:actions>
 </.header>
 
+<%!-- item_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end} --%>
 <.item_grid
   id="tournaments"
   items={@streams.tournaments}
-  item_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end}
 >
-  <:item :let={{_id, t}} class="flex flex-col justify-between">
-    <h3 class="truncate font-semibold !my-0 !mb-1">{t.name}</h3>
-    <div>
-      <p class="game-name">{t.game.name}</p>
-      <.date dt={t.date} />
-      <h4 class="icon-text truncate">
-        <.icon name="hero-map-pin-solid" /> {t.location}
-      </h4>
-      <.tournament_status value={t.status} />
-    </div>
+  <:item :let={{_id, t}} class="flex flex-col justify-between gap-2">
+    <h3 class="text-accent truncate font-semibold !m-0">{t.name}</h3>
+    <p class="game-name">{t.game.name}</p>
+    <.date dt={t.date} />
+    <h4 class="icon-text truncate">
+      <.icon name="hero-map-pin-solid" /> {t.location}
+    </h4>
+    <.tournament_status value={t.status} />
+    <.link navigate={~p"/tournaments/#{t.id}"} class="btn btn-secondary">
+      <.icon name="hero-globe-alt" /> View tournament
+    </.link>
   </:item>
 </.item_grid>
 

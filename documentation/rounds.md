@@ -354,7 +354,7 @@ def handle_event("start_round", %{"round_id" => round_id}, socket) do
   case Rounds.update_round(round, %{status: :active, started_at: NaiveDateTime.local_now()}) do
     {:ok, _round} ->
       # Broadcast update to all connected clients
-      {:noreply, socket |> put_flash(:info, "Round started!") |> push_redirect(...)}
+      {:noreply, socket |> put_flash(:info, "Round started!") |> push_navigate(...)}
     {:error, changeset} ->
       {:noreply, socket |> put_flash(:error, "Failed to start round")}
   end

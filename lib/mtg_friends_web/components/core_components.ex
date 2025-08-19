@@ -123,6 +123,7 @@ defmodule MtgFriendsWeb.CoreComponents do
       ]}>
         <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
           <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
+          <.icon :if={@kind == :success} name="hero-check-circle-mini" class="h-4 w-4" />
           <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
           {@title}
         </p>
@@ -133,6 +134,7 @@ defmodule MtgFriendsWeb.CoreComponents do
           class={[
             "btn btn-soft btn-circle btn-sm",
             @kind === :info && "btn-info",
+            @kind === :success && "btn-success",
             @kind == :error && "btn-error"
           ]}
         >
@@ -154,7 +156,8 @@ defmodule MtgFriendsWeb.CoreComponents do
 
   def flash_group(assigns) do
     ~H"""
-    <.flash kind={:info} title="Success!" flash={@flash} />
+    <.flash kind={:info} title="FYI!" flash={@flash} />
+    <.flash kind={:success} title="Success!" flash={@flash} />
     <.flash kind={:error} title="Error!" flash={@flash} />
     <.flash
       id="disconnected"
@@ -198,7 +201,7 @@ defmodule MtgFriendsWeb.CoreComponents do
   def simple_form(assigns) do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class={["mt-2 space-y-1", @class]}>
+      <div class={["mt-2 space-y-2", @class]}>
         {render_slot(@inner_block, f)}
         <%= if @as_flex do %>
           <div class="flex gap-2">
@@ -276,6 +279,7 @@ defmodule MtgFriendsWeb.CoreComponents do
   attr :prompt, :string, default: nil, doc: "the prompt for select inputs"
   attr :options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2"
   attr :multiple, :boolean, default: false, doc: "the multiple flag for select inputs"
+  attr :label_small, :boolean, default: false
 
   attr :rest, :global,
     include: ~w(autocomplete cols disabled form list max maxlength min minlength
@@ -320,7 +324,13 @@ defmodule MtgFriendsWeb.CoreComponents do
     ~H"""
     <div phx-feedback-for={@name}>
       <fieldset class="fieldset">
-        <legend class="fieldset-legend text-lg">
+        <legend class={[
+          "fieldset-legend",
+          case @label_small do
+            true -> "text-md"
+            false -> "text-lg"
+          end
+        ]}>
           {@label}
         </legend>
         <select
@@ -343,7 +353,15 @@ defmodule MtgFriendsWeb.CoreComponents do
     ~H"""
     <div phx-feedback-for={@name}>
       <fieldset class="fieldset">
-        <legend class="fieldset-legend text-lg">{@label}</legend>
+        <legend class={[
+          "fieldset-legend",
+          case @label_small do
+            true -> "text-md"
+            false -> "text-lg"
+          end
+        ]}>
+          {@label}
+        </legend>
         <textarea
           id={@id}
           name={@name}
@@ -364,8 +382,18 @@ defmodule MtgFriendsWeb.CoreComponents do
     ~H"""
     <div phx-feedback-for={@name} class={@class}>
       <fieldset class="fieldset">
-        <legend class="fieldset-legend text-lg">
-          {@label}
+        <legend class={[
+          "fieldset-legend",
+          case @label_small do
+            true -> "text-md"
+            false -> "text-lg"
+          end
+        ]}>
+          <%= if Map.has_key?(@rest, :required) do %>
+            {@label}<span class="text-accent">*</span>
+          <% else %>
+            {@label}
+          <% end %>
         </legend>
         <input
           type={@type}

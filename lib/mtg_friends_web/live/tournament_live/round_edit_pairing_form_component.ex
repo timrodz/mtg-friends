@@ -93,9 +93,6 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent do
         end
 
       false ->
-        # Debugging line
-        socket.assigns.patch |> IO.inspect(label: "socket.assigns.patch")
-
         {:noreply,
          socket
          |> put_flash(:success, "Pod updated successfully")
