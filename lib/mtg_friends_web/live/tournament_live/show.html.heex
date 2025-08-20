@@ -181,7 +181,7 @@
   <h2 class="font-bold">Rounds</h2>
   <.item_grid
     :if={length(@tournament.rounds) > 0}
-    id="rounds"
+    id="rounds-grid"
     items={@tournament.rounds}
     item_click={
       fn round -> JS.navigate(~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}") end
