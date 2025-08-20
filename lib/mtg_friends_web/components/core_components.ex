@@ -65,14 +65,13 @@ defmodule MtgFriendsWeb.CoreComponents do
               id={"#{@id}-container"}
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
-              phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
               class="shadow-base-300 bg-base-200 ring-base-300/10 relative hidden rounded-2xl p-6 md:p-14 shadow-lg ring-1 transition"
             >
               <div class="absolute top-6 right-5">
                 <button
                   phx-click={JS.exec("data-cancel", to: "##{@id}")}
                   type="button"
-                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
+                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-60 hover:cursor-pointer"
                   aria-label={gettext("close")}
                 >
                   <.icon name="hero-x-mark-solid" />
