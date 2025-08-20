@@ -89,14 +89,14 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent do
             {:noreply,
              socket
              |> put_flash(:success, "Pod updated successfully")
-             |> push_navigate(to: socket.assigns.patch)}
+             |> push_patch(to: socket.assigns.patch)}
         end
 
       false ->
         {:noreply,
          socket
          |> put_flash(:success, "Pod updated successfully")
-         |> push_navigate(to: socket.assigns.patch)}
+         |> push_patch(to: socket.assigns.patch)}
     end
   end
 

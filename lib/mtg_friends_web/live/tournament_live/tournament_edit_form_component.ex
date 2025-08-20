@@ -174,7 +174,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         {:noreply,
          socket
          |> put_flash(:success, "Tournament updated successfully")
-         |> push_navigate(to: socket.assigns.patch)}
+         |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign_form(socket, changeset)}
