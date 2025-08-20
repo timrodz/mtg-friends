@@ -3,7 +3,7 @@
   <:actions>
     <.link
       patch="#rounds"
-      class="btn btn-accent"
+      class="btn btn-accent btn-outline"
     >
       Go to rounds
     </.link>
@@ -11,7 +11,7 @@
       :if={@current_user_owner or @current_user_admin}
       patch={~p"/tournaments/#{@tournament}/show/edit"}
       phx-click={JS.push_focus()}
-      class="btn btn-secondary"
+      class="btn btn-secondary btn-outline"
     >
       Edit
     </.link>
@@ -130,19 +130,18 @@
                 placeholder="Enter a decklist here"
               />
             </div>
-            <div class="mt-1">
-              <.link
-                phx-click={
-                  JS.push("delete-participant", value: %{id: p["id"]})
-                  |> hide("##{p["id"]}")
-                }
-                data-confirm={"Are you sure? You're about to remove #{p["name"]} from the tournament."}
-                class="btn btn-error btn-outline"
-              >
-                Delete participant
-              </.link>
-              <%!-- TODO: Implement drop logic --%>
-              <%!-- <.link
+            <.link
+              phx-click={
+                JS.push("delete-participant", value: %{id: p["id"]})
+                |> hide("##{p["id"]}")
+              }
+              data-confirm={"Are you sure? You're about to remove #{p["name"]} from the tournament."}
+              class="btn btn-error btn-outline"
+            >
+              Delete participant
+            </.link>
+            <%!-- TODO: Implement drop logic --%>
+            <%!-- <.link
               phx-click={
                 JS.push("drop-participant", value: %{id: p["id"]})
                 |> hide("##{p["id"]}")
@@ -152,14 +151,13 @@
             >
               Drop from tournament
             </.link> --%>
-            </div>
           </div>
         <% end %>
       </div>
     </div>
     <p class="mt-8 mb-6 divider">Actions</p>
     <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
-      <.button phx-disable-with="Saving..." class="btn-secondary">
+      <.button phx-disable-with="Saving..." variant="secondary">
         <.icon name="hero-table-cells-solid" /> Save changes
       </.button>
     </:actions>
@@ -167,7 +165,7 @@
       <.button
         phx-click="create-participant"
         phx-disable-with="Creating..."
-        class="btn-accent"
+        variant="accent"
       >
         <.icon name="hero-users" /> Add participant
       </.button>
@@ -231,7 +229,7 @@
             not @all_participants_have_names? or @is_current_round_active? or
               not @has_enough_participants?
           }
-          class="btn-primary btn-md"
+          variant="primary"
         >
           <%= if length(@rounds) == 0 do %>
             <.icon name="hero-rocket-launch-solid" /> Create 1st round (start tournament)
