@@ -63,7 +63,6 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           required
           type="textarea"
           label="Participants (One per line)"
-          value={@initial_participants}
           field={@form[:initial_participants]}
           placeholder="John Doe
     Jane Doe
