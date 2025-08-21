@@ -87,7 +87,7 @@
     tournament_id={@tournament_id}
     round_id={@round_id}
     form={Enum.at(@forms, @selected_pairing_number - 1) |> elem(1)}
-    patch={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}"}
+    navigate={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}"}
   />
 </.modal>
 
