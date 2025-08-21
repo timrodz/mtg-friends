@@ -8,7 +8,7 @@ defmodule MtgFriends.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Juan from MTG Friends", "timrodz@icloud.com"})
+      |> from({"Tie breaker Support", "juan@timrodz.dev"})
       |> subject(subject)
       |> text_body(body)
 
