@@ -14,15 +14,15 @@
   </section>
 <% end %>
 <%= if @current_user_owner and @round_status == :inactive do %>
-  <section id="summary" class="p-2 alert alert-vertical alert-info alert-soft rounded-md">
-    <p class="mb-2 text-xl">
-      🎉 This round's pods have been generated! Let players know who they'll be playing against.
+  <div class="alert border-base-300 alert-vertical py-6">
+    <p>
+      🎉 This round's pods have been generated!<br />Let players know who they'll be playing against.
     </p>
-    <p class="mb-4 text-xl">When all players are ready, click on <b>Start round</b> below.</p>
-    <.button phx-click="start-round" phx-disable-with="Starting..." class="btn-primary">
+    <p>When all players are ready, click on <b>Start round</b> below.</p>
+    <.button phx-click="start-round" phx-disable-with="Starting..." variant="primary">
       <.icon name="hero-rocket-launch-solid" />Start round
     </.button>
-  </section>
+  </div>
 <% end %>
 
 <section id="pairings">
@@ -71,16 +71,6 @@
     </:item>
   </.item_grid>
 </section>
-
-<%!-- <div :if={@current_user_owner} class="p-2 bg-yellow-50 flex flex-col space-y-3">
-  <p>
-    Note to organizers: This app lets you organize tournaments <b>YOUR WAY</b>, so you can assign round points however you want.
-  </p>
-  <p>
-    If you want the round to end when a player wins, and "winners get 4 points, draws give 1 point to each player, and losers get 0 points", go. The same goes if you want to host tournaments where players get points based on their round standings (1st place: 4 points; 2nd place: 3 points; 3rd place: 2 points; 4th place: 1 point).
-  </p>
-  <p>The sky is the limit!</p>
-</div> --%>
 
 <.modal
   :if={@live_action == :edit}

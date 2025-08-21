@@ -43,7 +43,9 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent do
           </div>
         </div>
         <:actions>
-          <.button phx-disable-with="Saving..." class="btn-primary">Submit changes</.button>
+          <.button phx-disable-with="Saving..." variant="primary">
+            <.icon name="hero-check-solid" /> Submit changes
+          </.button>
         </:actions>
       </.simple_form>
     </div>

@@ -13,7 +13,7 @@
       phx-click={JS.push_focus()}
       class="btn btn-secondary btn-outline"
     >
-      Edit
+      <.icon name="hero-adjustments-horizontal-solid" /> Edit
     </.link>
   </:actions>
 </.header>
@@ -28,7 +28,7 @@
   <p>
     <.tournament_status value={@tournament.status} />
     {if @tournament.is_top_cut_4 do
-      raw("/ <span class='badge badge-neutral'>Top cut 4 enabled</span>")
+      raw("/ <span class='badge badge-neutral badge-soft'>Top cut 4 enabled</span>")
     end}
   </p>
   <p>
@@ -64,7 +64,7 @@
       <div class="card-body">
         <input type="hidden" name={"participant-id-#{p["id"]}"} value={p["id"]} class="input" />
         <span class={[
-          "badge font-mono",
+          "badge badge-soft font-mono",
           case index do
             0 ->
               if @tournament.status == :finished do
@@ -118,7 +118,7 @@
                 id={"form-participant-name-#{p["id"]}"}
                 name={"form-participant-name-#{p["id"]}"}
                 value={p["name"]}
-                placeholder="Enter a name here"
+                placeholder="Participant's name"
                 required
               />
               <.input
@@ -127,7 +127,7 @@
                 id={"form-participant-decklist-#{p["id"]}"}
                 name={"form-participant-decklist-#{p["id"]}"}
                 value={p["decklist"]}
-                placeholder="Enter a decklist here"
+                placeholder={"#{if p["name"], do: p["name"]<>"'s", else: "Participant's" } decklist (url)"}
               />
             </div>
             <.link
@@ -138,7 +138,7 @@
               data-confirm={"Are you sure? You're about to remove #{p["name"]} from the tournament."}
               class="btn btn-error btn-outline"
             >
-              Delete participant
+              <.icon name="hero-trash" /> Delete participant
             </.link>
             <%!-- TODO: Implement drop logic --%>
             <%!-- <.link
@@ -158,7 +158,7 @@
     <p class="mt-8 mb-6 divider">Actions</p>
     <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
       <.button phx-disable-with="Saving..." variant="secondary">
-        <.icon name="hero-table-cells-solid" /> Save changes
+        <.icon name="hero-check-solid" /> Save changes
       </.button>
     </:actions>
     <:actions :if={@current_user_owner and length(@rounds) == 0}>
@@ -167,7 +167,7 @@
         phx-disable-with="Creating..."
         variant="accent"
       >
-        <.icon name="hero-users" /> Add participant
+        <.icon name="hero-users-solid" /> Add participant
       </.button>
     </:actions>
   </.simple_form>

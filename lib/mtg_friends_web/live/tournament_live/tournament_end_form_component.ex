@@ -27,8 +27,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEndFormComponent do
         />
         <br />
         <:actions>
-          <.button phx-disable-with="Saving..." data-confirm="Are you sure?">
-            Submit changes and finish tournament
+          <.button phx-disable-with="Saving..." data-confirm="Are you sure?" variant="primary">
+            <.icon name="hero-rocket-launch-solid" /> Submit changes and finish tournament
           </.button>
         </:actions>
       </.simple_form>

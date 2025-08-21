@@ -82,8 +82,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           class="mt-2"
         />
         <:actions>
-          <.button phx-disable-with="Saving..." class="mt-2 btn btn-primary">
-            Submit Tournament
+          <.button phx-disable-with="Saving..." variant="primary">
+            <.icon name="hero-rocket-launch-solid" /> Submit Tournament
           </.button>
         </:actions>
       </.simple_form>
