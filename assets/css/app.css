@@ -91,8 +91,6 @@
   --noise: 1;
 }
 
-
-
 /* Add variants based on LiveView classes */
 @custom-variant phx-click-loading ([".phx-click-loading&", ".phx-click-loading &"]);
 @custom-variant phx-submit-loading ([".phx-submit-loading&", ".phx-submit-loading &"]);
@@ -117,32 +115,14 @@ h3 {
   @apply font-semibold text-xl my-3;
 }
 
-#participant-header {
-  @apply h-10 mt-6 md:mt-4 px-2 py-1;
-}
-
-.participant-grid {
-  @apply grid text-sm md:text-base ;
-  grid-template-columns: 40px 120px 60px 60px auto;
-
-  @media (min-width: 768px) {
-    grid-template-columns: 35px 160px 65px 65px auto 100px;
-  }
-
-  * {
-    @apply self-center m-0;
-  }
-}
-
-
-hr {
-  @apply mb-4;
-}
-
 ul {
   @apply list-disc list-inside;
 
   li {
     @apply ml-2;
   }
+}
+
+section {
+  @apply my-16
 }

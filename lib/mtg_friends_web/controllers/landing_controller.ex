@@ -4,7 +4,7 @@ defmodule MtgFriendsWeb.LandingController do
   alias MtgFriends.Tournaments
 
   def index(conn, _params) do
-    latest_tournaments = Tournaments.get_most_recent_tournaments(4)
+    latest_tournaments = Tournaments.get_most_recent_tournaments(6)
 
     supporters = [
       %{
@@ -35,7 +35,7 @@ defmodule MtgFriendsWeb.LandingController do
     ]
 
     render(conn, :index, %{
-      layout: false,
+      page_title: "Home",
       latest_tournaments: latest_tournaments,
       supporters: supporters
     })

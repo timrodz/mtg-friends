@@ -20,7 +20,7 @@
 
 <section id="summary" class="space-y-1">
   <h2>Summary / {@tournament.name}</h2>
-  <hr />
+  <div class="divider"></div>
   <.date dt={@tournament.date} />
   <p>
     <.icon name="hero-map-pin-solid" /> {@tournament.location}
@@ -57,7 +57,7 @@
       class={[
         "card card-border border-base-300 bg-base-100",
         @tournament.status == :finished && index == 0 &&
-          "border-2 border-success",
+          "border-[1px] border-success",
         p["is_dropped"] && "bg-error"
       ]}
     >

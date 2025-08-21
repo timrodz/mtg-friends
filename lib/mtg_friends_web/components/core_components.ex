@@ -610,7 +610,7 @@ defmodule MtgFriendsWeb.CoreComponents do
         <.icon name="hero-chevron-left" class="h-3 w-3" />
         {render_slot(@inner_block)}
       </.link>
-      <hr :if={@with_hr} class="mt-2" />
+      <div class="divider"></div>
     </div>
     """
   end
