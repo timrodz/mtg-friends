@@ -6,7 +6,7 @@ defmodule MtgFriendsWeb.Layouts do
   @spec app(any()) :: Phoenix.LiveView.Rendered.t()
   def app(assigns) do
     ~H"""
-    <div class="navbar bg-base-100 border-base-300 border-[1px] px-4 lg:px-10">
+    <div class="navbar bg-base-100 border-base-300 border-b-[1px] px-4 lg:px-10">
       <div class="navbar-start">
         <.link
           navigate={
@@ -23,34 +23,52 @@ defmodule MtgFriendsWeb.Layouts do
         </.link>
       </div>
       <div class="navbar-end">
-        <ul class="menu menu-vertical lg:menu-horizontal">
-          <%= if @current_user do %>
+        <div class="dropdown dropdown-left">
+          <div tabindex="0" role="button" class="btn btn-ghost btn-circle">
+            <.icon name="hero-bars-3-solid" />
+          </div>
+          <ul
+            tabindex="0"
+            class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 card card-border space-y-1"
+          >
             <li>
-              <.link navigate={~p"/users/settings"}>
-                Settings
+              <.link navigate={~p"/"}>
+                <.icon name="hero-home-solid" /> Home
               </.link>
             </li>
             <li>
-              <.link
-                href={~p"/users/log_out"}
-                method="delete"
-              >
-                Log out
+              <.link navigate={~p"/tournaments"}>
+                <.icon name="hero-rocket-launch-solid" /> Tournaments
               </.link>
             </li>
-          <% else %>
-            <li>
-              <.link navigate={~p"/users/register"}>
-                Register
-              </.link>
-            </li>
-            <li>
-              <.link navigate={~p"/users/log_in"}>
-                Log in
-              </.link>
-            </li>
-          <% end %>
-        </ul>
+            <%= if @current_user do %>
+              <li>
+                <.link navigate={~p"/users/settings"}>
+                  <.icon name="hero-cog-6-tooth-solid" /> Settings
+                </.link>
+              </li>
+              <li>
+                <.link
+                  href={~p"/users/log_out"}
+                  method="delete"
+                >
+                  <.icon name="hero-arrow-right-start-on-rectangle-solid" /> Log out
+                </.link>
+              </li>
+            <% else %>
+              <li>
+                <.link navigate={~p"/users/register"}>
+                  Register
+                </.link>
+              </li>
+              <li>
+                <.link navigate={~p"/users/log_in"}>
+                  Log in
+                </.link>
+              </li>
+            <% end %>
+          </ul>
+        </div>
       </div>
     </div>
     <main class="px-4 py-20 sm:px-6 lg:px-8">
@@ -59,7 +77,7 @@ defmodule MtgFriendsWeb.Layouts do
       </div>
     </main>
 
-    <footer class="footer sm:footer-horizontal footer-center bg-base-100 border-base-300 border-[1px] text-base-content p-4 bottom-0">
+    <footer class="footer sm:footer-horizontal footer-center bg-base-100 border-base-300 border-t-[1px] text-base-content p-4 bottom-0">
       <aside>
         <p>
           Copyright © {DateTime.utc_now().year} —

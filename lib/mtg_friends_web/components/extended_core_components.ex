@@ -68,7 +68,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
             :for={{col, _index} <- Enum.with_index(@item)}
             phx-click={@item_click && @item_click.(item)}
             class={[
-              "item relative p-4 text-base-content flex flex-col gap-1 h-full",
+              "p-4 text-base-content w-full",
               @item_click && "hover:cursor-pointer",
               col[:class]
             ]}
@@ -134,24 +134,24 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     case assigns.value do
       :inactive ->
         ~H"""
-        <.badge class="badge-info">
-          <CoreComponents.icon name="hero-users-solid" />
+        <.badge class="badge-info badge-soft">
+          <CoreComponents.icon name="hero-pencil-square" />
           {TournamentRenderer.render_status(@value)}
         </.badge>
         """
 
       :active ->
         ~H"""
-        <.badge class="badge-success">
-          <CoreComponents.icon name="hero-sun" />
+        <.badge class="badge-success badge-soft">
+          <CoreComponents.icon name="hero-power-solid" />
           {TournamentRenderer.render_status(@value)}
         </.badge>
         """
 
       :finished ->
         ~H"""
-        <.badge class="badge-error">
-          <CoreComponents.icon name="hero-moon" />
+        <.badge class="badge-error badge-soft">
+          <CoreComponents.icon name="hero-x-mark-solid" />
           {TournamentRenderer.render_status(@value)}
         </.badge>
         """
@@ -167,17 +167,25 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     case assigns.value do
       :inactive ->
         ~H"""
-        <.badge class="badge-info">{TournamentRenderer.render_round_status(@value)}</.badge>
+        <.badge class="badge-info">
+          <CoreComponents.icon name="hero-clock-solid" />
+          {TournamentRenderer.render_round_status(@value)}
+        </.badge>
         """
 
       :active ->
         ~H"""
-        <.badge class="badge-success">{TournamentRenderer.render_round_status(@value)}</.badge>
+        <.badge class="badge-success">
+          <CoreComponents.icon name="hero-power-solid" />{TournamentRenderer.render_round_status(@value)}
+        </.badge>
         """
 
       :finished ->
         ~H"""
-        <.badge class="badge-secondary">{TournamentRenderer.render_round_status(@value)}</.badge>
+        <.badge class="badge-secondary">
+          <CoreComponents.icon name="hero-x-mark-solid" />
+          {TournamentRenderer.render_round_status(@value)}
+        </.badge>
         """
 
       _ ->

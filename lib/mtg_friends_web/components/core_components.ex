@@ -255,6 +255,7 @@ defmodule MtgFriendsWeb.CoreComponents do
       "primary" => "btn-primary",
       "secondary" => "btn-secondary",
       "accent" => "btn-accent",
+      "accent-soft" => "btn-accent btn-soft",
       "accent-outline" => "btn-accent btn-outline",
       nil => "btn-primary btn-soft"
     }
@@ -603,14 +604,10 @@ defmodule MtgFriendsWeb.CoreComponents do
   def back(assigns) do
     ~H"""
     <div class={["my-4", @class]}>
-      <.link
-        navigate={@navigate}
-        class="btn"
-      >
-        <.icon name="hero-chevron-left" class="h-3 w-3" />
+      <.button href={@navigate}>
+        <.icon name="hero-chevron-left" />
         {render_slot(@inner_block)}
-      </.link>
-      <div class="divider"></div>
+      </.button>
     </div>
     """
   end
