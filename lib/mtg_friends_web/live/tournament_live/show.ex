@@ -187,7 +187,6 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   @impl true
   def handle_event("drop-participant", %{"id" => id}, socket) do
     participant = Participants.get_participant!(id)
-    IO.puts("dropping #{id}")
     {:ok, _} = Participants.update_participant(participant, %{"is_dropped" => true})
 
     {:noreply, reload_page(socket)}

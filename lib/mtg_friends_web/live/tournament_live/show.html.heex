@@ -1,9 +1,9 @@
 <.header>
-  {@tournament.name}
+  Tournament view
   <:actions>
     <.link
-      href="#rounds"
-      class="btn btn-secondary btn-soft"
+      navigate="#rounds"
+      class="btn btn-accent btn-outline"
     >
       Go to rounds
     </.link>
@@ -11,7 +11,7 @@
       :if={@current_user_owner or @current_user_admin}
       patch={~p"/tournaments/#{@tournament}/show/edit"}
       phx-click={JS.push_focus()}
-      class="btn btn-primary btn-soft"
+      class="btn btn-secondary btn-outline"
     >
       Edit
     </.link>
@@ -19,8 +19,8 @@
 </.header>
 
 <section id="summary" class="space-y-1">
-  <h2>Summary</h2>
-  <hr />
+  <h2>Summary / {@tournament.name}</h2>
+  <div class="divider"></div>
   <.date dt={@tournament.date} />
   <p>
     <.icon name="hero-map-pin-solid" /> {@tournament.location}
@@ -55,9 +55,9 @@
       :for={{p, index} <- Enum.with_index(@participant_forms.params["participants"])}
       id={"form-participant-#{p["id"]}"}
       class={[
-        "card bg-base-100 shadow-md",
+        "card card-border border-base-300 bg-base-100",
         @tournament.status == :finished && index == 0 &&
-          "border-2 border-success",
+          "border-[1px] border-success",
         p["is_dropped"] && "bg-error"
       ]}
     >
@@ -119,6 +119,7 @@
                 name={"form-participant-name-#{p["id"]}"}
                 value={p["name"]}
                 placeholder="Enter a name here"
+                required
               />
               <.input
                 type="url"
@@ -129,19 +130,18 @@
                 placeholder="Enter a decklist here"
               />
             </div>
-            <div class="mt-1">
-              <.link
-                phx-click={
-                  JS.push("delete-participant", value: %{id: p["id"]})
-                  |> hide("##{p["id"]}")
-                }
-                data-confirm={"Are you sure? You're about to remove #{p["name"]} from the tournament."}
-                class="btn btn-error btn-outline"
-              >
-                Delete from tournament
-              </.link>
-              <%!-- TODO: Implement drop logic --%>
-              <%!-- <.link
+            <.link
+              phx-click={
+                JS.push("delete-participant", value: %{id: p["id"]})
+                |> hide("##{p["id"]}")
+              }
+              data-confirm={"Are you sure? You're about to remove #{p["name"]} from the tournament."}
+              class="btn btn-error btn-outline"
+            >
+              Delete participant
+            </.link>
+            <%!-- TODO: Implement drop logic --%>
+            <%!-- <.link
               phx-click={
                 JS.push("drop-participant", value: %{id: p["id"]})
                 |> hide("##{p["id"]}")
@@ -151,23 +151,23 @@
             >
               Drop from tournament
             </.link> --%>
-            </div>
           </div>
         <% end %>
       </div>
     </div>
     <p class="mt-8 mb-6 divider">Actions</p>
     <:actions :if={@current_user_owner and length(@tournament.participants) > 0}>
-      <.button phx-disable-with="Saving...">
-        <.icon name="hero-table-cells-solid" class="mr-1" /> Save changes
+      <.button phx-disable-with="Saving..." variant="secondary">
+        <.icon name="hero-table-cells-solid" /> Save changes
       </.button>
     </:actions>
     <:actions :if={@current_user_owner and length(@rounds) == 0}>
       <.button
         phx-click="create-participant"
         phx-disable-with="Creating..."
+        variant="accent"
       >
-        <.icon name="hero-plus" class="mr-1" /> Add participant
+        <.icon name="hero-users" /> Add participant
       </.button>
     </:actions>
   </.simple_form>
@@ -177,7 +177,7 @@
   <h2 class="font-bold">Rounds</h2>
   <.item_grid
     :if={length(@tournament.rounds) > 0}
-    id="rounds"
+    id="rounds-grid"
     items={@tournament.rounds}
     item_click={
       fn round -> JS.navigate(~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}") end
@@ -229,13 +229,12 @@
             not @all_participants_have_names? or @is_current_round_active? or
               not @has_enough_participants?
           }
-          class="btn-primary btn-lg"
+          variant="primary"
         >
           <%= if length(@rounds) == 0 do %>
-            <.icon name="hero-rocket-launch-solid" class="mr-1" />
-            Create 1st round (start tournament)
+            <.icon name="hero-rocket-launch-solid" /> Create 1st round (start tournament)
           <% else %>
-            <.icon name="hero-plus" class="mr-1" />
+            <.icon name="hero-plus" />
             Begin {(@tournament.round_count == length(@rounds) + 1 && "last") || "new"} round
           <% end %>
         </.button>

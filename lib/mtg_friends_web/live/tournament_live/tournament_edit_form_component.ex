@@ -63,7 +63,6 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           required
           type="textarea"
           label="Participants (One per line)"
-          value={@initial_participants}
           field={@form[:initial_participants]}
           placeholder="John Doe
     Jane Doe
@@ -124,9 +123,9 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
   @impl true
   def handle_event("validate", %{"tournament" => tournament_params}, socket) do
     selected_game_code =
-      tournament_params["game_code"] |> String.to_atom() |> IO.inspect(label: "selected_game")
+      tournament_params["game_code"] |> String.to_atom()
 
-    format_options = get_format_options(selected_game_code) |> IO.inspect(label: "format_options")
+    format_options = get_format_options(selected_game_code)
 
     selected_format =
       case socket.assigns.selected_game_code != selected_game_code do
@@ -137,17 +136,14 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         false ->
           tournament_params["format"] |> String.to_atom()
       end
-      |> IO.inspect(label: "selected_format")
 
     subformat_options =
       get_subformat_options(selected_game_code, selected_format)
-      |> IO.inspect(label: "subformat_options")
 
     changeset =
       socket.assigns.tournament
       |> Tournaments.change_tournament(tournament_params)
       |> Map.put(:action, :validate)
-      |> IO.inspect(label: "changeset")
 
     {:noreply,
      socket
@@ -165,7 +161,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
     tournament = socket.assigns.tournament
 
     # This could be optimized but we're chilling for now
-    game = Games.get_game_by_code!(socket.assigns.selected_game_code) |> IO.inspect(label: "CODE")
+    game = Games.get_game_by_code!(socket.assigns.selected_game_code)
 
     tournament_params =
       tournament_params
@@ -178,7 +174,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         {:noreply,
          socket
          |> put_flash(:success, "Tournament updated successfully")
-         |> push_navigate(to: socket.assigns.patch)}
+         |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign_form(socket, changeset)}

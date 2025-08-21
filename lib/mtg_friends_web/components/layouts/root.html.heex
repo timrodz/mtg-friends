@@ -39,8 +39,8 @@
     >
     </script>
 
-    <.live_title suffix=" - MTG Friends">
-      {assigns[:page_title] || "MtgFriends"}
+    <.live_title suffix=" - Tie breaker">
+      {assigns[:page_title] || "Tie breaker"}
     </.live_title>
     <link phx-track-static rel="stylesheet" href={~p"/assets/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/app.js"}>
@@ -62,7 +62,7 @@
       })();
     </script>
   </head>
-  <body class="bg-base-100 antialiased">
+  <body class="bg-base-200 antialiased">
     {@inner_content}
   </body>
 </html>

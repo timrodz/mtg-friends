@@ -65,14 +65,13 @@ defmodule MtgFriendsWeb.CoreComponents do
               id={"#{@id}-container"}
               phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
               phx-key="escape"
-              phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
               class="shadow-base-300 bg-base-200 ring-base-300/10 relative hidden rounded-2xl p-6 md:p-14 shadow-lg ring-1 transition"
             >
               <div class="absolute top-6 right-5">
                 <button
                   phx-click={JS.exec("data-cancel", to: "##{@id}")}
                   type="button"
-                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
+                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-60 hover:cursor-pointer"
                   aria-label={gettext("close")}
                 >
                   <.icon name="hero-x-mark-solid" />
@@ -100,7 +99,7 @@ defmodule MtgFriendsWeb.CoreComponents do
   attr :id, :string, default: "flash", doc: "the optional id of flash container"
   attr :flash, :map, default: %{}, doc: "the map of flash messages to display"
   attr :title, :string, default: nil
-  attr :kind, :atom, values: [:info, :error], doc: "used for styling and flash lookup"
+  attr :kind, :atom, values: [:info, :success, :error], doc: "used for styling and flash lookup"
   attr :rest, :global, doc: "the arbitrary HTML attributes to add to the flash container"
 
   slot :inner_block, doc: "the optional inner block that renders the flash message"
@@ -116,27 +115,20 @@ defmodule MtgFriendsWeb.CoreComponents do
       {@rest}
     >
       <div class={[
-        "alert alert-vertical sm:alert-horizontal",
+        "alert w-80 sm:w-96 max-w-80 sm:max-w-96 text-wrap",
         @kind == :info && "alert-info",
         @kind == :success && "alert-success",
         @kind == :error && "alert-error"
       ]}>
-        <p :if={@title} class="flex items-center gap-1.5 text-sm font-semibold leading-6">
-          <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
-          <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
-          {@title}
-        </p>
-        <p class="text-sm">{msg}</p>
-        <button
-          type="button"
-          aria-label={gettext("close")}
-          class={[
-            "btn btn-soft btn-circle btn-sm",
-            @kind === :info && "btn-info",
-            @kind == :error && "btn-error"
-          ]}
-        >
-          <.icon name="hero-x-mark-solid" class="h-4 w-4" />
+        <.icon :if={@kind == :info} name="hero-information-circle-mini" class="h-4 w-4" />
+        <.icon :if={@kind == :success} name="hero-check-circle-mini" class="h-4 w-4" />
+        <.icon :if={@kind == :error} name="hero-exclamation-circle-mini" class="h-4 w-4" />
+        <div>
+          <p :if={@title} class="font-semibold">{@title}</p>
+          <p>{msg}</p>
+        </div>
+        <button type="button" class="group self-start cursor-pointer" aria-label={gettext("close")}>
+          <.icon name="hero-x-mark-solid" class="size-5 opacity-60 group-hover:opacity-100" />
         </button>
       </div>
     </div>
@@ -151,21 +143,50 @@ defmodule MtgFriendsWeb.CoreComponents do
       <.flash_group flash={@flash} />
   """
   attr :flash, :map, required: true, doc: "the map of flash messages"
+  attr :id, :string, default: "flash-group", doc: "the optional id of flash container"
 
   def flash_group(assigns) do
     ~H"""
-    <.flash kind={:info} title="Success!" flash={@flash} />
-    <.flash kind={:error} title="Error!" flash={@flash} />
-    <.flash
-      id="disconnected"
-      kind={:error}
-      title="We can't find the internet"
-      phx-disconnected={show("#disconnected")}
-      phx-connected={hide("#disconnected")}
-      hidden
-    >
-      Attempting to reconnect <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
-    </.flash>
+    <div id={@id} aria-live="polite">
+      <.flash kind={:info} title="Notice" flash={@flash} />
+      <.flash kind={:success} title="Success!" flash={@flash} />
+      <.flash kind={:error} title="Error" flash={@flash} />
+
+      <%!-- <.flash
+        id="disconnected"
+        kind={:error}
+        title="We can't find the internet"
+        phx-disconnected={show("#disconnected")}
+        phx-connected={hide("#disconnected")}
+        hidden
+      >
+        Attempting to reconnect <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 animate-spin" />
+      </.flash> --%>
+
+      <.flash
+        id="client-error"
+        kind={:error}
+        title={gettext("We can't find the internet")}
+        phx-disconnected={show(".phx-client-error #client-error") |> JS.remove_attribute("hidden")}
+        phx-connected={hide("#client-error") |> JS.set_attribute({"hidden", ""})}
+        hidden
+      >
+        {gettext("Attempting to reconnect")}
+        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 motion-safe:animate-spin" />
+      </.flash>
+
+      <.flash
+        id="server-error"
+        kind={:error}
+        title={gettext("Something went wrong!")}
+        phx-disconnected={show(".phx-client-error #client-error") |> JS.remove_attribute("hidden")}
+        phx-connected={hide("#client-error") |> JS.set_attribute({"hidden", ""})}
+        hidden
+      >
+        {gettext("Hang in there while we get back on track")}
+        <.icon name="hero-arrow-path" class="ml-1 h-3 w-3 motion-safe:animate-spin" />
+      </.flash>
+    </div>
     """
   end
 
@@ -198,7 +219,7 @@ defmodule MtgFriendsWeb.CoreComponents do
   def simple_form(assigns) do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class={["mt-2 space-y-1", @class]}>
+      <div class={["mt-2 space-y-2", @class]}>
         {render_slot(@inner_block, f)}
         <%= if @as_flex do %>
           <div class="flex gap-2">
@@ -217,32 +238,42 @@ defmodule MtgFriendsWeb.CoreComponents do
   end
 
   @doc """
-  Renders a button.
+  Renders a button with navigation support.
 
   ## Examples
 
       <.button>Send!</.button>
-      <.button phx-click="go" class="ml-2">Send!</.button>
+      <.button phx-click="go" variant="primary">Send!</.button>
+      <.button navigate={~p"/"}>Home</.button>
   """
-  attr :type, :string, default: nil
-  attr :class, :string, default: nil
-  attr :rest, :global, include: ~w(disabled form name value)
-
+  attr :rest, :global, include: ~w(href navigate patch disabled)
+  attr :variant, :string, values: ~w(primary secondary accent)
   slot :inner_block, required: true
 
-  def button(assigns) do
-    ~H"""
-    <button
-      type={@type}
-      class={[
-        "btn",
-        @class
-      ]}
-      {@rest}
-    >
-      {render_slot(@inner_block)}
-    </button>
-    """
+  def button(%{rest: rest} = assigns) do
+    variants = %{
+      "primary" => "btn-primary",
+      "secondary" => "btn-secondary",
+      "accent" => "btn-accent",
+      "accent-outline" => "btn-accent btn-outline",
+      nil => "btn-primary btn-soft"
+    }
+
+    assigns = assign(assigns, :class, Map.fetch!(variants, assigns[:variant]))
+
+    if rest[:href] || rest[:navigate] || rest[:patch] do
+      ~H"""
+      <.link class={["btn", @class]} {@rest}>
+        {render_slot(@inner_block)}
+      </.link>
+      """
+    else
+      ~H"""
+      <button class={["btn", @class]} {@rest}>
+        {render_slot(@inner_block)}
+      </button>
+      """
+    end
   end
 
   @doc """
@@ -292,95 +323,88 @@ defmodule MtgFriendsWeb.CoreComponents do
     |> input()
   end
 
-  def input(%{type: "checkbox", value: value} = assigns) do
+  def input(%{type: "checkbox"} = assigns) do
     assigns =
-      assign_new(assigns, :checked, fn -> Phoenix.HTML.Form.normalize_value("checkbox", value) end)
+      assign_new(assigns, :checked, fn ->
+        Phoenix.HTML.Form.normalize_value("checkbox", assigns[:value])
+      end)
 
     ~H"""
-    <div phx-feedback-for={@name} class={@class}>
-      <label class="label">
-        <input type="hidden" name={@name} value="false" />
-        <input
-          type="checkbox"
-          id={@id}
-          name={@name}
-          value="true"
-          checked={@checked}
-          class="checkbox"
-          {@rest}
-        />
-        {@label}
+    <fieldset class="fieldset mb-2">
+      <label>
+        <input type="hidden" name={@name} value="false" disabled={@rest[:disabled]} />
+        <span class="fieldset-label">
+          <input
+            type="checkbox"
+            id={@id}
+            name={@name}
+            value="true"
+            checked={@checked}
+            class="checkbox checkbox-sm"
+            {@rest}
+          />{@label}
+        </span>
       </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
+    </fieldset>
     """
   end
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend text-lg">
-          {@label}
-        </legend>
+    <fieldset class="fieldset mb-2">
+      <label>
+        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
         <select
           id={@id}
           name={@name}
-          class="select w-full"
+          class={["w-full select", @errors != [] && "select-error"]}
           multiple={@multiple}
           {@rest}
         >
           <option :if={@prompt} value="">{@prompt}</option>
           {Phoenix.HTML.Form.options_for_select(@options, @value)}
         </select>
-      </fieldset>
+      </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
+    </fieldset>
     """
   end
 
   def input(%{type: "textarea"} = assigns) do
     ~H"""
-    <div phx-feedback-for={@name}>
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend text-lg">{@label}</legend>
+    <fieldset class="fieldset mb-2">
+      <label>
+        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
         <textarea
           id={@id}
           name={@name}
-          class={[
-            "textarea w-full",
-            @errors != [] && "border-error focus:border-error"
-          ]}
+          class={["w-full textarea", @errors != [] && "textarea-error"]}
           {@rest}
-        ><%= Phoenix.HTML.Form.normalize_value("textarea", @value) %></textarea>
-      </fieldset>
+        >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
+      </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
+    </fieldset>
     """
   end
 
   # All other inputs text, datetime-local, url, password, etc. are handled here...
   def input(assigns) do
     ~H"""
-    <div phx-feedback-for={@name} class={@class}>
-      <fieldset class="fieldset">
-        <legend class="fieldset-legend text-lg">
-          {@label}
-        </legend>
+    <fieldset class="fieldset mb-2">
+      <label>
+        <span :if={@label} class="fieldset-label mb-1">{@label}</span>
         <input
           type={@type}
           name={@name}
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
-          class={[
-            "input w-full",
-            @errors != [] && "input-error"
-          ]}
+          class={["w-full input", @errors != [] && "input-error"]}
           {@rest}
         />
-      </fieldset>
+      </label>
       <.error :for={msg <- @errors}>{msg}</.error>
-    </div>
+    </fieldset>
     """
   end
 
@@ -402,12 +426,10 @@ defmodule MtgFriendsWeb.CoreComponents do
   @doc """
   Generates a generic error message.
   """
-  slot :inner_block, required: true
-
   def error(assigns) do
     ~H"""
-    <p class="mt-1 flex gap-3 text-sm leading-6 text-error phx-no-feedback:hidden">
-      <.icon name="hero-exclamation-circle-mini" class="mt-0.5 flex-none" />
+    <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
+      <.icon name="hero-exclamation-circle-mini" class="size-5" />
       {render_slot(@inner_block)}
     </p>
     """
@@ -450,7 +472,7 @@ defmodule MtgFriendsWeb.CoreComponents do
       @class
     ]}>
       <div>
-        <h1 class="truncate">
+        <h1 class="text-lg font-semibold leading-8 truncate">
           {render_slot(@inner_block)}
         </h1>
         <p :if={@subtitle != []} class="mt-2 leading-6 text-base-content">
@@ -545,8 +567,8 @@ defmodule MtgFriendsWeb.CoreComponents do
   ## Examples
 
       <.list>
-        <:item title="Title"><%= @post.title %></:item>
-        <:item title="Views"><%= @post.views %></:item>
+        <:item title="Title">{@post.title}</:item>
+        <:item title="Views">{@post.views}</:item>
       </.list>
   """
   slot :item, required: true do
@@ -555,14 +577,14 @@ defmodule MtgFriendsWeb.CoreComponents do
 
   def list(assigns) do
     ~H"""
-    <div class="mt-6">
-      <dl class="-my-4 divide-y divide-zinc-100">
-        <div :for={item <- @item} class="flex gap-4 py-4 text-sm leading-6 sm:gap-8">
-          <dt class="w-1/4 flex-none text-zinc-500">{item.title}</dt>
-          <dd class="text-zinc-700">{render_slot(item)}</dd>
+    <ul class="list">
+      <li :for={item <- @item} class="list-row">
+        <div>
+          <div class="font-bold">{item.title}</div>
+          <div>{render_slot(item)}</div>
         </div>
-      </dl>
-    </div>
+      </li>
+    </ul>
     """
   end
 
@@ -588,35 +610,35 @@ defmodule MtgFriendsWeb.CoreComponents do
         <.icon name="hero-chevron-left" class="h-3 w-3" />
         {render_slot(@inner_block)}
       </.link>
-      <hr :if={@with_hr} class="mt-2" />
+      <div class="divider"></div>
     </div>
     """
   end
 
   @doc """
-  Renders a [Hero Icon](https://heroicons.com).
+  Renders a [Heroicon](https://heroicons.com).
 
-  Hero icons come in three styles – outline, solid, and mini.
-  By default, the outline style is used, but solid an mini may
+  Heroicons come in three styles – outline, solid, and mini.
+  By default, the outline style is used, but solid and mini may
   be applied by using the `-solid` and `-mini` suffix.
 
   You can customize the size and colors of the icons by setting
   width, height, and background color classes.
 
-  Icons are extracted from your `assets/vendor/heroicons` directory and bundled
-  within your compiled app.css by the plugin in your `assets/tailwind.config.js`.
+  Icons are extracted from the `deps/heroicons` directory and bundled within
+  your compiled app.css by the plugin in `assets/vendor/heroicons.js`.
 
   ## Examples
 
       <.icon name="hero-x-mark-solid" />
-      <.icon name="hero-arrow-path" class="ml-1 w-3 h-3 animate-spin" />
+      <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
   """
   attr :name, :string, required: true
-  attr :class, :string, default: nil
+  attr :class, :string, default: "size-4"
 
   def icon(%{name: "hero-" <> _} = assigns) do
     ~H"""
-    <span class={[@name, "w-5 h-5", @class]} />
+    <span class={[@name, @class]} />
     """
   end
 

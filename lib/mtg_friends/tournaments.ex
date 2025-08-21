@@ -38,7 +38,6 @@ defmodule MtgFriends.Tournaments do
 
   def list_tournaments_paginated(limit \\ 6, page \\ 1) do
     offset = limit * (page - 1)
-    IO.puts("Listing tournaments for range #{offset - limit} to #{offset}")
 
     from(t in Tournament,
       select: t,
@@ -188,29 +187,42 @@ defmodule MtgFriends.Tournaments do
 
   defp validate_description(description_raw) do
     HTTPoison.start()
+    expected_fields = ~w(image_uris name)
 
+    # Grabs all text inside double brackets i.e. [[Lightning greaves]]
     cards_to_search =
       Regex.scan(~r/\[\[(.*?)\]\]/, description_raw)
       |> Enum.map(&hd/1)
       |> then(
         &for(
-          card <- &1,
+          card_raw <- &1,
           do:
-            case HTTPoison.get(
-                   "https://api.scryfall.com/cards/named?fuzzy=#{card |> String.replace("[[", "") |> String.replace("]]", "")}"
-                 ) do
-              {:ok, response} ->
-                expected_fields = ~w(image_uris name scryfall_uri)
+            with card_clean <-
+                   card_raw
+                   |> String.replace("[[", "")
+                   |> String.replace("]]", "")
+                   |> URI.encode(),
+                 uri <-
+                   "https://api.scryfall.com/cards/named?fuzzy=#{card_clean}",
+                 {:ok, response} <-
+                   HTTPoison.get(
+                     uri,
+                     [
+                       {"User-Agent", "tie-breaker/#{Application.spec(:mtg_friends, :vsn)}"},
+                       {"Accept", "application/json"}
+                     ]
+                   ) do
+              body =
+                response.body
+                |> Poison.decode!()
+                |> Map.take(expected_fields)
 
-                body =
-                  response.body
-                  |> Poison.decode!()
-                  |> Map.take(expected_fields)
+              image_uris = Map.get(body, "image_uris")
+              img_large = Map.get(image_uris, "large")
+              name = Map.get(body, "name")
 
-                image_uris = Map.get(body, "image_uris")
-                img_large = Map.get(image_uris, "large")
-                name = Map.get(body, "name")
-                %{image_uri: img_large, name: name, og_name: "[[#{name}]]"}
+              %{image_uri: img_large, name: name, og_name: card_raw}
+              |> IO.inspect(label: "card name")
             end
         )
       )

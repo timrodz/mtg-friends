@@ -60,7 +60,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
           :for={item <- @items}
           id={@item_id && @item_id.(item)}
           class={[
-            "card card-border bg-base-200 rounded-md shadow-sm",
+            "card card-border border-base-300 bg-base-100",
             @item_container_class
           ]}
         >
@@ -134,12 +134,16 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     case assigns.value do
       :inactive ->
         ~H"""
-        <.badge class="badge-info">{TournamentRenderer.render_status(@value)}</.badge>
+        <.badge class="badge-info">
+          <CoreComponents.icon name="hero-users-solid" />
+          {TournamentRenderer.render_status(@value)}
+        </.badge>
         """
 
       :active ->
         ~H"""
         <.badge class="badge-success">
+          <CoreComponents.icon name="hero-sun" />
           {TournamentRenderer.render_status(@value)}
         </.badge>
         """
@@ -147,6 +151,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
       :finished ->
         ~H"""
         <.badge class="badge-error">
+          <CoreComponents.icon name="hero-moon" />
           {TournamentRenderer.render_status(@value)}
         </.badge>
         """
@@ -235,7 +240,6 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
 
       _ ->
         ~H"""
-        <p class="badge badge-warning">No decklist</p>
         """
     end
   end
