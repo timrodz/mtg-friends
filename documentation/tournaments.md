@@ -30,7 +30,7 @@ schema "tournaments" do
   field :round_count, :integer, default: 4
   field :status, Ecto.Enum, values: [:inactive, :active, :finished], default: :inactive
   field :format, Ecto.Enum, values: [:edh, :standard], default: :edh
-  field :subformat, Ecto.Enum, values: [:bubble_rounds, :swiss], default: :swiss
+  field :subformat, Ecto.Enum, values: [:bubble_rounds, :swiss], default: :bubble_rounds
 
   belongs_to :user, MtgFriends.Accounts.User
   belongs_to :game, MtgFriends.Games.Game

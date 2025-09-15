@@ -238,8 +238,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         case format do
           :edh ->
             [
-              {"Swiss Rounds", :swiss},
-              {"Bubble Rounds (Pods are determined by last round standings)", :bubble_rounds}
+              {"Bubble Rounds (Pods are determined by last round standings)", :bubble_rounds},
+              {"Swiss Rounds", :swiss}
             ]
 
           _ ->
