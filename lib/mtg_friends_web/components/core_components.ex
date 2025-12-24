@@ -247,7 +247,7 @@ defmodule MtgFriendsWeb.CoreComponents do
       <.button navigate={~p"/"}>Home</.button>
   """
   attr :rest, :global, include: ~w(href navigate patch disabled)
-  attr :variant, :string, values: ~w(primary secondary accent)
+  attr :variant, :string, values: ~w(primary secondary accent accent-soft accent-outline)
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do

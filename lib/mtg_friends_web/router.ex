@@ -15,6 +15,11 @@ defmodule MtgFriendsWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :fetch_session
+  end
+
+  pipeline :api_authenticated do
+    plug MtgFriendsWeb.APIAuthPlug
   end
 
   scope "/", MtgFriendsWeb do
@@ -46,9 +51,24 @@ defmodule MtgFriendsWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", MtgFriendsWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", MtgFriendsWeb do
+    pipe_through :api
+
+    post "/login", API.SessionController, :create
+  end
+
+  scope "/api", MtgFriendsWeb do
+    pipe_through [:api, :api_authenticated]
+
+    resources "/tournaments", API.TournamentController, only: [:index, :show, :create, :update] do
+      resources "/participants", API.ParticipantController, only: [:create, :delete]
+      # Using tailored route for rounds logic to act as "create next round"
+      post "/rounds", API.RoundController, :create
+      get "/rounds/:number", API.RoundController, :show
+    end
+
+    resources "/pairings", API.PairingController, only: [:update]
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:mtg_friends, :dev_routes) do
