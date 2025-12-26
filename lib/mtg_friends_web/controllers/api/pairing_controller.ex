@@ -1,10 +1,28 @@
 defmodule MtgFriendsWeb.API.PairingController do
   use MtgFriendsWeb, :controller
 
+  use OpenApiSpex.ControllerSpecs
+
   alias MtgFriends.Pairings
   alias MtgFriends.Pairings.Pairing
+  alias MtgFriendsWeb.Schemas
 
   action_fallback MtgFriendsWeb.FallbackController
+
+  tags ["pairings"]
+
+  operation :update,
+    summary: "Update pairing result",
+    security: [%{"authorization" => []}],
+    parameters: [
+      tournament_id: [in: :path, description: "Tournament ID", type: :integer],
+      id: [in: :path, description: "Pairing ID", type: :integer]
+    ],
+    request_body: {"Pairing params", "application/json", Schemas.PairingRequest},
+    responses: [
+      ok: {"Pairing updated", "application/json", Schemas.PairingResponse},
+      unprocessable_entity: {"Validation error", "application/json", Schemas.ErrorResponse}
+    ]
 
   # Update result for a pairing (e.g. setting points or winner)
   # BUT `Pairings.update_pairings` in context is designed for form params and POD update.

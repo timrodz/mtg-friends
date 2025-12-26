@@ -64,7 +64,8 @@ defmodule MtgFriends.MixProject do
       {:poison, "~> 5.0"},
       {:tzdata, "~> 1.1.2"},
       {:calendar, "~> 1.0.0"},
-      {:gen_smtp, "~> 1.1"}
+      {:gen_smtp, "~> 1.1"},
+      {:open_api_spex, "~> 3.18"}
     ]
   end
 

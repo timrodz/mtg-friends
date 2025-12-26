@@ -1,5 +1,6 @@
 defmodule MtgFriendsWeb.Router do
   use MtgFriendsWeb, :router
+  alias OpenApiSpex
 
   import MtgFriendsWeb.UserAuth
 
@@ -16,6 +17,7 @@ defmodule MtgFriendsWeb.Router do
   pipeline :api do
     plug :accepts, ["json"]
     plug :fetch_session
+    plug OpenApiSpex.Plug.PutApiSpec, module: MtgFriendsWeb.ApiSpec
   end
 
   pipeline :api_authenticated do
@@ -54,7 +56,6 @@ defmodule MtgFriendsWeb.Router do
     live "/tournaments/:tournament_id/rounds/:round_number", TournamentLive.Round, :index
   end
 
-  # Other scopes may use custom stacks.
   scope "/api", MtgFriendsWeb do
     pipe_through :api
 
@@ -63,6 +64,12 @@ defmodule MtgFriendsWeb.Router do
     resources "/tournaments", API.TournamentController, only: [:index, :show] do
       get "/rounds/:number", API.RoundController, :show
     end
+  end
+
+  scope "/api" do
+    pipe_through :api
+    get "/openapi", OpenApiSpex.Plug.RenderSpec, module: MtgFriendsWeb.ApiSpec
+    get "/swaggerui", OpenApiSpex.Plug.SwaggerUI, path: "api/openapi", title: "MTG Friends API"
   end
 
   scope "/api", MtgFriendsWeb do
