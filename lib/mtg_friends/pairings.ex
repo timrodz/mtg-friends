@@ -38,6 +38,13 @@ defmodule MtgFriends.Pairings do
   """
   def get_pairing!(id), do: Repo.get!(Pairing, id)
 
+  def get_pairing(id) do
+    case Repo.get(Pairing, id) do
+      nil -> {:error, :not_found}
+      pairing -> {:ok, pairing}
+    end
+  end
+
   def get_pairing!(tournament_id, round_id, participant_id),
     do:
       Repo.get_by(Pairing,
