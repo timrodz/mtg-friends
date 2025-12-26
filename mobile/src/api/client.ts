@@ -3,10 +3,7 @@ import { QueryClient } from "@tanstack/react-query";
 
 export const queryClient = new QueryClient();
 
-// Use localhost for iOS simulator, or specific IP for physical device
-// For Android Emulator, use 10.0.2.2 usually, but strict localhost might work with adb reverse
-// Stick to localhost as verified working in previous steps for now.
-export const API_URL = "http://localhost:4000/api";
+export const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const getHeaders = () => {
   const token = useAuthStore.getState().token;
