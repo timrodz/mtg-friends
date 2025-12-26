@@ -15,7 +15,6 @@ defmodule MtgFriendsWeb.ApiSpec do
         version: to_string(Application.spec(:mtg_friends, :vsn))
       },
       paths: Paths.from_router(Router),
-      security: [%{"authorization" => []}],
       components: %Components{
         securitySchemes: %{"authorization" => %SecurityScheme{type: "http", scheme: "bearer"}}
       }

@@ -68,8 +68,8 @@ defmodule MtgFriendsWeb.Router do
 
   scope "/api" do
     pipe_through :api
-    get "/openapi", OpenApiSpex.Plug.RenderSpec, module: MtgFriendsWeb.ApiSpec
-    get "/swaggerui", OpenApiSpex.Plug.SwaggerUI, path: "api/openapi", title: "MTG Friends API"
+    get "/openapi", OpenApiSpex.Plug.RenderSpec, []
+    get "/swagger", OpenApiSpex.Plug.SwaggerUI, path: "api/openapi", title: "Tie Breaker API"
   end
 
   scope "/api", MtgFriendsWeb do
