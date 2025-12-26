@@ -6,21 +6,48 @@ defmodule MtgFriendsWeb.API.ParticipantController do
 
   action_fallback MtgFriendsWeb.FallbackController
 
-  def create(conn, %{"tournament_id" => tournament_id, "participant" => participant_params}) do
-    params = Map.put(participant_params, "tournament_id", tournament_id)
+  alias MtgFriends.Tournaments
 
-    with {:ok, %Participant{} = participant} <- Participants.create_participant(params) do
-      conn
-      |> put_status(:created)
-      |> render(:show, participant: participant)
+  def create(conn, %{"tournament_id" => tournament_id, "participant" => participant_params}) do
+    tournament = Tournaments.get_tournament_simple!(tournament_id)
+
+    if tournament.user_id == conn.assigns.current_user.id do
+      params = Map.put(participant_params, "tournament_id", tournament_id)
+
+      with {:ok, %Participant{} = participant} <- Participants.create_participant(params) do
+        conn
+        |> put_status(:created)
+        |> render(:show, participant: participant)
+      end
+    else
+      send_resp(conn, :forbidden, "")
+    end
+  end
+
+  def update(conn, %{"id" => id, "participant" => participant_params}) do
+    participant = Participants.get_participant!(id)
+    tournament = Tournaments.get_tournament_simple!(participant.tournament_id)
+
+    if tournament.user_id == conn.assigns.current_user.id do
+      with {:ok, %Participant{} = participant} <-
+             Participants.update_participant(participant, participant_params) do
+        render(conn, :show, participant: participant)
+      end
+    else
+      send_resp(conn, :forbidden, "")
     end
   end
 
   def delete(conn, %{"id" => id}) do
     participant = Participants.get_participant!(id)
+    tournament = Tournaments.get_tournament_simple!(participant.tournament_id)
 
-    with {:ok, %Participant{}} <- Participants.delete_participant(participant) do
-      send_resp(conn, :no_content, "")
+    if tournament.user_id == conn.assigns.current_user.id do
+      with {:ok, %Participant{}} <- Participants.delete_participant(participant) do
+        send_resp(conn, :no_content, "")
+      end
+    else
+      send_resp(conn, :forbidden, "")
     end
   end
 end

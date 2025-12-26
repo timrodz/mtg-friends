@@ -70,7 +70,12 @@ defmodule MtgFriends.Pairings do
 
     new_pairings =
       participant_pairings
-      |> Enum.map(fn p -> p |> Map.put(:inserted_at, now) |> Map.put(:updated_at, now) end)
+      |> Enum.map(fn p ->
+        p
+        |> Map.put(:inserted_at, now)
+        |> Map.put(:updated_at, now)
+        |> Map.put(:active, true)
+      end)
 
     Ecto.Multi.new()
     |> Ecto.Multi.insert_all(:insert_all, Pairing, new_pairings)
@@ -144,6 +149,8 @@ defmodule MtgFriends.Pairings do
 
     MtgFriends.Repo.transaction(multi)
   end
+
+
 
   @doc """
   Deletes a pairing.

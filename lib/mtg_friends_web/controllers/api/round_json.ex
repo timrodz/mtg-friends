@@ -9,11 +9,13 @@ defmodule MtgFriendsWeb.API.RoundJSON do
     %{data: data(round)}
   end
 
-  defp data(%Round{} = round) do
+  def data(%Round{} = round) do
     %{
       id: round.id,
       number: round.number,
       tournament_id: round.tournament_id,
+      is_complete: MtgFriends.Rounds.is_round_complete?(round),
+      inserted_at: round.inserted_at,
       pairings: for(pairing <- round.pairings || [], do: pairing_data(pairing))
     }
   end
@@ -29,7 +31,8 @@ defmodule MtgFriendsWeb.API.RoundJSON do
       number: pairing.number, # This is the Table Number / Pod Number
       participant_id: pairing.participant_id,
       points: pairing.points,
-      winner: pairing.winner
+      winner: pairing.winner,
+      active: pairing.active
     }
 
     if Ecto.assoc_loaded?(pairing.participant) do

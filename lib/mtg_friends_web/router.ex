@@ -55,16 +55,20 @@ defmodule MtgFriendsWeb.Router do
     pipe_through :api
 
     post "/login", API.SessionController, :create
+
+    resources "/tournaments", API.TournamentController, only: [:index, :show] do
+      get "/rounds/:number", API.RoundController, :show
+    end
   end
 
   scope "/api", MtgFriendsWeb do
     pipe_through [:api, :api_authenticated]
 
-    resources "/tournaments", API.TournamentController, only: [:index, :show, :create, :update] do
-      resources "/participants", API.ParticipantController, only: [:create, :delete]
+    resources "/tournaments", API.TournamentController, only: [:create, :update] do
+      resources "/participants", API.ParticipantController, only: [:create, :update, :delete]
       # Using tailored route for rounds logic to act as "create next round"
       post "/rounds", API.RoundController, :create
-      get "/rounds/:number", API.RoundController, :show
+      put "/rounds/:number", API.RoundController, :update
     end
 
     resources "/pairings", API.PairingController, only: [:update]

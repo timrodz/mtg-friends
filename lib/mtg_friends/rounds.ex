@@ -82,7 +82,9 @@ defmodule MtgFriends.Rounds do
     %Round{}
     |> Round.changeset(%{
       tournament_id: tournament_id,
-      number: tournament_rounds
+      number: tournament_rounds,
+      status: :active,
+      started_at: NaiveDateTime.utc_now()
     })
     |> Repo.insert()
   end
@@ -132,5 +134,53 @@ defmodule MtgFriends.Rounds do
   """
   def change_round(%Round{} = round, attrs \\ %{}) do
     Round.changeset(round, attrs)
+  end
+
+  def is_round_complete?(%Round{} = round) do
+     round.status == :finished
+  end
+
+  def check_and_finalize(round, tournament) do
+    # Force reload pairings to ensure we have latest state
+    round = Repo.preload(round, [:pairings], force: true)
+
+    # Check if all pairings are inactive
+    if Enum.all?(round.pairings, fn p -> p.active == false end) do
+       # Finish the round
+       {:ok, round} = update_round(round, %{status: :finished})
+
+       # Check if it's the last round
+       is_last_round = tournament.round_count == round.number + 1
+
+       if is_last_round do
+         finalize_tournament(tournament, round.pairings)
+         {:ok, round, :tournament_finished}
+       else
+         {:ok, round, :round_finished}
+       end
+    else
+      # Not complete yet
+      {:ok, round, :active}
+    end
+  end
+
+  defp finalize_tournament(tournament, pairings) do
+    alias MtgFriends.{Participants, Tournaments}
+
+    # Handle Top Cut 4 Winner Logic
+    if tournament.is_top_cut_4 do
+      # Find the pairing with a winner loaded.
+      # Pairings should be preloaded with participants if we need to update them?
+      # We need to preload participants on these pairings to update them.
+      pairings = Repo.preload(pairings, :participant)
+
+      winning_pairing = Enum.find(pairings, fn p -> p.winner end)
+
+      if winning_pairing do
+         Participants.update_participant(winning_pairing.participant, %{"is_tournament_winner" => true})
+      end
+    end
+
+    Tournaments.update_tournament(tournament, %{"status" => :finished})
   end
 end

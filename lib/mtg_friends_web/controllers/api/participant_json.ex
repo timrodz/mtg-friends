@@ -8,7 +8,7 @@ defmodule MtgFriendsWeb.API.ParticipantJSON do
     %{data: data(participant)}
   end
 
-  defp data(%Participant{} = participant) do
+  def data(%Participant{} = participant) do
     %{
       id: participant.id,
       name: participant.name,

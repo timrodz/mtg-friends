@@ -1,29 +1,46 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { login } from "../api/client";
+import { useAuthStore } from "../store/authStore";
+import { useNavigation } from "@react-navigation/native";
 
-export default function LoginScreen({
-  onLoginSuccess,
-}: {
-  onLoginSuccess: (token: string) => void;
-}) {
+export default function LoginScreen() {
+  const navigation = useNavigation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const loginAction = useAuthStore((state) => state.login);
 
   const handleLogin = async () => {
+    setError("");
+    setLoading(true);
     try {
       const data = await login(email, password);
-      if (data.data && data.data.token) {
-        onLoginSuccess(data.data.token);
+      if (data.data?.token && data.data?.user) {
+        await loginAction(data.data.token, data.data.user);
+        navigation.goBack();
+      } else {
+        setError("Invalid response from server");
       }
-    } catch (error) {
-      Alert.alert("Error", "Login failed. Please check your credentials.");
+    } catch (err: any) {
+      setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>MTG Friends Login</Text>
+      <Text style={styles.title}>MTG Friends</Text>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -38,7 +55,17 @@ export default function LoginScreen({
         onChangeText={setPassword}
         secureTextEntry
       />
-      <Button title="Login" onPress={handleLogin} />
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Login</Text>
+        )}
+      </TouchableOpacity>
     </View>
   );
 }
@@ -52,15 +79,30 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 24,
+    fontWeight: "bold",
     marginBottom: 20,
     textAlign: "center",
   },
   input: {
-    height: 40,
-    borderColor: "gray",
     borderWidth: 1,
-    marginBottom: 12,
-    paddingHorizontal: 10,
+    borderColor: "#ddd",
+    padding: 15,
     borderRadius: 5,
+    marginBottom: 10,
+  },
+  button: {
+    backgroundColor: "#007AFF",
+    padding: 15,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  error: {
+    color: "red",
+    marginBottom: 10,
+    textAlign: "center",
   },
 });

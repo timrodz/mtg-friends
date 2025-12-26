@@ -31,8 +31,14 @@ defmodule MtgFriendsWeb.API.TournamentController do
   def update(conn, %{"id" => id, "tournament" => tournament_params}) do
     tournament = Tournaments.get_tournament!(id)
 
-    with {:ok, %Tournament{} = tournament} <- Tournaments.update_tournament(tournament, tournament_params) do
-      render(conn, :show, tournament: tournament)
+    if tournament.user_id == conn.assigns.current_user.id do
+      with {:ok, %Tournament{} = tournament} <- Tournaments.update_tournament(tournament, tournament_params) do
+        render(conn, :show, tournament: tournament)
+      end
+    else
+      conn
+      |> put_status(:forbidden)
+      |> json(%{error: "You are not authorized to edit this tournament"})
     end
   end
 end
