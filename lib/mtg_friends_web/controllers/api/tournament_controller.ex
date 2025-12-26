@@ -28,15 +28,11 @@ defmodule MtgFriendsWeb.API.TournamentController do
     render(conn, :show, tournament: tournament)
   end
 
-  def update(conn, %{"id" => id, "tournament" => tournament_params}) do
-    tournament = Tournaments.get_tournament!(id)
+  def update(conn, %{"tournament" => tournament_params}) do
+    tournament = conn.assigns.tournament
 
-    if tournament.user_id == conn.assigns.current_user.id do
-      with {:ok, %Tournament{} = tournament} <- Tournaments.update_tournament(tournament, tournament_params) do
-        render(conn, :show, tournament: tournament)
-      end
-    else
-      {:error, :forbidden}
+    with {:ok, %Tournament{} = tournament} <- Tournaments.update_tournament(tournament, tournament_params) do
+      render(conn, :show, tournament: tournament)
     end
   end
 end

@@ -4,7 +4,6 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent do
   require Logger
 
   alias MtgFriends.Pairings
-  alias MtgFriends.Participants
   alias MtgFriends.Tournaments
   alias MtgFriends.Rounds
 

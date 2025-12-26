@@ -12,10 +12,15 @@ defmodule MtgFriendsWeb.API.PairingController do
   # We should probably expose a cleaner API and map it, OR expose `update` for a single pairing struct.
   # `Pairings.update_pairing/2` exists for single pairing update using changeset.
 
-  def update(conn, %{"id" => id, "pairing" => pairing_params}) do
+  def update(conn, %{"tournament_id" => _tournament_id, "id" => id, "pairing" => pairing_params}) do
     pairing = Pairings.get_pairing!(id)
+    tournament = conn.assigns.tournament
 
     with {:ok, %Pairing{} = pairing} <- Pairings.update_pairing(pairing, pairing_params) do
+      # Check if round is complete and update status
+      round = MtgFriends.Rounds.get_round!(pairing.round_id)
+      {:ok, _round, _status} = MtgFriends.Rounds.check_and_finalize(round, tournament)
+
       render(conn, :show, pairing: pairing)
     end
   end

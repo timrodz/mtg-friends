@@ -18,6 +18,9 @@ const getHeaders = () => {
 
 const handleResponse = async (response: Response) => {
   if (response.status === 401) {
+    if (response.url.includes("/login")) {
+      throw new Error("Invalid credentials");
+    }
     useAuthStore.getState().logout();
     throw new Error("Session expired");
   }
@@ -153,6 +156,23 @@ export const updateRound = async (
       method: "PUT",
       headers: getHeaders(),
       body: JSON.stringify({ results }),
+    }
+  );
+  return handleResponse(response);
+};
+
+export const updatePairing = async (
+  tournamentId: number,
+  roundId: number,
+  pairingId: number,
+  data: any
+) => {
+  const response = await fetch(
+    `${API_URL}/tournaments/${tournamentId}/rounds/${roundId}/pairings/${pairingId}`,
+    {
+      method: "PUT",
+      headers: getHeaders(),
+      body: JSON.stringify({ pairing: data }),
     }
   );
   return handleResponse(response);

@@ -22,6 +22,10 @@ defmodule MtgFriendsWeb.Router do
     plug MtgFriendsWeb.APIAuthPlug
   end
 
+  pipeline :authorize_tournament_owner do
+    plug MtgFriendsWeb.Plugs.AuthorizeTournamentOwner
+  end
+
   scope "/", MtgFriendsWeb do
     pipe_through [:browser, :require_authenticated_user]
 
@@ -64,14 +68,23 @@ defmodule MtgFriendsWeb.Router do
   scope "/api", MtgFriendsWeb do
     pipe_through [:api, :api_authenticated]
 
-    resources "/tournaments", API.TournamentController, only: [:create, :update] do
-      resources "/participants", API.ParticipantController, only: [:create, :update, :delete]
-      # Using tailored route for rounds logic to act as "create next round"
-      post "/rounds", API.RoundController, :create
-      put "/rounds/:number", API.RoundController, :update
-    end
+    resources "/tournaments", API.TournamentController, only: [:create]
 
-    resources "/pairings", API.PairingController, only: [:update]
+    scope "/tournaments/:tournament_id", API do
+      pipe_through :authorize_tournament_owner
+
+      put "/", TournamentController, :update
+      resources "/participants", ParticipantController, only: [:create, :update, :delete]
+
+      scope "/rounds" do
+        post "/", RoundController, :create
+        put "/:number", RoundController, :update
+
+        scope "/:round_id" do
+          resources "/pairings", PairingController, only: [:update]
+        end
+      end
+    end
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

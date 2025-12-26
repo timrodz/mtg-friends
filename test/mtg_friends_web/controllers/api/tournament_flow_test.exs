@@ -65,10 +65,10 @@ defmodule MtgFriendsWeb.API.TournamentFlowTest do
     # For each table, pick a winner
     for {_table, [p1, p2]} <- grouped_pairings do
       # P1 wins
-      conn = put(conn, ~p"/api/pairings/#{p1["id"]}", pairing: %{points: 3, winner: true})
+      conn = put(conn, ~p"/api/tournaments/#{tournament_id}/rounds/#{round_data["id"]}/pairings/#{p1["id"]}", pairing: %{points: 3, winner: true, active: false})
       assert json_response(conn, 200)["data"]["points"] == 3
 
-      conn = put(conn, ~p"/api/pairings/#{p2["id"]}", pairing: %{points: 0, winner: false})
+      conn = put(conn, ~p"/api/tournaments/#{tournament_id}/rounds/#{round_data["id"]}/pairings/#{p2["id"]}", pairing: %{points: 0, winner: false, active: false})
       assert json_response(conn, 200)["data"]["points"] == 0
     end
 
