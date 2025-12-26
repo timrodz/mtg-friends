@@ -18,6 +18,7 @@ defmodule MtgFriendsWeb.Router do
     plug :accepts, ["json"]
     plug :fetch_session
     plug OpenApiSpex.Plug.PutApiSpec, module: MtgFriendsWeb.ApiSpec
+    plug :rate_limit
   end
 
   pipeline :api_authenticated do
@@ -152,6 +153,25 @@ defmodule MtgFriendsWeb.Router do
 
       live "/games/:id", GameLive.Show, :show
       live "/games/:id/show/edit", GameLive.Show, :edit
+    end
+  end
+
+  defp rate_limit(conn, _opts) do
+    # Get IP based on RemoteIP or just remote_ip if not using a proxy middleware yet
+    # Since we don't have RemoteIP plug configured in Endpoint (observed in application files), we use conn.remote_ip directly.
+    # Note: If behind a proxy (Fly.io, etc), real IP header parsing is needed.
+    # Assuming standard conn.remote_ip is correct for now or handled by Endpoint configuration.
+
+    case MtgFriendsWeb.RateLimit.hit("api:#{inspect(conn.remote_ip)}", 60_000, 60) do
+      {:allow, _count} ->
+        conn
+
+      {:deny, _limit} ->
+        conn
+        |> put_status(:too_many_requests)
+        |> put_resp_content_type("application/json")
+        |> send_resp(429, Jason.encode!(%{error: "Rate limit exceeded"}))
+        |> halt()
     end
   end
 end

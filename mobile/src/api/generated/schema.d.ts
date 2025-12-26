@@ -198,7 +198,7 @@ export interface components {
             points?: number;
             round_id?: number;
             tournament_id?: number;
-            winner?: number | null;
+            winner?: boolean;
         };
         /** PairingRequest */
         PairingRequest: {
