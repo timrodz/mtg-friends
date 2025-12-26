@@ -36,9 +36,7 @@ defmodule MtgFriendsWeb.API.TournamentController do
         render(conn, :show, tournament: tournament)
       end
     else
-      conn
-      |> put_status(:forbidden)
-      |> json(%{error: "You are not authorized to edit this tournament"})
+      {:error, :forbidden}
     end
   end
 end

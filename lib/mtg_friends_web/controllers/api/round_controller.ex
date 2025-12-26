@@ -22,9 +22,7 @@ defmodule MtgFriendsWeb.API.RoundController do
       latest_round = List.last(tournament.rounds)
 
       if latest_round && !Rounds.is_round_complete?(Rounds.get_round!(latest_round.id, true)) do
-        conn
-        |> put_status(:conflict)
-        |> json(%{error: "Current round is not complete"})
+        {:error, :conflict}
       else
         current_round_count = Enum.count(tournament.rounds)
 
@@ -43,7 +41,7 @@ defmodule MtgFriendsWeb.API.RoundController do
         end
       end
     else
-      send_resp(conn, :forbidden, "")
+      {:error, :forbidden}
     end
   end
 
@@ -72,7 +70,7 @@ defmodule MtgFriendsWeb.API.RoundController do
          render(conn, :show, round: round)
        end
     else
-      send_resp(conn, :forbidden, "")
+      {:error, :forbidden}
     end
   end
 end

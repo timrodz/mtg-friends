@@ -20,7 +20,7 @@ defmodule MtgFriendsWeb.API.ParticipantController do
         |> render(:show, participant: participant)
       end
     else
-      send_resp(conn, :forbidden, "")
+      {:error, :forbidden}
     end
   end
 
@@ -34,7 +34,7 @@ defmodule MtgFriendsWeb.API.ParticipantController do
         render(conn, :show, participant: participant)
       end
     else
-      send_resp(conn, :forbidden, "")
+      {:error, :forbidden}
     end
   end
 
@@ -47,7 +47,7 @@ defmodule MtgFriendsWeb.API.ParticipantController do
         send_resp(conn, :no_content, "")
       end
     else
-      send_resp(conn, :forbidden, "")
+      {:error, :forbidden}
     end
   end
 end

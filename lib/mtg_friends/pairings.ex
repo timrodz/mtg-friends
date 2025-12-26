@@ -150,8 +150,6 @@ defmodule MtgFriends.Pairings do
     MtgFriends.Repo.transaction(multi)
   end
 
-
-
   @doc """
   Deletes a pairing.
 
