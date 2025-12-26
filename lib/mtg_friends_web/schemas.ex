@@ -261,7 +261,7 @@ defmodule MtgFriendsWeb.Schemas do
         number: %Schema{type: :integer},
         active: %Schema{type: :boolean},
         points: %Schema{type: :integer},
-        winner: %Schema{type: :integer, nullable: true},
+        winner: %Schema{type: :boolean},
         tournament_id: %Schema{type: :integer},
         round_id: %Schema{type: :integer},
         participant_id: %Schema{type: :integer}
