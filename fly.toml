@@ -4,7 +4,7 @@
 #
 
 app = 'mtg-friends'
-primary_region = 'mia'
+primary_region = 'dfw'
 kill_signal = 'SIGTERM'
 
 [deploy]
