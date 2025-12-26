@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import * as SecureStore from "expo-secure-store";
+import { setItemAsync, deleteItemAsync, getItemAsync } from "expo-secure-store";
 
 interface User {
   id: number;
@@ -23,21 +23,21 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoading: true,
 
   login: async (token: string, user: User) => {
-    await SecureStore.setItemAsync("userToken", token);
-    await SecureStore.setItemAsync("userInfo", JSON.stringify(user));
+    await setItemAsync("userToken", token);
+    await setItemAsync("userInfo", JSON.stringify(user));
     set({ token, user, isAuthenticated: true });
   },
 
   logout: async () => {
-    await SecureStore.deleteItemAsync("userToken");
-    await SecureStore.deleteItemAsync("userInfo");
+    await deleteItemAsync("userToken");
+    await deleteItemAsync("userInfo");
     set({ token: null, user: null, isAuthenticated: false });
   },
 
   loadToken: async () => {
     try {
-      const token = await SecureStore.getItemAsync("userToken");
-      const userInfo = await SecureStore.getItemAsync("userInfo");
+      const token = await getItemAsync("userToken");
+      const userInfo = await getItemAsync("userInfo");
 
       if (token && userInfo) {
         set({ token, user: JSON.parse(userInfo), isAuthenticated: true });
