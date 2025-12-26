@@ -23,9 +23,15 @@ export default function LoginScreen() {
     setError("");
     setLoading(true);
     try {
-      const data = await login(email, password);
-      if (data.data?.token && data.data?.user) {
-        await loginAction(data.data.token, data.data.user);
+      const { data } = await login(email, password);
+      if (
+        data?.token &&
+        data?.user &&
+        "id" in data.user &&
+        "email" in data.user
+      ) {
+        // @ts-expect-error needs Zod parsing
+        await loginAction(data.token, data.user);
         navigation.goBack();
       } else {
         setError("Invalid response from server");

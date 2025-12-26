@@ -5,17 +5,10 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
-  fetchTournaments,
-  fetchTournament,
   createTournament,
+  fetchTournament,
+  fetchTournaments,
   updateTournament,
-  createParticipant,
-  updateParticipant,
-  deleteParticipant,
-  createRound,
-  fetchRound,
-  updateRound,
-  updatePairing,
 } from "../api/client";
 
 export const useTournaments = () => {
@@ -60,125 +53,6 @@ export const useUpdateTournament = () => {
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["tournaments"] });
       queryClient.invalidateQueries({ queryKey: ["tournament", variables.id] });
-    },
-  });
-};
-
-export const useCreateParticipant = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ tournamentId, data }: { tournamentId: number; data: any }) =>
-      createParticipant(tournamentId, data),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["tournament", variables.tournamentId],
-      });
-    },
-  });
-};
-
-export const useUpdateParticipant = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      tournamentId,
-      participantId,
-      data,
-    }: {
-      tournamentId: number;
-      participantId: number;
-      data: any;
-    }) => updateParticipant(tournamentId, participantId, data),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["tournament", variables.tournamentId],
-      });
-    },
-  });
-};
-
-export const useDeleteParticipant = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      tournamentId,
-      participantId,
-    }: {
-      tournamentId: number;
-      participantId: number;
-    }) => deleteParticipant(tournamentId, participantId),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["tournament", variables.tournamentId],
-      });
-    },
-  });
-};
-
-export const useCreateRound = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: (tournamentId: number) => createRound(tournamentId),
-    onSuccess: (data, tournamentId) => {
-      queryClient.invalidateQueries({
-        queryKey: ["tournament", tournamentId],
-      });
-    },
-  });
-};
-
-export const useRound = (tournamentId: number, roundNumber: number) => {
-  return useQuery({
-    queryKey: ["round", tournamentId, roundNumber],
-    queryFn: () => fetchRound(tournamentId, roundNumber),
-    enabled: !!tournamentId && roundNumber !== undefined && roundNumber >= 0,
-  });
-};
-
-export const useUpdateRound = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      tournamentId,
-      roundNumber,
-      results,
-    }: {
-      tournamentId: number;
-      roundNumber: number;
-      results: any[];
-    }) => updateRound(tournamentId, roundNumber, results),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["round", variables.tournamentId, variables.roundNumber],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["tournament", variables.tournamentId],
-      });
-    },
-  });
-};
-
-export const useUpdatePairing = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      tournamentId,
-      roundId,
-      pairingId,
-      data,
-    }: {
-      tournamentId: number;
-      roundId: number;
-      pairingId: number;
-      data: any;
-    }) => updatePairing(tournamentId, roundId, pairingId, data),
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: ["round", variables.tournamentId],
-      });
-      queryClient.invalidateQueries({
-        queryKey: ["tournament", variables.tournamentId],
-      });
     },
   });
 };

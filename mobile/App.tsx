@@ -6,7 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { useAuthStore } from "./src/store/authStore";
-import { queryClient } from "./src/api/client";
+import { queryClient } from "./src/api/queryClient";
 import { RootStackParamList } from "./src/navigation/types";
 
 import LoginScreen from "./src/screens/LoginScreen";

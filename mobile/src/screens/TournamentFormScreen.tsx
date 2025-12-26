@@ -21,6 +21,7 @@ import {
 import { RootStackParamList } from "../navigation/types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuthStore } from "../store/authStore";
+import { GameFormat, TournamentStatus } from "../api/types";
 
 type FormRouteProp = RouteProp<RootStackParamList, "TournamentCreate">;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -68,8 +69,8 @@ export default function TournamentFormScreen() {
   const [date, setDate] = useState("");
   const [description, setDescription] = useState("");
   const [gameId, setGameId] = useState(1);
-  const [format, setFormat] = useState("edh");
-  const [status, setStatus] = useState("inactive");
+  const [format, setFormat] = useState<GameFormat>("edh");
+  const [status, setStatus] = useState<TournamentStatus>("inactive");
   const [roundLength, setRoundLength] = useState("60");
   const [roundCount, setRoundCount] = useState("4");
   const [subformat, setSubformat] = useState("swiss");

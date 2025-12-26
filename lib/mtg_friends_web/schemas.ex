@@ -3,25 +3,44 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule Tournament do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "Tournament",
       description: "A TCG Tournament",
       type: :object,
       properties: %{
         id: %Schema{type: :integer, description: "Tournament ID"},
+        game_id: %Schema{type: :integer, description: "Game ID"},
+        user_id: %Schema{type: :integer, description: "User ID"},
         name: %Schema{type: :string, description: "Tournament Name"},
         date: %Schema{type: :string, format: :date, description: "Date of the tournament"},
-        status: %Schema{type: :string, enum: ["pending", "active", "finished"], description: "Tournament status"},
+        status: %Schema{
+          type: :string,
+          enum: ["inactive", "active", "finished"],
+          description: "Tournament status"
+        },
         location: %Schema{type: :string, description: "Tournament location"},
         description_raw: %Schema{type: :string, description: "Raw description (markdown)"},
         description_html: %Schema{type: :string, description: "Rendered HTML description"},
         round_length_minutes: %Schema{type: :integer, description: "Length of each round"},
         is_top_cut_4: %Schema{type: :boolean, description: "Whether there is a top 4 cut"},
         round_count: %Schema{type: :integer, description: "Number of rounds"},
-        format: %Schema{type: :string, description: "Tournament format"},
-        subformat: %Schema{type: :string, description: "Tournament subformat"},
+        format: %Schema{
+          type: :string,
+          enum: ["standard", "edh"],
+          description: "Tournament format"
+        },
+        subformat: %Schema{
+          type: :string,
+          enum: ["bubble_rounds", "swiss"],
+          description: "Tournament subformat"
+        },
         inserted_at: %Schema{type: :string, format: :date_time},
-        updated_at: %Schema{type: :string, format: :date_time}
+        updated_at: %Schema{type: :string, format: :date_time},
+        has_enough_participants: %Schema{
+          type: :boolean,
+          description: "Whether the tournament has enough participants"
+        }
       },
       required: [:id, :name, :status],
       example: %{
@@ -36,6 +55,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule TournamentRequest do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "TournamentRequest",
       type: :object,
@@ -50,10 +70,13 @@ defmodule MtgFriendsWeb.Schemas do
             round_length_minutes: %Schema{type: :integer},
             is_top_cut_4: %Schema{type: :boolean},
             round_count: %Schema{type: :integer},
-            status: %Schema{type: :string, enum: ["pending", "active", "finished"]},
+            status: %Schema{type: :string, enum: ["inactive", "active", "finished"]},
             format: %Schema{type: :string},
             subformat: %Schema{type: :string},
-            initial_participants: %Schema{type: :string, description: "List of participants, one per line"}
+            initial_participants: %Schema{
+              type: :string,
+              description: "List of participants, one per line"
+            }
           },
           required: [:name]
         }
@@ -63,6 +86,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule TournamentResponse do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "TournamentResponse",
       type: :object,
@@ -74,6 +98,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule TournamentsResponse do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "TournamentsResponse",
       type: :object,
@@ -85,6 +110,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule LoginRequest do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "LoginRequest",
       type: :object,
@@ -98,6 +124,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule LoginResponse do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "LoginResponse",
       type: :object,
@@ -121,22 +148,25 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule Round do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "Round",
       type: :object,
       properties: %{
         id: %Schema{type: :integer},
         number: %Schema{type: :integer},
-        status: %Schema{type: :string, enum: ["pending", "active", "finished"]},
+        status: %Schema{type: :string, enum: ["inactive", "active", "finished"]},
         started_at: %Schema{type: :string, format: :date_time},
         inserted_at: %Schema{type: :string, format: :date_time},
-        updated_at: %Schema{type: :string, format: :date_time}
+        updated_at: %Schema{type: :string, format: :date_time},
+        is_complete: %Schema{type: :boolean}
       }
     })
   end
 
   defmodule RoundResponse do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "RoundResponse",
       type: :object,
@@ -148,6 +178,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule RoundResultsRequest do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "RoundResultsRequest",
       type: :object,
@@ -170,6 +201,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule Participant do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "Participant",
       type: :object,
@@ -187,6 +219,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule ParticipantResponse do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "ParticipantResponse",
       type: :object,
@@ -198,6 +231,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule ParticipantRequest do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "ParticipantRequest",
       type: :object,
@@ -218,6 +252,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule Pairing do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "Pairing",
       type: :object,
@@ -236,6 +271,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule PairingResponse do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "PairingResponse",
       type: :object,
@@ -247,6 +283,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule PairingRequest do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "PairingRequest",
       type: :object,
@@ -265,6 +302,7 @@ defmodule MtgFriendsWeb.Schemas do
 
   defmodule ErrorResponse do
     require OpenApiSpex
+
     OpenApiSpex.schema(%{
       title: "ErrorResponse",
       type: :object,

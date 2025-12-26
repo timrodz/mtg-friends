@@ -1,176 +1,169 @@
+import axios, { InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "../store/authStore";
-import { QueryClient } from "@tanstack/react-query";
+import type { components } from "./generated/schema";
+import {
+  LoginResponse,
+  PairingResponse,
+  ParticipantResponse,
+  RoundResponse,
+  TournamentResponse,
+  TournamentArrayResponse,
+} from "./types";
 
-export const queryClient = new QueryClient();
+const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
-export const API_URL = process.env.EXPO_PUBLIC_API_URL;
-
-const getHeaders = () => {
-  const token = useAuthStore.getState().token;
-  return {
+const axiosInstance = axios.create({
+  baseURL: API_URL,
+  headers: {
     "Content-Type": "application/json",
-    Authorization: token ? `Bearer ${token}` : "",
-  };
-};
+  },
+});
 
-const handleResponse = async (response: Response) => {
-  if (response.status === 401) {
-    if (response.url.includes("/login")) {
-      throw new Error("Invalid credentials");
+axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const token = useAuthStore.getState().token;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      if (!error.config.url?.includes("/login")) {
+        useAuthStore.getState().logout();
+      }
     }
-    useAuthStore.getState().logout();
-    throw new Error("Session expired");
+    return Promise.reject(error);
   }
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(errorBody || "API Request Failed");
-  }
-  return response.json();
-};
+);
 
+// General
 export const login = async (email: string, password: string) => {
-  const response = await fetch(`${API_URL}/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+  const response = await axiosInstance.post<LoginResponse>("/login", {
+    email,
+    password,
   });
-  return handleResponse(response);
+  return response.data;
 };
 
+// Tournaments
 export const fetchTournaments = async (page = 1, limit = 10) => {
-  const queryParams = new URLSearchParams({
-    page: page.toString(),
-    limit: limit.toString(),
-  });
-  const response = await fetch(
-    `${API_URL}/tournaments?${queryParams.toString()}`,
+  const response = await axiosInstance.get<TournamentArrayResponse>(
+    "/tournaments",
     {
-      headers: getHeaders(),
+      params: { page, limit },
     }
   );
-  return handleResponse(response);
+  return response.data;
 };
 
 export const fetchTournament = async (id: string) => {
-  const response = await fetch(`${API_URL}/tournaments/${id}`, {
-    headers: getHeaders(),
-  });
-  return handleResponse(response);
+  const response = await axiosInstance.get<TournamentResponse>(
+    `/tournaments/${id}`
+  );
+  return response.data;
 };
 
-export const createTournament = async (data: any) => {
-  const response = await fetch(`${API_URL}/tournaments`, {
-    method: "POST",
-    headers: getHeaders(),
-    body: JSON.stringify({ tournament: data }),
-  });
-  return handleResponse(response);
+export const createTournament = async (
+  data: components["schemas"]["TournamentRequest"]["tournament"]
+) => {
+  const response = await axiosInstance.post<TournamentResponse>(
+    "/tournaments",
+    {
+      tournament: data,
+    }
+  );
+  return response.data;
 };
 
-export const updateTournament = async (id: number, data: any) => {
-  const response = await fetch(`${API_URL}/tournaments/${id}`, {
-    method: "PUT",
-    headers: getHeaders(),
-    body: JSON.stringify({ tournament: data }),
-  });
-  return handleResponse(response);
+export const updateTournament = async (
+  id: number,
+  data: components["schemas"]["TournamentRequest"]["tournament"]
+) => {
+  const response = await axiosInstance.put<TournamentResponse>(
+    `/tournaments/${id}`,
+    {
+      tournament: data,
+    }
+  );
+  return response.data;
 };
 
 // Participants
-export const createParticipant = async (tournamentId: number, data: any) => {
-  const response = await fetch(
-    `${API_URL}/tournaments/${tournamentId}/participants`,
-    {
-      method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify({ participant: data }),
-    }
+export const createParticipant = async (
+  tournamentId: number,
+  data: components["schemas"]["ParticipantRequest"]["participant"]
+) => {
+  const response = await axiosInstance.post<ParticipantResponse>(
+    `/tournaments/${tournamentId}/participants`,
+    { participant: data }
   );
-  return handleResponse(response);
+  return response.data;
 };
 
 export const updateParticipant = async (
   tournamentId: number,
   participantId: number,
-  data: any
+  data: components["schemas"]["ParticipantRequest"]["participant"]
 ) => {
-  const response = await fetch(
-    `${API_URL}/tournaments/${tournamentId}/participants/${participantId}`,
-    {
-      method: "PUT",
-      headers: getHeaders(),
-      body: JSON.stringify({ participant: data }),
-    }
+  const response = await axiosInstance.put<ParticipantResponse>(
+    `/tournaments/${tournamentId}/participants/${participantId}`,
+    { participant: data }
   );
-  return handleResponse(response);
-};
-
-export const fetchRound = async (tournamentId: number, number: number) => {
-  const response = await fetch(
-    `${API_URL}/tournaments/${tournamentId}/rounds/${number}`,
-    {
-      headers: getHeaders(),
-    }
-  );
-  return handleResponse(response);
+  return response.data;
 };
 
 export const deleteParticipant = async (
   tournamentId: number,
   participantId: number
 ) => {
-  const response = await fetch(
-    `${API_URL}/tournaments/${tournamentId}/participants/${participantId}`,
-    {
-      method: "DELETE",
-      headers: getHeaders(),
-    }
+  // 204 response has no content, so we just return true or verify status
+  const response = await axiosInstance.delete(
+    `/tournaments/${tournamentId}/participants/${participantId}`
   );
   if (response.status === 204) return { data: true };
-  return handleResponse(response);
+  return response.data;
 };
 
 // Rounds
-export const createRound = async (tournamentId: number) => {
-  const response = await fetch(
-    `${API_URL}/tournaments/${tournamentId}/rounds`,
-    {
-      method: "POST",
-      headers: getHeaders(),
-    }
+export const fetchRound = async (tournamentId: number, number: number) => {
+  const response = await axiosInstance.get<RoundResponse>(
+    `/tournaments/${tournamentId}/rounds/${number}`
   );
-  return handleResponse(response);
+  return response.data;
+};
+
+export const createRound = async (tournamentId: number) => {
+  const response = await axiosInstance.post<RoundResponse>(
+    `/tournaments/${tournamentId}/rounds`
+  );
+  return response.data;
 };
 
 export const updateRound = async (
   tournamentId: number,
   roundNumber: number,
-  results: any[]
+  results: components["schemas"]["RoundResultsRequest"]["results"]
 ) => {
-  const response = await fetch(
-    `${API_URL}/tournaments/${tournamentId}/rounds/${roundNumber}`,
-    {
-      method: "PUT",
-      headers: getHeaders(),
-      body: JSON.stringify({ results }),
-    }
+  const response = await axiosInstance.put<RoundResponse>(
+    `/tournaments/${tournamentId}/rounds/${roundNumber}`,
+    { results }
   );
-  return handleResponse(response);
+  return response.data;
 };
 
+// Pairings
 export const updatePairing = async (
   tournamentId: number,
   roundId: number,
   pairingId: number,
-  data: any
+  data: components["schemas"]["PairingRequest"]["pairing"]
 ) => {
-  const response = await fetch(
-    `${API_URL}/tournaments/${tournamentId}/rounds/${roundId}/pairings/${pairingId}`,
-    {
-      method: "PUT",
-      headers: getHeaders(),
-      body: JSON.stringify({ pairing: data }),
-    }
+  const response = await axiosInstance.put<PairingResponse>(
+    `/tournaments/${tournamentId}/rounds/${roundId}/pairings/${pairingId}`,
+    { pairing: data }
   );
-  return handleResponse(response);
+  return response.data;
 };
