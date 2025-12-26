@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createRound, fetchRound, updateRound } from "../api/client";
+import { RoundResultsRequest } from "../api/types";
 
 export const useCreateRound = () => {
   const queryClient = useQueryClient();
@@ -31,7 +32,7 @@ export const useUpdateRound = () => {
     }: {
       tournamentId: number;
       roundNumber: number;
-      results: any[];
+      results: RoundResultsRequest;
     }) => updateRound(tournamentId, roundNumber, results),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({

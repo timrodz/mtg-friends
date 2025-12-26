@@ -55,8 +55,17 @@ defmodule MtgFriendsWeb.API.TournamentController do
     ]
 
   def index(conn, params) do
-    page = Map.get(params, "page", "1") |> String.to_integer()
-    limit = Map.get(params, "limit", "10") |> String.to_integer()
+    page =
+      case Integer.parse(Map.get(params, "page", "1")) do
+        {page, _} -> page
+        _ -> 1
+      end
+
+    limit =
+      case Integer.parse(Map.get(params, "limit", "10")) do
+        {limit, _} -> limit
+        _ -> 10
+      end
 
     tournaments = Tournaments.list_tournaments_paginated(limit, page)
     render(conn, :index, tournaments: tournaments)

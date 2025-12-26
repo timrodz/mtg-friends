@@ -1,6 +1,13 @@
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import duration from "dayjs/plugin/duration";
+
+dayjs.extend(utc);
+dayjs.extend(duration);
+
 /**
  * Formats the remaining time until a round expires.
- * @param insertedAt The ISO string of when the round was created (UTC).
+ * @param insertedAt The ISO string of when the round was created (must be treated as UTC).
  * @param roundLengthSeconds Total duration of the round in seconds.
  * @returns A formatted string: "D:HH:MM:SS", "H:MM:SS", or "MM:SS".
  */
@@ -10,23 +17,22 @@ export const formatRemainingTime = (
 ): string => {
   if (!insertedAt) return "00:00";
 
-  // Append 'Z' to ensure it's treated as UTC if missing
-  const timestamp = insertedAt.endsWith("Z") ? insertedAt : insertedAt + "Z";
-  const start = new Date(timestamp);
-  const expiry = new Date(start.getTime() + roundLengthSeconds * 1000);
-  const now = new Date();
+  // Ensure parsing as UTC
+  const start = dayjs.utc(insertedAt);
+  const expiry = start.add(roundLengthSeconds, "second");
+  const now = dayjs.utc();
 
-  const diffMs = expiry.getTime() - now.getTime();
-  const diffSeconds = Math.floor(diffMs / 1000);
+  const diffMs = expiry.diff(now);
 
-  if (diffSeconds <= 0) {
+  if (diffMs <= 0) {
     return "00:00";
   }
 
-  const days = Math.floor(diffSeconds / (3600 * 24));
-  const hours = Math.floor((diffSeconds % (3600 * 24)) / 3600);
-  const minutes = Math.floor((diffSeconds % 3600) / 60);
-  const seconds = diffSeconds % 60;
+  const dur = dayjs.duration(diffMs);
+  const days = Math.floor(dur.asDays());
+  const hours = dur.hours();
+  const minutes = dur.minutes();
+  const seconds = dur.seconds();
 
   if (days > 0) {
     return `${days}:${hours.toString().padStart(2, "0")}:${minutes

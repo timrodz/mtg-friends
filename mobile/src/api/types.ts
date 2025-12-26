@@ -1,43 +1,48 @@
-import type { components, paths } from "./generated/schema";
+import type { components } from "./generated/schema";
 
-// Helpers to tackle the verbose types
-type Path<P extends keyof paths> = paths[P];
-type Operation<P extends keyof paths, M extends keyof Path<P>> = Path<P>[M];
-type Response<
-  P extends keyof paths,
-  M extends keyof Path<P>,
-  S extends number
-> =
-  // @ts-ignore - The generated types structure is correct but TS struggles with deep indexing here
-  Operation<P, M>["responses"][S]["content"]["application/json"];
 type ResponseType<T> = { data: T };
 
-// Schemas
-type TournamentType = components["schemas"]["Tournament"];
-type RoundType = components["schemas"]["Round"];
-type ParticipantType = components["schemas"]["Participant"];
-type PairingType = components["schemas"]["Pairing"];
+type _TournamentType = components["schemas"]["Tournament"];
+type _RoundType = components["schemas"]["Round"];
+type _ParticipantType = components["schemas"]["Participant"];
+type _PairingType = components["schemas"]["Pairing"];
 
-export type LoginResponse = Response<"/api/login", "post", 201>;
+// Requests
+export type TournamentRequest =
+  components["schemas"]["TournamentRequest"]["tournament"];
+export type ParticipantRequest =
+  components["schemas"]["ParticipantRequest"]["participant"];
+export type PairingRequest = components["schemas"]["PairingRequest"]["pairing"];
+export type RoundResultsRequest =
+  components["schemas"]["RoundResultsRequest"]["results"];
+
+// Responses
+export type LoginResponse = components["schemas"]["LoginResponse"];
 export type TournamentResponse = ResponseType<
   TournamentType & {
-    participants?: Array<ParticipantType>;
-    rounds?: Array<RoundType>;
+    participants?: Array<_ParticipantType>;
+    rounds?: Array<_RoundType>;
   }
 >;
 export type TournamentArrayResponse = ResponseType<
   Array<
     TournamentType & {
-      participants?: Array<ParticipantType>;
-      rounds?: Array<RoundType>;
+      participants?: Array<_ParticipantType>;
+      rounds?: Array<_RoundType>;
     }
   >
 >;
 export type RoundResponse = ResponseType<
-  RoundType & { pairings?: Array<PairingType> }
+  _RoundType & { pairings?: Array<_PairingType> }
 >;
-export type ParticipantResponse = ResponseType<ParticipantType>;
-export type PairingResponse = ResponseType<PairingType>;
+export type ParticipantResponse = ResponseType<_ParticipantType>;
+export type PairingResponse = ResponseType<_PairingType>;
+
+// Schemas
+export type TournamentType = _TournamentType;
+export type RoundType = _RoundType & { pairings?: Array<PairingType> };
+export type ParticipantType = _ParticipantType;
+export type PairingType = _PairingType & { participant?: ParticipantType };
 
 export type GameFormat = TournamentType["format"];
 export type GameSubformat = TournamentType["subformat"];

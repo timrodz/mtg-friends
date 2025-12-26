@@ -24,12 +24,6 @@ defmodule MtgFriendsWeb.API.PairingController do
       unprocessable_entity: {"Validation error", "application/json", Schemas.ErrorResponse}
     ]
 
-  # Update result for a pairing (e.g. setting points or winner)
-  # BUT `Pairings.update_pairings` in context is designed for form params and POD update.
-  # It takes "input-points-participant-ID" keys.
-  # We should probably expose a cleaner API and map it, OR expose `update` for a single pairing struct.
-  # `Pairings.update_pairing/2` exists for single pairing update using changeset.
-
   def update(conn, %{"tournament_id" => _tournament_id, "id" => id, "pairing" => pairing_params}) do
     pairing = Pairings.get_pairing!(id)
     tournament = conn.assigns.tournament

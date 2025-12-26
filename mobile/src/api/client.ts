@@ -1,6 +1,5 @@
 import axios, { InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "../store/authStore";
-import type { components } from "./generated/schema";
 import {
   LoginResponse,
   PairingResponse,
@@ -8,9 +7,19 @@ import {
   RoundResponse,
   TournamentResponse,
   TournamentArrayResponse,
+  PairingRequest,
+  RoundResultsRequest,
+  TournamentRequest,
+  ParticipantRequest,
 } from "./types";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
+
+if (!API_URL) {
+  throw new Error(
+    "API_URL environment variable is not set. Please check your .env configuration."
+  );
+}
 
 const axiosInstance = axios.create({
   baseURL: API_URL,
@@ -40,7 +49,10 @@ axiosInstance.interceptors.response.use(
 );
 
 // General
-export const login = async (email: string, password: string) => {
+export const login = async (
+  email: string,
+  password: string
+): Promise<LoginResponse> => {
   const response = await axiosInstance.post<LoginResponse>("/login", {
     email,
     password,
@@ -49,7 +61,10 @@ export const login = async (email: string, password: string) => {
 };
 
 // Tournaments
-export const fetchTournaments = async (page = 1, limit = 10) => {
+export const fetchTournaments = async (
+  page = 1,
+  limit = 10
+): Promise<TournamentArrayResponse> => {
   const response = await axiosInstance.get<TournamentArrayResponse>(
     "/tournaments",
     {
@@ -59,7 +74,9 @@ export const fetchTournaments = async (page = 1, limit = 10) => {
   return response.data;
 };
 
-export const fetchTournament = async (id: string) => {
+export const fetchTournament = async (
+  id: number
+): Promise<TournamentResponse> => {
   const response = await axiosInstance.get<TournamentResponse>(
     `/tournaments/${id}`
   );
@@ -67,8 +84,8 @@ export const fetchTournament = async (id: string) => {
 };
 
 export const createTournament = async (
-  data: components["schemas"]["TournamentRequest"]["tournament"]
-) => {
+  data: TournamentRequest
+): Promise<TournamentResponse> => {
   const response = await axiosInstance.post<TournamentResponse>(
     "/tournaments",
     {
@@ -80,8 +97,8 @@ export const createTournament = async (
 
 export const updateTournament = async (
   id: number,
-  data: components["schemas"]["TournamentRequest"]["tournament"]
-) => {
+  data: TournamentRequest
+): Promise<TournamentResponse> => {
   const response = await axiosInstance.put<TournamentResponse>(
     `/tournaments/${id}`,
     {
@@ -94,8 +111,8 @@ export const updateTournament = async (
 // Participants
 export const createParticipant = async (
   tournamentId: number,
-  data: components["schemas"]["ParticipantRequest"]["participant"]
-) => {
+  data: ParticipantRequest
+): Promise<ParticipantResponse> => {
   const response = await axiosInstance.post<ParticipantResponse>(
     `/tournaments/${tournamentId}/participants`,
     { participant: data }
@@ -106,8 +123,8 @@ export const createParticipant = async (
 export const updateParticipant = async (
   tournamentId: number,
   participantId: number,
-  data: components["schemas"]["ParticipantRequest"]["participant"]
-) => {
+  data: ParticipantRequest
+): Promise<ParticipantResponse> => {
   const response = await axiosInstance.put<ParticipantResponse>(
     `/tournaments/${tournamentId}/participants/${participantId}`,
     { participant: data }
@@ -118,24 +135,26 @@ export const updateParticipant = async (
 export const deleteParticipant = async (
   tournamentId: number,
   participantId: number
-) => {
-  // 204 response has no content, so we just return true or verify status
-  const response = await axiosInstance.delete(
+): Promise<void> => {
+  await axiosInstance.delete(
     `/tournaments/${tournamentId}/participants/${participantId}`
   );
-  if (response.status === 204) return { data: true };
-  return response.data;
 };
 
 // Rounds
-export const fetchRound = async (tournamentId: number, number: number) => {
+export const fetchRound = async (
+  tournamentId: number,
+  number: number
+): Promise<RoundResponse> => {
   const response = await axiosInstance.get<RoundResponse>(
     `/tournaments/${tournamentId}/rounds/${number}`
   );
   return response.data;
 };
 
-export const createRound = async (tournamentId: number) => {
+export const createRound = async (
+  tournamentId: number
+): Promise<RoundResponse> => {
   const response = await axiosInstance.post<RoundResponse>(
     `/tournaments/${tournamentId}/rounds`
   );
@@ -145,8 +164,8 @@ export const createRound = async (tournamentId: number) => {
 export const updateRound = async (
   tournamentId: number,
   roundNumber: number,
-  results: components["schemas"]["RoundResultsRequest"]["results"]
-) => {
+  results: RoundResultsRequest
+): Promise<RoundResponse> => {
   const response = await axiosInstance.put<RoundResponse>(
     `/tournaments/${tournamentId}/rounds/${roundNumber}`,
     { results }
@@ -159,8 +178,8 @@ export const updatePairing = async (
   tournamentId: number,
   roundId: number,
   pairingId: number,
-  data: components["schemas"]["PairingRequest"]["pairing"]
-) => {
+  data: PairingRequest
+): Promise<PairingResponse> => {
   const response = await axiosInstance.put<PairingResponse>(
     `/tournaments/${tournamentId}/rounds/${roundId}/pairings/${pairingId}`,
     { pairing: data }

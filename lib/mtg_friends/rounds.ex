@@ -137,7 +137,7 @@ defmodule MtgFriends.Rounds do
   end
 
   def is_round_complete?(%Round{} = round) do
-     round.status == :finished
+    round.status == :finished
   end
 
   def check_and_finalize(round, tournament) do
@@ -146,18 +146,20 @@ defmodule MtgFriends.Rounds do
 
     # Check if all pairings are inactive
     if Enum.all?(round.pairings, fn p -> p.active == false end) do
-       # Finish the round
-       {:ok, round} = update_round(round, %{status: :finished})
+      case update_round(round, %{status: :finished}) do
+        {:ok, round} ->
+          is_last_round? = tournament.round_count == round.number + 1
 
-       # Check if it's the last round
-       is_last_round = tournament.round_count == round.number + 1
+          if is_last_round? do
+            finalize_tournament(tournament, round.pairings)
+            {:ok, round, :tournament_finished}
+          else
+            {:ok, round, :round_finished}
+          end
 
-       if is_last_round do
-         finalize_tournament(tournament, round.pairings)
-         {:ok, round, :tournament_finished}
-       else
-         {:ok, round, :round_finished}
-       end
+        {:error, changeset} ->
+          {:error, changeset}
+      end
     else
       # Not complete yet
       {:ok, round, :active}
@@ -177,7 +179,9 @@ defmodule MtgFriends.Rounds do
       winning_pairing = Enum.find(pairings, fn p -> p.winner end)
 
       if winning_pairing do
-         Participants.update_participant(winning_pairing.participant, %{"is_tournament_winner" => true})
+        Participants.update_participant(winning_pairing.participant, %{
+          "is_tournament_winner" => true
+        })
       end
     end
 

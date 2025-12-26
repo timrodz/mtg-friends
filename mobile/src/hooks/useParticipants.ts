@@ -4,12 +4,18 @@ import {
   deleteParticipant,
   updateParticipant,
 } from "../api/client";
+import { ParticipantRequest } from "../api/types";
 
 export const useCreateParticipant = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ tournamentId, data }: { tournamentId: number; data: any }) =>
-      createParticipant(tournamentId, data),
+    mutationFn: ({
+      tournamentId,
+      data,
+    }: {
+      tournamentId: number;
+      data: ParticipantRequest;
+    }) => createParticipant(tournamentId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["tournament", variables.tournamentId],
@@ -28,7 +34,7 @@ export const useUpdateParticipant = () => {
     }: {
       tournamentId: number;
       participantId: number;
-      data: any;
+      data: ParticipantRequest;
     }) => updateParticipant(tournamentId, participantId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({

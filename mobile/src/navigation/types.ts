@@ -1,3 +1,9 @@
+import {
+  ParticipantRequest,
+  ParticipantResponse,
+  ParticipantType,
+} from "../api/types";
+
 export type RootStackParamList = {
   Login: undefined;
   TournamentList: undefined;
@@ -5,6 +11,6 @@ export type RootStackParamList = {
   TournamentDetail: { id: number };
   TournamentEdit: { id: number };
   ParticipantCreate: { tournamentId: number };
-  ParticipantEdit: { tournamentId: number; participant: any };
+  ParticipantEdit: { tournamentId: number; participant: ParticipantType };
   RoundDetail: { tournamentId: number; roundNumber: number };
 };

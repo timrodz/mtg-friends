@@ -74,7 +74,7 @@ export default function TournamentListScreen() {
     <View style={styles.container}>
       <FlatList
         data={tournaments}
-        keyExtractor={(item: any) => item.id.toString()}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.item}

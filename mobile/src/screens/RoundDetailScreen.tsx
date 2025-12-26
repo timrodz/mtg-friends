@@ -1,26 +1,31 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { RouteProp, useRoute } from "@react-navigation/native";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
   ActivityIndicator,
-  FlatList,
-  TouchableOpacity,
-  Modal,
-  TextInput,
   Alert,
+  FlatList,
+  Modal,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { useRoute, RouteProp } from "@react-navigation/native";
+import { PairingType, ParticipantType } from "../api/types";
+import { useRound, useUpdateRound } from "../hooks/useRounds";
+import { useTournament } from "../hooks/useTournaments";
 import { RootStackParamList } from "../navigation/types";
-import {
-  useRound,
-  useTournament,
-  useUpdateRound,
-} from "../hooks/useTournaments";
 import { useAuthStore } from "../store/authStore";
 import { formatRemainingTime } from "../utils/time";
 
 type RoundDetailRouteProp = RouteProp<RootStackParamList, "RoundDetail">;
+
+type SelectedTable = {
+  table: number;
+  players: PairingType[];
+  active: boolean;
+};
+type ScoreMap = { [key: number]: string };
 
 export default function RoundDetailScreen() {
   const route = useRoute<RoundDetailRouteProp>();
@@ -38,24 +43,27 @@ export default function RoundDetailScreen() {
 
   // State
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedTable, setSelectedTable] = useState<any>(null);
-  const [scores, setScores] = useState<{ [key: number]: string }>({});
+  const [selectedTable, setSelectedTable] = useState<SelectedTable>(null);
+  const [scores, setScores] = useState<ScoreMap>({});
   const [timer, setTimer] = useState("00:00");
 
   const isOwner = user?.id === tournamentData?.data?.user_id;
 
-  const pairings = useMemo(() => {
+  const pairings: SelectedTable[] = useMemo(() => {
     if (isLoading || !response?.data?.pairings) return [];
 
     // Group by pairing number (table number)
-    const grouped = response.data.pairings.reduce((acc: any, p: any) => {
-      // p.number is the table/pod number
-      if (!acc[p.number]) {
-        acc[p.number] = [];
-      }
-      acc[p.number].push(p);
-      return acc;
-    }, {});
+    const grouped = response.data.pairings.reduce(
+      (acc: PairingType, pairing: PairingType) => {
+        // p.number is the table/pod number
+        if (!acc[pairing.number]) {
+          acc[pairing.number] = [];
+        }
+        acc[pairing.number].push(pairing);
+        return acc;
+      },
+      {}
+    );
 
     // Convert to array of tables
     return Object.keys(grouped)
@@ -63,7 +71,9 @@ export default function RoundDetailScreen() {
         table: parseInt(tableNumber),
         players: grouped[tableNumber],
         // Active if any pairing in the pod is active (treat null/undefined as active)
-        active: grouped[tableNumber].some((p: any) => p.active !== false),
+        active: grouped[tableNumber].some(
+          (pairing: PairingType) => pairing.active !== false
+        ),
       }))
       .sort((a, b) => a.table - b.table);
   }, [response, isLoading]);
@@ -80,11 +90,11 @@ export default function RoundDetailScreen() {
     return () => clearInterval(interval);
   }, [response?.data?.inserted_at, response?.data?.is_complete]);
 
-  const handleOpenModal = (tableItem: any) => {
+  const handleOpenModal = (tableItem: SelectedTable) => {
     setSelectedTable(tableItem);
-    const initialScores: any = {};
-    tableItem.players.forEach((p: any) => {
-      initialScores[p.participant_id] = (p.points || 0).toString();
+    const initialScores: ScoreMap = {};
+    tableItem.players.forEach((pairing: PairingType) => {
+      initialScores[pairing.participant_id] = (pairing.points || 0).toString();
     });
     setScores(initialScores);
     setModalVisible(true);
@@ -98,11 +108,11 @@ export default function RoundDetailScreen() {
     if (!selectedTable) return;
 
     // Validate scores are numbers
-    const results = selectedTable.players.map((p: any) => {
-      const scoreStr = scores[p.participant_id] || "0";
+    const results = selectedTable.players.map((participant: PairingType) => {
+      const scoreStr = scores[participant.participant_id] || "0";
       const points = parseInt(scoreStr, 10);
       return {
-        participant_id: p.participant_id,
+        participant_id: participant.participant_id,
         points: isNaN(points) ? 0 : points,
       };
     });
@@ -177,12 +187,14 @@ export default function RoundDetailScreen() {
             </View>
 
             <View style={styles.playersContainer}>
-              {item.players.map((p: any, index: number) => (
-                <View key={p.id} style={styles.playerRow}>
+              {item.players.map((participant: PairingType, index: number) => (
+                <View key={participant.id} style={styles.playerRow}>
                   <Text style={styles.playerName}>
-                    {p.participant?.name || "Unknown Player"}
+                    {participant.participant?.name || "Unknown Player"}
                   </Text>
-                  <Text style={styles.playerPoints}>{p.points} pts</Text>
+                  <Text style={styles.playerPoints}>
+                    {participant.points} pts
+                  </Text>
                   {/* VS separator if not the last player (assuming 2 players usually) */}
                   {index < item.players.length - 1 && (
                     <Text style={styles.vsText}>VS</Text>
@@ -225,15 +237,17 @@ export default function RoundDetailScreen() {
             Enter points for each player
           </Text>
 
-          {selectedTable?.players.map((p: any) => (
-            <View key={p.id} style={styles.inputRow}>
-              <Text style={styles.inputLabel}>{p.participant?.name}</Text>
+          {selectedTable?.players.map((participant: PairingType) => (
+            <View key={participant.id} style={styles.inputRow}>
+              <Text style={styles.inputLabel}>
+                {participant.participant?.name}
+              </Text>
               <TextInput
                 style={styles.scoreInput}
                 keyboardType="numeric"
-                value={scores[p.participant_id]}
+                value={scores[participant.participant_id]}
                 onChangeText={(text) =>
-                  handleScoreChange(p.participant_id, text)
+                  handleScoreChange(participant.participant_id, text)
                 }
               />
             </View>

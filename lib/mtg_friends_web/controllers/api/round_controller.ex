@@ -75,7 +75,14 @@ defmodule MtgFriendsWeb.API.RoundController do
         # Refresh tournament with preloads required by PairingEngine
         tournament = MtgFriends.Tournaments.get_tournament!(tournament_id)
 
-        PairingEngine.create_pairings(tournament, round)
+        case PairingEngine.create_pairings(tournament, round) do
+          {:ok, _pairings} ->
+            :ok
+
+          {:error, reason} ->
+            # Consider rolling back the round creation or returning an error
+            raise "Failed to create pairings: #{inspect(reason)}"
+        end
 
         # Re-fetch round with pairings to render
         round = Rounds.get_round!(round.id, true)

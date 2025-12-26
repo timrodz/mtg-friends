@@ -118,7 +118,7 @@ export default function TournamentFormScreen() {
 
     if (isEditMode) {
       updateMutation.mutate(
-        { id: id as number, data: payload },
+        { id: id, data: payload },
         {
           onSuccess: () => {
             Alert.alert("Success", "Tournament updated");

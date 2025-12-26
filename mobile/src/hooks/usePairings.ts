@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updatePairing } from "../api/client";
+import { PairingRequest } from "../api/types";
 
 export const useUpdatePairing = () => {
   const queryClient = useQueryClient();
@@ -13,7 +14,7 @@ export const useUpdatePairing = () => {
       tournamentId: number;
       roundId: number;
       pairingId: number;
-      data: any;
+      data: PairingRequest;
     }) => updatePairing(tournamentId, roundId, pairingId, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({

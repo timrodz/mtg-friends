@@ -10,6 +10,7 @@ import {
   fetchTournaments,
   updateTournament,
 } from "../api/client";
+import { TournamentRequest } from "../api/types";
 
 export const useTournaments = () => {
   return useInfiniteQuery({
@@ -28,7 +29,7 @@ export const useTournaments = () => {
 export const useTournament = (id: number) => {
   return useQuery({
     queryKey: ["tournament", id],
-    queryFn: () => fetchTournament(id.toString()),
+    queryFn: () => fetchTournament(id),
     enabled: !!id,
   });
 };
@@ -48,7 +49,7 @@ export const useUpdateTournament = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: any }) =>
+    mutationFn: ({ id, data }: { id: number; data: TournamentRequest }) =>
       updateTournament(id, data),
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["tournaments"] });

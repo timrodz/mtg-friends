@@ -11,7 +11,7 @@ import {
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../navigation/types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { useUpdateParticipant } from "../hooks/useTournaments";
+import { useUpdateParticipant } from "../hooks/useParticipants";
 
 type EditParticipantRouteProp = RouteProp<
   RootStackParamList,

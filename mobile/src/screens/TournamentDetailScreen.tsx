@@ -11,14 +11,13 @@ import {
 import RenderHTML from "react-native-render-html";
 import { useWindowDimensions } from "react-native";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
-import {
-  useTournament,
-  useDeleteParticipant,
-  useCreateRound,
-} from "../hooks/useTournaments";
+import { useTournament } from "../hooks/useTournaments";
 import { RootStackParamList } from "../navigation/types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuthStore } from "../store/authStore";
+import { useDeleteParticipant } from "../hooks/useParticipants";
+import { useCreateRound } from "../hooks/useRounds";
+import { PairingType, ParticipantType, RoundType } from "../api/types";
 
 type DetailRouteProp = RouteProp<RootStackParamList, "TournamentDetail">;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -184,12 +183,12 @@ export default function TournamentDetailScreen() {
       {participants.length === 0 ? (
         <Text style={styles.emptyText}>No participants added.</Text>
       ) : (
-        participants.map((p: any) => (
-          <View key={p.id} style={styles.listItem}>
+        participants.map((participant: ParticipantType) => (
+          <View key={participant.id} style={styles.listItem}>
             <View>
-              <Text style={styles.listItemText}>{p.name}</Text>
-              {p.points !== undefined && (
-                <Text style={styles.listItemSub}>{p.points} pts</Text>
+              <Text style={styles.listItemText}>{participant.name}</Text>
+              {participant.points !== undefined && (
+                <Text style={styles.listItemSub}>{participant.points} pts</Text>
               )}
             </View>
             {isOwner && (
@@ -198,7 +197,7 @@ export default function TournamentDetailScreen() {
                   onPress={() =>
                     navigation.navigate("ParticipantEdit", {
                       tournamentId: id,
-                      participant: p,
+                      participant: participant,
                     })
                   }
                   style={styles.actionButton}
@@ -206,7 +205,7 @@ export default function TournamentDetailScreen() {
                   <Text style={styles.actionLink}>Edit</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  onPress={() => handleDeleteParticipant(p.id)}
+                  onPress={() => handleDeleteParticipant(participant.id)}
                   style={styles.deleteAction}
                 >
                   <Text style={styles.deleteActionText}>Remove</Text>
@@ -259,19 +258,19 @@ export default function TournamentDetailScreen() {
       {rounds.length === 0 ? (
         <Text style={styles.emptyText}>No rounds generated.</Text>
       ) : (
-        rounds.map((r: any) => (
+        rounds.map((round: RoundType) => (
           <TouchableOpacity
-            key={r.id}
+            key={round.id}
             style={styles.listItem}
             onPress={() =>
               navigation.navigate("RoundDetail", {
                 tournamentId: id,
-                roundNumber: r.number,
+                roundNumber: round.number,
               })
             }
           >
             <View>
-              <Text style={styles.listItemText}>Round {r.number + 1}</Text>
+              <Text style={styles.listItemText}>Round {round.number + 1}</Text>
               <View
                 style={{
                   flexDirection: "row",
@@ -280,15 +279,17 @@ export default function TournamentDetailScreen() {
                 }}
               >
                 <Text style={styles.listItemSub}>
-                  {r.pairings?.length || 0} pairings
+                  {round.pairings?.length || 0} pairings
                 </Text>
                 <Text
                   style={[
                     styles.statusBadge,
-                    r.is_complete ? styles.statusFinished : styles.statusActive,
+                    round.is_complete
+                      ? styles.statusFinished
+                      : styles.statusActive,
                   ]}
                 >
-                  {r.is_complete ? "Finished" : "Active"}
+                  {round.is_complete ? "Finished" : "Active"}
                 </Text>
               </View>
             </View>
