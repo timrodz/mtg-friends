@@ -8,6 +8,8 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
+import RenderHTML from "react-native-render-html";
+import { useWindowDimensions } from "react-native";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import {
   useTournament,
@@ -22,6 +24,7 @@ type DetailRouteProp = RouteProp<RootStackParamList, "TournamentDetail">;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function TournamentDetailScreen() {
+  const { width } = useWindowDimensions();
   const route = useRoute<DetailRouteProp>();
   const navigation = useNavigation<NavigationProp>();
   const { id } = route.params;
@@ -134,9 +137,23 @@ export default function TournamentDetailScreen() {
       </View>
 
       <Text style={styles.sectionHeader}>Description</Text>
-      <Text style={styles.description}>
-        {tournament.description_raw || "No description provided."}
-      </Text>
+      <View style={styles.descriptionContainer}>
+        <RenderHTML
+          contentWidth={width - 40}
+          source={{
+            html:
+              tournament.description_html ||
+              `<p>${tournament.description_raw}</p>`,
+          }}
+          baseStyle={styles.descriptionBase}
+          tagsStyles={{
+            a: {
+              color: "#007AFF",
+              textDecorationLine: "underline",
+            },
+          }}
+        />
+      </View>
 
       <Text style={styles.sectionHeader}>Status: {tournament.status}</Text>
 
@@ -219,9 +236,10 @@ export default function TournamentDetailScreen() {
             <Text
               style={[
                 styles.actionLink,
-                rounds.length > 0 &&
-                  !rounds[rounds.length - 1].is_complete &&
-                  styles.disabledLink,
+                (rounds.length > 0 && !rounds[rounds.length - 1].is_complete) ||
+                !tournament.has_enough_participants
+                  ? styles.disabledLink
+                  : null,
               ]}
             >
               {rounds.length + 1 === tournament.round_count
@@ -231,6 +249,12 @@ export default function TournamentDetailScreen() {
           </TouchableOpacity>
         )}
       </View>
+
+      {!tournament.has_enough_participants && isOwner && (
+        <Text style={styles.warningText}>
+          Must have at least 4 participants before starting this tournament.
+        </Text>
+      )}
 
       {rounds.length === 0 ? (
         <Text style={styles.emptyText}>No rounds generated.</Text>
@@ -341,10 +365,17 @@ const styles = StyleSheet.create({
   disabledLink: {
     color: "#ccc",
   },
-  description: {
+  descriptionContainer: {
+    backgroundColor: "#f9f9f9",
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  descriptionBase: {
     fontSize: 16,
-    color: "#555",
-    lineHeight: 24,
+    color: "#444",
+    lineHeight: 22,
   },
   errorText: {
     color: "red",
@@ -421,5 +452,13 @@ const styles = StyleSheet.create({
   statusFinished: {
     backgroundColor: "#e8f5e9",
     color: "#1b5e20",
+  },
+  warningText: {
+    color: "#ff9800",
+    fontSize: 14,
+    fontStyle: "italic",
+    marginTop: -5,
+    marginBottom: 10,
+    textAlign: "right",
   },
 });

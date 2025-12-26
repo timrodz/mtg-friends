@@ -49,7 +49,8 @@ defmodule MtgFriendsWeb.API.TournamentJSON do
       subformat: tournament.subformat,
       is_top_cut_4: tournament.is_top_cut_4,
       participants: participants,
-      rounds: rounds
+      rounds: rounds,
+      has_enough_participants: MtgFriends.Tournaments.has_enough_participants?(tournament)
     }
   end
 end

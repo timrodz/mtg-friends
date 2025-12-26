@@ -97,6 +97,15 @@ defmodule MtgFriends.Tournaments do
   def get_tournament_simple(id), do: Repo.get(Tournament, id)
   def get_tournament_simple!(id), do: Repo.get!(Tournament, id)
 
+  def has_enough_participants?(%Tournament{participants: participants}) when is_list(participants) do
+    length(participants) >= 4
+  end
+
+  def has_enough_participants?(%Tournament{} = tournament) do
+    tournament = Repo.preload(tournament, :participants)
+    length(tournament.participants) >= 4
+  end
+
   @doc """
   Creates a tournament.
 
@@ -223,7 +232,6 @@ defmodule MtgFriends.Tournaments do
               name = Map.get(body, "name")
 
               %{image_uri: img_large, name: name, og_name: card_raw}
-              |> IO.inspect(label: "card name")
             end
         )
       )

@@ -73,12 +73,11 @@ export default function ParticipantEditScreen() {
       <View style={styles.formGroup}>
         <Text style={styles.label}>Decklist (Optional)</Text>
         <TextInput
-          style={[styles.input, styles.textArea]}
+          style={styles.input}
           value={decklist}
           onChangeText={setDecklist}
           placeholder="Paste decklist URL or text"
-          multiline
-          numberOfLines={4}
+          inputMode="url"
         />
       </View>
 
@@ -125,10 +124,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     fontSize: 16,
     backgroundColor: "#f9f9f9",
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: "top",
   },
   saveButton: {
     backgroundColor: "#007AFF",

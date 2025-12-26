@@ -11,9 +11,8 @@ import { RootStackParamList } from "./src/navigation/types";
 
 import LoginScreen from "./src/screens/LoginScreen";
 import TournamentListScreen from "./src/screens/TournamentListScreen";
-import TournamentCreateScreen from "./src/screens/TournamentCreateScreen";
 import TournamentDetailScreen from "./src/screens/TournamentDetailScreen";
-import TournamentEditScreen from "./src/screens/TournamentEditScreen";
+import TournamentFormScreen from "./src/screens/TournamentFormScreen";
 import ParticipantCreateScreen from "./src/screens/ParticipantCreateScreen";
 import ParticipantEditScreen from "./src/screens/ParticipantEditScreen";
 import RoundDetailScreen from "./src/screens/RoundDetailScreen";
@@ -46,7 +45,7 @@ function AppNavigator() {
         />
         <Stack.Screen
           name="TournamentCreate"
-          component={TournamentCreateScreen}
+          component={TournamentFormScreen}
           options={{ title: "Create Tournament" }}
         />
         <Stack.Screen
@@ -56,7 +55,7 @@ function AppNavigator() {
         />
         <Stack.Screen
           name="TournamentEdit"
-          component={TournamentEditScreen}
+          component={TournamentFormScreen}
           options={{ title: "Edit Tournament" }}
         />
         <Stack.Screen

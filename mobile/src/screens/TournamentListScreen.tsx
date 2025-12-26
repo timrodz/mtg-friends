@@ -11,12 +11,7 @@ import { useTournaments } from "../hooks/useTournaments";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuthStore } from "../store/authStore";
-
-type RootStackParamList = {
-  TournamentDetail: { id: number };
-  TournamentCreate: undefined;
-  Login: undefined;
-};
+import { RootStackParamList } from "../navigation/types";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -117,7 +112,7 @@ export default function TournamentListScreen() {
       {isAuthenticated && (
         <TouchableOpacity
           style={styles.fab}
-          onPress={() => navigation.navigate("TournamentCreate")}
+          onPress={() => navigation.navigate("TournamentCreate", {})}
         >
           <Text style={styles.fabText}>+</Text>
         </TouchableOpacity>

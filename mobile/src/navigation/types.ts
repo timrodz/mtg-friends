@@ -1,7 +1,7 @@
 export type RootStackParamList = {
   Login: undefined;
   TournamentList: undefined;
-  TournamentCreate: undefined;
+  TournamentCreate: { id?: number };
   TournamentDetail: { id: number };
   TournamentEdit: { id: number };
   ParticipantCreate: { tournamentId: number };

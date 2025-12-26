@@ -13,11 +13,16 @@ import {
   Platform,
 } from "react-native";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
-import { useTournament, useUpdateTournament } from "../hooks/useTournaments";
+import {
+  useTournament,
+  useUpdateTournament,
+  useCreateTournament,
+} from "../hooks/useTournaments";
 import { RootStackParamList } from "../navigation/types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useAuthStore } from "../store/authStore";
 
-type EditRouteProp = RouteProp<RootStackParamList, "TournamentEdit">;
+type FormRouteProp = RouteProp<RootStackParamList, "TournamentCreate">;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 const GAME_OPTIONS = [
@@ -42,13 +47,20 @@ const PAIRING_OPTIONS = [
   { label: "Bubble Rounds", value: "bubble_rounds" },
 ];
 
-export default function TournamentEditScreen() {
-  const route = useRoute<EditRouteProp>();
+export default function TournamentFormScreen() {
+  const route = useRoute<FormRouteProp>();
   const navigation = useNavigation<NavigationProp>();
-  const { id } = route.params;
+  const user = useAuthStore((state) => state.user);
+  const id = route.params?.id;
+  const isEditMode = !!id;
 
-  const { data: response, isLoading: isLoadingTournament } = useTournament(id);
+  const { data: response, isLoading: isLoadingTournament } = useTournament(
+    id as number
+  );
   const updateMutation = useUpdateTournament();
+  const createMutation = useCreateTournament();
+
+  const isPending = updateMutation.isPending || createMutation.isPending;
 
   // State
   const [name, setName] = useState("");
@@ -62,9 +74,10 @@ export default function TournamentEditScreen() {
   const [roundCount, setRoundCount] = useState("4");
   const [subformat, setSubformat] = useState("swiss");
   const [isTopCut4, setIsTopCut4] = useState(false);
+  const [initialParticipants, setInitialParticipants] = useState("");
 
   useEffect(() => {
-    if (response?.data) {
+    if (isEditMode && response?.data) {
       const t = response.data;
       setName(t.name || "");
       setLocation(t.location || "");
@@ -78,44 +91,64 @@ export default function TournamentEditScreen() {
       setSubformat(t.subformat || "swiss");
       setIsTopCut4(!!t.is_top_cut_4);
     }
-  }, [response]);
+  }, [response, isEditMode]);
 
-  const handleUpdate = () => {
+  const handleSubmit = () => {
     if (!name || name.length < 5) {
       Alert.alert("Error", "Name must be at least 5 characters");
       return;
     }
 
-    updateMutation.mutate(
-      {
-        id,
-        data: {
-          name,
-          location,
-          date: date ? new Date(date).toISOString() : new Date().toISOString(),
-          description_raw: description,
-          game_id: gameId,
-          format,
-          status,
-          round_length_minutes: parseInt(roundLength, 10),
-          round_count: parseInt(roundCount, 10),
-          subformat,
-          is_top_cut_4: isTopCut4,
-        },
-      },
-      {
-        onSuccess: () => {
-          Alert.alert("Success", "Tournament updated");
-          navigation.goBack();
+    const payload = {
+      name,
+      location: location || "TBD",
+      date: date ? new Date(date).toISOString() : new Date().toISOString(),
+      description_raw: description,
+      game_id: gameId,
+      format,
+      status,
+      round_length_minutes: parseInt(roundLength, 10) || 60,
+      round_count: parseInt(roundCount, 10) || 4,
+      subformat,
+      is_top_cut_4: isTopCut4,
+      user_id: user?.id,
+      initial_participants: isEditMode ? "" : initialParticipants,
+    };
+
+    if (isEditMode) {
+      updateMutation.mutate(
+        { id: id as number, data: payload },
+        {
+          onSuccess: () => {
+            Alert.alert("Success", "Tournament updated");
+            navigation.goBack();
+          },
+          onError: (error: any) => {
+            Alert.alert(
+              "Error",
+              error.message || "Failed to update tournament"
+            );
+          },
+        }
+      );
+    } else {
+      createMutation.mutate(payload, {
+        onSuccess: (response) => {
+          Alert.alert("Success", "Tournament created");
+          if (response?.data?.id) {
+            navigation.replace("TournamentDetail", { id: response.data.id });
+          } else {
+            navigation.goBack();
+          }
         },
         onError: (error: any) => {
-          Alert.alert("Error", error.message || "Failed to update tournament");
+          Alert.alert("Error", error.message || "Failed to create tournament");
         },
-      }
-    );
+      });
+    }
   };
 
-  if (isLoadingTournament) {
+  if (isEditMode && isLoadingTournament) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color="#007AFF" />
@@ -164,7 +197,9 @@ export default function TournamentEditScreen() {
         style={styles.container}
         contentContainerStyle={styles.contentContainer}
       >
-        <Text style={styles.headerTitle}>Edit {name}</Text>
+        <Text style={styles.headerTitle}>
+          {isEditMode ? `Edit ${name}` : "Create Tournament"}
+        </Text>
 
         {renderOptionList("Game", GAME_OPTIONS, gameId, setGameId)}
         {renderOptionList("Format", FORMAT_OPTIONS, format, setFormat)}
@@ -252,15 +287,30 @@ export default function TournamentEditScreen() {
           </View>
         )}
 
+        {!isEditMode && (
+          <View style={styles.section}>
+            <Text style={styles.label}>Participants (one per line)</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={initialParticipants}
+              onChangeText={setInitialParticipants}
+              multiline
+              placeholder="Player 1&#10;Player 2&#10;Player 3&#10;Player 4"
+            />
+          </View>
+        )}
+
         <TouchableOpacity
           style={styles.saveButton}
-          onPress={handleUpdate}
-          disabled={updateMutation.isPending}
+          onPress={handleSubmit}
+          disabled={isPending}
         >
-          {updateMutation.isPending ? (
+          {isPending ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.saveText}>Save Changes</Text>
+            <Text style={styles.saveText}>
+              {isEditMode ? "Save Changes" : "Create Tournament"}
+            </Text>
           )}
         </TouchableOpacity>
 

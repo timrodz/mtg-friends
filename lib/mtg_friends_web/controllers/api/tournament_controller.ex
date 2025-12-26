@@ -15,11 +15,30 @@ defmodule MtgFriendsWeb.API.TournamentController do
   end
 
   def create(conn, %{"tournament" => tournament_params}) do
-    with {:ok, %Tournament{} = tournament} <- Tournaments.create_tournament(tournament_params) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", ~p"/api/tournaments/#{tournament}")
-      |> render(:show, tournament: tournament)
+    initial_participants =
+      Map.get(tournament_params, "initial_participants", "")
+      |> String.split("\n", trim: true)
+
+    result =
+      MtgFriends.Repo.transaction(fn ->
+        with {:ok, tournament} <- Tournaments.create_tournament(tournament_params),
+             {:ok, _} <- MtgFriends.Participants.create_x_participants(tournament.id, initial_participants) do
+          tournament
+        else
+          {:error, %Ecto.Changeset{} = changeset} -> MtgFriends.Repo.rollback(changeset)
+          {:error, _name, changeset, _changes} -> MtgFriends.Repo.rollback(changeset)
+        end
+      end)
+
+    case result do
+      {:ok, tournament} ->
+        conn
+        |> put_status(:created)
+        |> put_resp_header("location", ~p"/api/tournaments/#{tournament}")
+        |> render(:show, tournament: tournament)
+
+      {:error, changeset} ->
+        {:error, changeset}
     end
   end
 

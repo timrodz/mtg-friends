@@ -145,7 +145,7 @@ export default function RoundDetailScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.headerContainer}>
-        <Text style={styles.header}>Round {roundNumber}</Text>
+        <Text style={styles.header}>Round {roundNumber + 1}</Text>
         <View
           style={[
             styles.statusBadge,

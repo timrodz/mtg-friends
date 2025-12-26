@@ -90,7 +90,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
       )
       |> assign(
         :has_enough_participants?,
-        length(tournament.participants) >= 4
+        Tournaments.has_enough_participants?(tournament)
       )
       |> assign(:participant_forms, participant_forms)
     }
