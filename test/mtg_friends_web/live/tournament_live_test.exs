@@ -64,7 +64,7 @@ defmodule MtgFriendsWeb.TournamentLiveTest do
              |> form("#tournament-form", tournament: @update_attrs)
              |> render_submit()
 
-      assert_patch(edit_live, ~p"/tournaments")
+      assert_redirect(edit_live, ~p"/tournaments")
     end
   end
 

@@ -48,7 +48,7 @@
   :if={@live_action in [:new, :edit]}
   id="tournament-modal"
   show
-  on_cancel={JS.patch(~p"/tournaments")}
+  on_cancel={JS.navigate(~p"/tournaments")}
 >
   <.live_component
     module={MtgFriendsWeb.TournamentLive.TournamentEditFormComponent}
@@ -57,6 +57,6 @@
     title={@page_title}
     action={@live_action}
     tournament={@tournament}
-    patch={~p"/tournaments"}
+    navigate={~p"/tournaments"}
   />
 </.modal>
