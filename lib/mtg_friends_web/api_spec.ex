@@ -11,7 +11,7 @@ defmodule MtgFriendsWeb.ApiSpec do
         Server.from_endpoint(Endpoint)
       ],
       info: %Info{
-        title: to_string(Application.spec(:mtg_friends, :description)),
+        title: "Tie Breaker API",
         version: to_string(Application.spec(:mtg_friends, :vsn))
       },
       paths: Paths.from_router(Router),
