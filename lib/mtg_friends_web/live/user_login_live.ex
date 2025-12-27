@@ -38,8 +38,6 @@ defmodule MtgFriendsWeb.UserLoginLive do
   end
 
   def mount(_params, _session, socket) do
-    # Deprecated: use `Flash.get/2` instead of `live_flash/2`
-    # email = live_flash(socket.assigns.flash, :email)
     email = Flash.get(socket.assigns.flash, :email)
     form = to_form(%{"email" => email}, as: "user")
     {:ok, assign(socket, form: form), temporary_assigns: [form: form]}

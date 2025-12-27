@@ -38,6 +38,13 @@ defmodule MtgFriends.Pairings do
   """
   def get_pairing!(id), do: Repo.get!(Pairing, id)
 
+  def get_pairing(id) do
+    case Repo.get(Pairing, id) do
+      nil -> {:error, :not_found}
+      pairing -> {:ok, pairing}
+    end
+  end
+
   def get_pairing!(tournament_id, round_id, participant_id),
     do:
       Repo.get_by(Pairing,
@@ -70,7 +77,12 @@ defmodule MtgFriends.Pairings do
 
     new_pairings =
       participant_pairings
-      |> Enum.map(fn p -> p |> Map.put(:inserted_at, now) |> Map.put(:updated_at, now) end)
+      |> Enum.map(fn p ->
+        p
+        |> Map.put(:inserted_at, now)
+        |> Map.put(:updated_at, now)
+        |> Map.put(:active, true)
+      end)
 
     Ecto.Multi.new()
     |> Ecto.Multi.insert_all(:insert_all, Pairing, new_pairings)

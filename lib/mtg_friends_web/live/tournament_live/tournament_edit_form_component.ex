@@ -172,9 +172,17 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         notify_parent({:saved, updated_tournament})
 
         {:noreply,
-         socket
-         |> put_flash(:success, "Tournament updated successfully")
-         |> push_navigate(to: ~p"/tournaments/#{updated_tournament}")}
+         cond do
+           path = Map.get(socket.assigns, :navigate) ->
+             socket
+             |> put_flash(:success, "Tournament updated successfully")
+             |> push_navigate(to: path)
+
+           true ->
+             socket
+             |> put_flash(:success, "Tournament updated successfully")
+             |> push_navigate(to: ~p"/tournaments/#{updated_tournament}")
+         end}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign_form(socket, changeset)}
