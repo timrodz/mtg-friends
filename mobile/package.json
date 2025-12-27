@@ -6,8 +6,11 @@
     "start": "expo start",
     "start:android": "expo start --android",
     "start:ios": "expo start --ios",
-    "build:android": "eas build --platform android",
-    "build:ios": "eas build --platform ios",
+    "build:android:cloud": "eas build --platform android",
+    "build:android": "expo run:android",
+    "build:ios:cloud": "eas build --platform ios",
+    "build:ios": "expo run:ios",
+    "build:ios:local": "expo run:ios --device",
     "generate:api": "npx openapi-typescript ./src/api/generated/openapi.json -o ./src/api/generated/schema.d.ts"
   },
   "dependencies": {
@@ -17,6 +20,7 @@
     "axios": "^1.13.2",
     "dayjs": "^1.11.19",
     "expo": "~54.0.30",
+    "expo-dev-client": "~6.0.20",
     "expo-secure-store": "^15.0.8",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",

@@ -12,15 +12,16 @@ import {
 } from "../api/client";
 import { TournamentRequest } from "../api/types";
 
+const TOURNAMENTS_LIMIT = 10;
+
 export const useTournaments = () => {
   return useInfiniteQuery({
     queryKey: ["tournaments"],
-    queryFn: ({ pageParam }) => fetchTournaments(pageParam, 10),
+    queryFn: ({ pageParam }) => fetchTournaments(pageParam, TOURNAMENTS_LIMIT),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
-      // API returns { data: [...items] }
-      // If lastPage data is less than limit (10), we are done.
-      if (!lastPage.data || lastPage.data.length < 10) return undefined;
+      if (!lastPage.data || lastPage.data.length < TOURNAMENTS_LIMIT)
+        return undefined;
       return allPages.length + 1;
     },
   });

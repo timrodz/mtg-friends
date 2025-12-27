@@ -12,6 +12,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuthStore } from "../store/authStore";
 import { RootStackParamList } from "../navigation/types";
+import { tournamentBadge, tournamentFormat } from "../utils/tournaments/utils";
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -82,14 +83,17 @@ export default function TournamentListScreen() {
               navigation.navigate("TournamentDetail", { id: item.id })
             }
           >
-            <View>
+            <View style={styles.tournamentContainer}>
               <Text style={styles.itemTitle}>{item.name}</Text>
               <Text style={styles.itemSubtitle}>
-                {item.format} • {new Date(item.date).toLocaleDateString()}
+                {tournamentFormat(item.format)} •{" "}
+                {new Date(item.date).toLocaleDateString()}
               </Text>
             </View>
             <View>
-              <Text style={styles.statusBadge}>{item.status}</Text>
+              <Text style={styles.statusBadge}>
+                {tournamentBadge(item.status)}
+              </Text>
             </View>
           </TouchableOpacity>
         )}
@@ -145,6 +149,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
+  },
+  tournamentContainer: {
+    maxWidth: "75%",
   },
   itemTitle: {
     fontWeight: "bold",

@@ -22,31 +22,15 @@ import { RootStackParamList } from "../navigation/types";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useAuthStore } from "../store/authStore";
 import { GameFormat, TournamentStatus } from "../api/types";
+import {
+  FORMAT_OPTIONS,
+  GAME_OPTIONS,
+  PAIRING_OPTIONS,
+  STATUS_OPTIONS,
+} from "../utils/tournaments/constants";
 
 type FormRouteProp = RouteProp<RootStackParamList, "TournamentCreate">;
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-const GAME_OPTIONS = [
-  { label: "Magic: The Gathering", value: 1, code: "mtg" },
-  { label: "Yu-Gi-Oh!", value: 2, code: "yugioh" },
-  { label: "Pokémon", value: 3, code: "pokemon" },
-];
-
-const FORMAT_OPTIONS = [
-  { label: "Commander (EDH)", value: "edh" },
-  { label: "Standard", value: "standard" },
-];
-
-const STATUS_OPTIONS = [
-  { label: "1. Open (registering)", value: "inactive" },
-  { label: "2. In progress", value: "active" },
-  { label: "3. Finished", value: "finished" },
-];
-
-const PAIRING_OPTIONS = [
-  { label: "Swiss Rounds", value: "swiss" },
-  { label: "Bubble Rounds", value: "bubble_rounds" },
-];
 
 export default function TournamentFormScreen() {
   const route = useRoute<FormRouteProp>();
