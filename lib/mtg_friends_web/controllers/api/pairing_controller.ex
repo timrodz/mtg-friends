@@ -16,6 +16,7 @@ defmodule MtgFriendsWeb.API.PairingController do
     security: [%{"authorization" => []}],
     parameters: [
       tournament_id: [in: :path, description: "Tournament ID", type: :integer],
+      round_id: [in: :path, description: "Round ID", type: :integer],
       id: [in: :path, description: "Pairing ID", type: :integer]
     ],
     request_body: {"Pairing params", "application/json", Schemas.PairingRequest},
