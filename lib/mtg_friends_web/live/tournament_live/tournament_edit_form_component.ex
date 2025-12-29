@@ -83,7 +83,12 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         />
         <:actions>
           <.button phx-disable-with="Saving..." variant="primary">
-            <.icon name="hero-rocket-launch-solid" /> Submit Tournament
+            <.icon name="hero-rocket-launch-solid" />
+            <%= if @action == :edit do %>
+              Edit Tournament
+            <% else %>
+              Create Tournament
+            <% end %>
           </.button>
         </:actions>
       </.simple_form>
