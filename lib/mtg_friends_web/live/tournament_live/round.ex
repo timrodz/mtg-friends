@@ -3,6 +3,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
 
   alias MtgFriendsWeb.UserAuth
   alias MtgFriends.Rounds
+  alias MtgFriends.Utils.Date
 
   on_mount {MtgFriendsWeb.UserAuth, :mount_current_user}
 
@@ -160,7 +161,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
         time_diff = NaiveDateTime.diff(round_end_time, NaiveDateTime.utc_now())
 
         if time_diff > 0 do
-          {time_diff, Seconds.to_hh_mm_ss(time_diff)}
+          {time_diff, Date.to_hh_mm_ss(time_diff)}
         else
           {0, "00:00"}
         end
