@@ -208,7 +208,7 @@ defmodule MtgFriendsWeb.CoreComponents do
   attr :class, :string, default: nil
 
   attr :rest, :global,
-    include: ~w(autocomplete name rel action enctype method novalidate target),
+    include: ~w(autocomplete name rel action enctype method novalidate target csrf_token),
     doc: "the arbitrary HTML attributes to apply to the form tag"
 
   attr :as_flex, :boolean, default: false

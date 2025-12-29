@@ -26,6 +26,7 @@ defmodule MtgFriendsWeb.UserRegistrationLive do
         phx-trigger-action={@trigger_submit}
         action={~p"/users/log_in?_action=registered"}
         method="post"
+        csrf_token={Plug.CSRFProtection.get_csrf_token()}
       >
         <.error :if={@check_errors}>
           Oops, something went wrong! Please check the errors below.
