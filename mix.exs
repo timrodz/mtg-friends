@@ -66,7 +66,8 @@ defmodule MtgFriends.MixProject do
       {:calendar, "~> 1.0.0"},
       {:gen_smtp, "~> 1.1"},
       {:hammer, "~> 7.0"},
-      {:open_api_spex, "~> 3.18"}
+      {:open_api_spex, "~> 3.18"},
+      {:expletive, "~> 0.1.0"}
     ]
   end
 

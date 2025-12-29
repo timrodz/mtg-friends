@@ -3,6 +3,7 @@ defmodule MtgFriends.Tournaments.Tournament do
   import Ecto.Changeset
 
   alias ValidationHelper
+  alias MtgFriends.Utils.ProfanityFilter
 
   schema "tournaments" do
     field :name, :string
@@ -51,8 +52,18 @@ defmodule MtgFriends.Tournaments.Tournament do
       :game_id,
       :name,
       :location,
-      :date,
-      :description_raw
+      :date
     ])
+    |> validate_name()
+  end
+
+  defp validate_name(changeset) do
+    validate_change(changeset, :name, fn :name, name ->
+      if ProfanityFilter.is_text_profane?(name) do
+        [name: "contains restricted words"]
+      else
+        []
+      end
+    end)
   end
 end

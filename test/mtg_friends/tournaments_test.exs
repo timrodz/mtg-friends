@@ -10,7 +10,14 @@ defmodule MtgFriends.TournamentsTest do
     import MtgFriends.AccountsFixtures
     import MtgFriends.GamesFixtures
 
-    @invalid_attrs %{name: nil, location: nil, date: nil, description_raw: nil, user_id: nil, game_id: nil}
+    @invalid_attrs %{
+      name: nil,
+      location: nil,
+      date: nil,
+      description_raw: nil,
+      user_id: nil,
+      game_id: nil
+    }
 
     test "list_tournaments/0 returns all tournaments" do
       tournament = tournament_fixture()
@@ -27,6 +34,7 @@ defmodule MtgFriends.TournamentsTest do
     test "create_tournament/1 with valid data creates a tournament" do
       user = user_fixture()
       game = game_fixture()
+
       valid_attrs = %{
         name: "Test Tournament Name",
         location: "Test Location Here",
@@ -40,11 +48,31 @@ defmodule MtgFriends.TournamentsTest do
       assert tournament.name == "Test Tournament Name"
       assert tournament.location == "Test Location Here"
       assert tournament.date == ~N[2025-08-15 10:00:00]
-      assert tournament.description_raw == "This is a test tournament description for testing purposes"
+
+      assert tournament.description_raw ==
+               "This is a test tournament description for testing purposes"
     end
 
     test "create_tournament/1 with invalid data returns error changeset" do
       assert {:error, %Ecto.Changeset{}} = Tournaments.create_tournament(@invalid_attrs)
+    end
+
+    test "create_tournament/1 with restricted name returns error changeset" do
+      user = user_fixture()
+      game = game_fixture()
+
+      restricted_attrs = %{
+        name: "Admin",
+        location: "Valid Location",
+        date: ~N[2025-08-15 10:00:00],
+        user_id: user.id,
+        game_id: game.id
+      }
+
+      assert {:error, %Ecto.Changeset{} = changeset} =
+               Tournaments.create_tournament(restricted_attrs)
+
+      assert "contains restricted words" in errors_on(changeset).name
     end
 
     test "update_tournament/2 with valid data updates the tournament" do
