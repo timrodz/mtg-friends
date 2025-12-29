@@ -57,6 +57,6 @@
     title={@page_title}
     action={@live_action}
     tournament={@tournament}
-    navigate={~p"/tournaments"}
+    navigate={if @tournament.id do ~p"/tournaments/#{@tournament.id}" else ~p"/tournaments" end}
   />
 </.modal>
