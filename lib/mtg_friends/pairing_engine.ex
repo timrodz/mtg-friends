@@ -1,7 +1,7 @@
 defmodule MtgFriends.PairingEngine do
   @moduledoc """
   Handles complex tournament pairing algorithms.
-  
+
   This module contains all the pairing logic that was previously in TournamentUtils,
   providing a clean separation of concerns for tournament pairing strategies.
   """
@@ -53,12 +53,13 @@ defmodule MtgFriends.PairingEngine do
   defp create_top_cut_pairings(tournament, round, num_pairings) do
     # Import scoring functions - we'll need to refactor this later
     import MtgFriends.TournamentUtils, only: [get_overall_scores: 2]
-    
+
     get_overall_scores(tournament.rounds, num_pairings)
     |> Enum.take(4)
     |> Enum.map(fn participant ->
       %{
-        number: 0,  # Single pairing for top cut
+        # Single pairing for top cut
+        number: 0,
         tournament_id: tournament.id,
         round_id: round.id,
         participant_id: participant.id
@@ -71,6 +72,7 @@ defmodule MtgFriends.PairingEngine do
       # First round: shuffle participants
       0 ->
         Logger.info("Creating first round pairings for tournament #{tournament.id}")
+
         partition_participants_into_pairings(
           active_participants |> Enum.shuffle(),
           num_pairings,
@@ -81,6 +83,7 @@ defmodule MtgFriends.PairingEngine do
         case tournament.subformat do
           :bubble_rounds ->
             Logger.info("Creating bubble round pairings for tournament #{tournament.id}")
+
             create_bubble_round_pairings(tournament.id, round.number)
             |> partition_participants_into_pairings(num_pairings, tournament.format)
 
@@ -109,8 +112,10 @@ defmodule MtgFriends.PairingEngine do
 
   defp partition_participants_into_pairings(participants, num_pairings, tournament_format) do
     participant_count = length(participants)
-    
-    Logger.debug("Partitioning #{participant_count} participants into #{num_pairings} pairings for #{tournament_format}")
+
+    Logger.debug(
+      "Partitioning #{participant_count} participants into #{num_pairings} pairings for #{tournament_format}"
+    )
 
     case tournament_format do
       :edh ->
@@ -129,7 +134,8 @@ defmodule MtgFriends.PairingEngine do
         participants |> Enum.chunk_every(@edh_min_players_per_pod)
 
       _ ->
-        total_participants_for_complete_pairings = corrected_num_complete_pairings * @edh_players_per_pod
+        total_participants_for_complete_pairings =
+          corrected_num_complete_pairings * @edh_players_per_pod
 
         complete_pairings =
           participants
@@ -156,7 +162,10 @@ defmodule MtgFriends.PairingEngine do
         _ -> if num_complete_pairings == 0, do: num_pairings, else: num_complete_pairings
       end
 
-    Logger.debug("Assigning #{num_pairings} pairings with #{corrected_num_complete_pairings} complete pairings [Total participants: #{participant_count}]")
+    Logger.debug(
+      "Assigning #{num_pairings} pairings with #{corrected_num_complete_pairings} complete pairings [Total participants: #{participant_count}]"
+    )
+
     corrected_num_complete_pairings
   end
 
@@ -183,16 +192,17 @@ defmodule MtgFriends.PairingEngine do
   defp create_swiss_pairings(tournament, num_pairings) do
     participant_ids = tournament.participants |> Enum.map(& &1.id)
 
-    Logger.info("Generating Swiss pairings with up to #{@max_swiss_retries} attempts to minimize repeat opponents")
+    Logger.info(
+      "Generating Swiss pairings with up to #{@max_swiss_retries} attempts to minimize repeat opponents"
+    )
 
     player_pairing_matrix = build_player_pairing_matrix(tournament, participant_ids)
-    
+
     case attempt_optimal_swiss_pairings(player_pairing_matrix, num_pairings, tournament.format) do
       {:ok, pairings} ->
         pairings
 
       {:fallback, _reason} ->
-        Logger.warning("Using fallback Swiss pairing algorithm for tournament #{tournament.id}")
         generate_swiss_pairings_with_retries(
           @max_swiss_retries,
           num_pairings,
@@ -212,7 +222,9 @@ defmodule MtgFriends.PairingEngine do
     participant_ids
     |> Enum.map(fn id ->
       players_played_against = find_previous_opponents(mapped_rounds, id)
-      players_not_played_with = calculate_unplayed_opponents(participant_ids, id, players_played_against)
+
+      players_not_played_with =
+        calculate_unplayed_opponents(participant_ids, id, players_played_against)
 
       {id, players_played_against, players_not_played_with}
     end)
@@ -235,8 +247,8 @@ defmodule MtgFriends.PairingEngine do
   defp find_previous_opponents(mapped_rounds, participant_id) do
     mapped_rounds
     |> Enum.flat_map(fn round ->
-      Enum.find(round, fn participants -> 
-        participants |> Enum.find(&(&1 == participant_id)) 
+      Enum.find(round, fn participants ->
+        participants |> Enum.find(&(&1 == participant_id))
       end) || []
     end)
     |> Enum.reject(&(&1 == participant_id))
@@ -251,8 +263,9 @@ defmodule MtgFriends.PairingEngine do
   end
 
   defp attempt_optimal_swiss_pairings(player_pairing_matrix, num_pairings, tournament_format) do
-    partitioned_matrix = partition_participants_into_pairings(player_pairing_matrix, num_pairings, tournament_format)
-    
+    partitioned_matrix =
+      partition_participants_into_pairings(player_pairing_matrix, num_pairings, tournament_format)
+
     unique_pairings =
       partitioned_matrix
       |> Enum.reduce([], fn pairing_group, acc ->
@@ -265,12 +278,13 @@ defmodule MtgFriends.PairingEngine do
         {:fallback, "Could not create unique pairings"}
 
       false ->
-        result_pairings = 
+        result_pairings =
           partition_participants_into_pairings(
             unique_pairings |> Enum.map(fn id -> %{id: id} end),
             num_pairings,
             tournament_format
           )
+
         {:ok, result_pairings}
     end
   end
@@ -279,27 +293,30 @@ defmodule MtgFriends.PairingEngine do
     taken_ids = taken_ids |> List.flatten()
 
     case find_available_player(matrix, taken_ids) do
-      nil -> 
-        [nil]  # No available players
-      
+      nil ->
+        # No available players
+        [nil]
+
       {primary_id, _, available_opponents} ->
-        available_opponents_filtered = available_opponents |> Enum.filter(&(not Enum.member?(taken_ids, &1)))
-        
+        available_opponents_filtered =
+          available_opponents |> Enum.filter(&(not Enum.member?(taken_ids, &1)))
+
         case length(available_opponents_filtered) > index do
-          false -> 
-            [nil]  # Not enough opponents available
-          
+          false ->
+            # Not enough opponents available
+            [nil]
+
           true ->
             secondary_id = Enum.at(available_opponents_filtered, index + 1)
             Logger.debug("Pairing player #{primary_id} with available opponents")
-            
+
             build_pairing_group(matrix, taken_ids, primary_id, secondary_id, group_size)
         end
     end
   end
 
   defp find_available_player(matrix, taken_ids) do
-    matrix 
+    matrix
     |> Enum.filter(fn {player_id, _, _} -> not Enum.member?(taken_ids, player_id) end)
     |> Enum.at(0)
   end
@@ -312,7 +329,10 @@ defmodule MtgFriends.PairingEngine do
 
       4 ->
         member_3 = find_common_unplayed_opponent(matrix, taken_ids, [member_1, member_2])
-        member_4 = find_common_unplayed_opponent(matrix, taken_ids, [member_1, member_2, member_3])
+
+        member_4 =
+          find_common_unplayed_opponent(matrix, taken_ids, [member_1, member_2, member_3])
+
         [[member_1, member_2, member_3, member_4], taken_ids]
 
       _ ->
@@ -324,7 +344,7 @@ defmodule MtgFriends.PairingEngine do
     matrix
     |> Enum.find(fn {candidate_id, _, unplayed_opponents} ->
       not Enum.member?(taken_ids, candidate_id) and
-      Enum.all?(existing_members, &Enum.member?(unplayed_opponents, &1))
+        Enum.all?(existing_members, &Enum.member?(unplayed_opponents, &1))
     end)
     |> case do
       nil -> nil
@@ -333,25 +353,40 @@ defmodule MtgFriends.PairingEngine do
   end
 
   # Fallback algorithm with retry logic
-  defp generate_swiss_pairings_with_retries(retries_left, num_pairings, player_matrix, best_round, tournament_format) when retries_left > 0 do
+  defp generate_swiss_pairings_with_retries(
+         retries_left,
+         num_pairings,
+         player_matrix,
+         best_round,
+         tournament_format
+       )
+       when retries_left > 0 do
     Logger.debug("Swiss pairing attempt #{@max_swiss_retries - retries_left + 1}")
 
     shuffled_matrix = Enum.shuffle(player_matrix)
-    pairings = partition_participants_into_pairings(shuffled_matrix, num_pairings, tournament_format)
-    
+
+    pairings =
+      partition_participants_into_pairings(shuffled_matrix, num_pairings, tournament_format)
+
     pairing_results = evaluate_pairing_quality(pairings)
-    total_repeated = Enum.reduce(pairing_results, 0, fn result, acc -> result.total_repeated_opponents + acc end)
-    
-    best_score = case length(best_round) > 1 do
-      true -> Enum.reduce(best_round, 0, fn result, acc -> result.total_repeated_opponents + acc end)
-      false -> :infinity
-    end
-    
+
+    total_repeated =
+      Enum.reduce(pairing_results, 0, fn result, acc -> result.total_repeated_opponents + acc end)
+
+    best_score =
+      case length(best_round) > 1 do
+        true ->
+          Enum.reduce(best_round, 0, fn result, acc -> result.total_repeated_opponents + acc end)
+
+        false ->
+          :infinity
+      end
+
     is_better = total_repeated < best_score
     Logger.debug("Round has #{total_repeated} repeated opponents. Better than best? #{is_better}")
-    
+
     new_best = if is_better, do: pairing_results, else: best_round
-    
+
     generate_swiss_pairings_with_retries(
       retries_left - 1,
       num_pairings,
@@ -361,7 +396,13 @@ defmodule MtgFriends.PairingEngine do
     )
   end
 
-  defp generate_swiss_pairings_with_retries(0, _num_pairings, _player_matrix, best_round, _tournament_format) do
+  defp generate_swiss_pairings_with_retries(
+         0,
+         _num_pairings,
+         _player_matrix,
+         best_round,
+         _tournament_format
+       ) do
     Logger.info("Swiss pairing generation completed")
     best_round
   end

@@ -1,5 +1,6 @@
 defmodule MtgFriendsWeb.Router do
   use MtgFriendsWeb, :router
+  alias OpenApiSpex
 
   import MtgFriendsWeb.UserAuth
 
@@ -15,6 +16,17 @@ defmodule MtgFriendsWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :fetch_session
+    plug OpenApiSpex.Plug.PutApiSpec, module: MtgFriendsWeb.ApiSpec
+    plug :rate_limit
+  end
+
+  pipeline :api_authenticated do
+    plug MtgFriendsWeb.APIAuthPlug
+  end
+
+  pipeline :authorize_tournament_owner do
+    plug MtgFriendsWeb.Plugs.AuthorizeTournamentOwner
   end
 
   scope "/", MtgFriendsWeb do
@@ -45,10 +57,43 @@ defmodule MtgFriendsWeb.Router do
     live "/tournaments/:tournament_id/rounds/:round_number", TournamentLive.Round, :index
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", MtgFriendsWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", MtgFriendsWeb do
+    pipe_through :api
+
+    post "/login", API.SessionController, :create
+
+    resources "/tournaments", API.TournamentController, only: [:index, :show] do
+      get "/rounds/:number", API.RoundController, :show
+    end
+  end
+
+  scope "/api" do
+    pipe_through :api
+    get "/openapi", OpenApiSpex.Plug.RenderSpec, []
+    get "/swagger", OpenApiSpex.Plug.SwaggerUI, path: "api/openapi", title: "Tie Breaker API"
+  end
+
+  scope "/api", MtgFriendsWeb do
+    pipe_through [:api, :api_authenticated]
+
+    resources "/tournaments", API.TournamentController, only: [:create]
+
+    scope "/tournaments/:tournament_id", API do
+      pipe_through :authorize_tournament_owner
+
+      put "/", TournamentController, :update
+      resources "/participants", ParticipantController, only: [:create, :update, :delete]
+
+      scope "/rounds" do
+        post "/", RoundController, :create
+        put "/:number", RoundController, :update
+
+        scope "/:round_id" do
+          resources "/pairings", PairingController, only: [:update]
+        end
+      end
+    end
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:mtg_friends, :dev_routes) do
@@ -108,6 +153,25 @@ defmodule MtgFriendsWeb.Router do
 
       live "/games/:id", GameLive.Show, :show
       live "/games/:id/show/edit", GameLive.Show, :edit
+    end
+  end
+
+  defp rate_limit(conn, _opts) do
+    # Get IP based on RemoteIP or just remote_ip if not using a proxy middleware yet
+    # Since we don't have RemoteIP plug configured in Endpoint (observed in application files), we use conn.remote_ip directly.
+    # Note: If behind a proxy (Fly.io, etc), real IP header parsing is needed.
+    # Assuming standard conn.remote_ip is correct for now or handled by Endpoint configuration.
+
+    case MtgFriendsWeb.RateLimit.hit("api:#{inspect(conn.remote_ip)}", 60_000, 60) do
+      {:allow, _count} ->
+        conn
+
+      {:deny, _limit} ->
+        conn
+        |> put_status(:too_many_requests)
+        |> put_resp_content_type("application/json")
+        |> send_resp(429, Jason.encode!(%{error: "Rate limit exceeded"}))
+        |> halt()
     end
   end
 end
