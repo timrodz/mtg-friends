@@ -28,8 +28,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           value={@selected_game_code}
         />
         <.input field={@form[:format]} type="select" options={@format_options} label="Format" />
-        <.input field={@form[:name]} type="text" label="Name" min="5" />
-        <.input field={@form[:location]} type="text" label="Location" />
+        <.input field={@form[:name]} type="text" label="Name" min="4" />
+        <.input field={@form[:location]} type="text" label="Location" min="4" />
         <.input field={@form[:date]} type="datetime-local" label="Date" />
 
         <.input

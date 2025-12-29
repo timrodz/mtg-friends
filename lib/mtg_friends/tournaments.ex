@@ -97,7 +97,8 @@ defmodule MtgFriends.Tournaments do
   def get_tournament_simple(id), do: Repo.get(Tournament, id)
   def get_tournament_simple!(id), do: Repo.get!(Tournament, id)
 
-  def has_enough_participants?(%Tournament{participants: participants}) when is_list(participants) do
+  def has_enough_participants?(%Tournament{participants: participants})
+      when is_list(participants) do
     length(participants) >= 4
   end
 
@@ -196,56 +197,64 @@ defmodule MtgFriends.Tournaments do
   end
 
   defp validate_description(description_raw) do
-    HTTPoison.start()
-    expected_fields = ~w(image_uris name)
+    try do
+      HTTPoison.start()
+      expected_fields = ~w(image_uris name)
 
-    # Grabs all text inside double brackets i.e. [[Lightning greaves]]
-    cards_to_search =
-      Regex.scan(~r/\[\[(.*?)\]\]/, description_raw)
-      |> Enum.map(&hd/1)
-      |> then(
-        &for(
-          card_raw <- &1,
-          do:
-            with card_clean <-
-                   card_raw
-                   |> String.replace("[[", "")
-                   |> String.replace("]]", "")
-                   |> URI.encode(),
-                 uri <-
-                   "https://api.scryfall.com/cards/named?fuzzy=#{card_clean}",
-                 {:ok, response} <-
-                   HTTPoison.get(
-                     uri,
-                     [
-                       {"User-Agent", "tie-breaker/#{Application.spec(:mtg_friends, :vsn)}"},
-                       {"Accept", "application/json"}
-                     ]
-                   ) do
-              body =
-                response.body
-                |> Poison.decode!()
-                |> Map.take(expected_fields)
+      # Grabs all text inside double brackets i.e. [[Lightning greaves]]
+      cards_to_search =
+        Regex.scan(~r/\[\[(.*?)\]\]/, description_raw)
+        |> Enum.map(&hd/1)
+        |> then(
+          &for(
+            card_raw <- &1,
+            do:
+              with card_clean <-
+                     card_raw
+                     |> String.replace("[[", "")
+                     |> String.replace("]]", "")
+                     |> URI.encode(),
+                   uri <-
+                     "https://api.scryfall.com/cards/named?fuzzy=#{card_clean}",
+                   {:ok, response} <-
+                     HTTPoison.get(
+                       uri,
+                       [
+                         {"User-Agent", "tie-breaker/#{Application.spec(:mtg_friends, :vsn)}"},
+                         {"Accept", "application/json"}
+                       ]
+                     ) do
+                body =
+                  response.body
+                  |> Poison.decode!()
+                  |> Map.take(expected_fields)
 
-              image_uris = Map.get(body, "image_uris")
-              img_large = Map.get(image_uris, "large")
-              name = Map.get(body, "name")
+                image_uris = Map.get(body, "image_uris")
+                img_large = Map.get(image_uris, "large")
+                name = Map.get(body, "name")
 
-              %{image_uri: img_large, name: name, og_name: card_raw}
-            end
+                %{image_uri: img_large, name: name, og_name: card_raw}
+              else
+                _ -> nil
+              end
+          )
         )
+        |> Enum.reject(&is_nil/1)
+
+      cards_names_to_search = for card <- cards_to_search, do: card.og_name
+
+      String.replace(
+        String.replace(description_raw, "\n", "</br>"),
+        cards_names_to_search,
+        fn og_name ->
+          metadata = Enum.find(cards_to_search, fn card -> card.og_name == og_name end)
+
+          "<a class=\"underline\" target=\"_blank\" href=\"#{metadata.image_uri}\">#{metadata.name}</a>"
+        end
       )
-
-    cards_names_to_search = for card <- cards_to_search, do: card.og_name
-
-    String.replace(
-      String.replace(description_raw, "\n", "</br>"),
-      cards_names_to_search,
-      fn og_name ->
-        metadata = Enum.find(cards_to_search, fn card -> card.og_name == og_name end)
-
-        "<a class=\"underline\" target=\"_blank\" href=\"#{metadata.image_uri}\">#{metadata.name}</a>"
-      end
-    )
+    rescue
+      _ ->
+        String.replace(description_raw, "\n", "</br>")
+    end
   end
 end

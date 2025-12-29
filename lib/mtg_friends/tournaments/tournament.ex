@@ -15,7 +15,7 @@ defmodule MtgFriends.Tournaments.Tournament do
     field :round_count, :integer, default: 4
     field :status, Ecto.Enum, values: [:inactive, :active, :finished], default: :inactive
     field :format, Ecto.Enum, values: [:edh, :standard], default: :edh
-    field :subformat, Ecto.Enum, values: [:bubble_rounds, :swiss], default: :swiss
+    field :subformat, Ecto.Enum, values: [:bubble_rounds, :swiss], default: :bubble_rounds
 
     belongs_to :user, MtgFriends.Accounts.User
     belongs_to :game, MtgFriends.Games.Game
@@ -44,9 +44,8 @@ defmodule MtgFriends.Tournaments.Tournament do
       :subformat,
       :is_top_cut_4
     ])
-    |> validate_length(:name, min: 5)
-    |> validate_length(:location, min: 5)
-    |> validate_length(:description_raw, min: 20)
+    |> validate_length(:name, min: 4)
+    |> validate_length(:location, min: 4)
     |> validate_required([
       :user_id,
       :game_id,
