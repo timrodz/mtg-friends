@@ -66,8 +66,7 @@ defmodule MtgFriendsWeb.API.TournamentFlowTest do
           participant_id: p_id,
           number: table_number,
           active: true,
-          points: 0,
-          round_id: round_id
+          points: 0
         )
       end
     end)
@@ -121,8 +120,7 @@ defmodule MtgFriendsWeb.API.TournamentFlowTest do
           participant_id: p_id,
           number: table_number,
           active: true,
-          points: 0,
-          round_id: round_2_id
+          points: 0
         )
       end
     end)

@@ -15,7 +15,8 @@ defmodule MtgFriendsWeb.APIAuthPlug do
       else
         _ ->
           conn
-          |> send_resp(401, "Unauthorized")
+          |> put_resp_content_type("application/json")
+          |> send_resp(401, Jason.encode!(%{error: "Unauthorized"}))
           |> halt()
       end
     end

@@ -17,7 +17,8 @@ defmodule MtgFriendsWeb.API.SessionController do
       unauthorized: {"Invalid credentials", "application/json", Schemas.ErrorResponse}
     ]
 
-  def create(conn, %{"email" => email, "password" => password}) do
+  def create(conn, %{"email" => email, "password" => password})
+      when is_binary(email) and is_binary(password) do
     if user = Accounts.get_user_by_email_and_password(email, password) do
       token = Accounts.generate_user_session_token(user) |> Base.url_encode64(padding: false)
 
@@ -37,5 +38,11 @@ defmodule MtgFriendsWeb.API.SessionController do
       |> put_status(:unauthorized)
       |> json(%{error: "Invalid email or password"})
     end
+  end
+
+  def create(conn, _params) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{error: "Missing email or password"})
   end
 end

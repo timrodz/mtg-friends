@@ -87,6 +87,12 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent do
          socket
          |> put_flash(:success, "Pod updated successfully")
          |> push_navigate(to: socket.assigns.patch)}
+
+      {:error, _changeset} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Failed to finalize round")
+         |> push_navigate(to: socket.assigns.patch)}
     end
   end
 end

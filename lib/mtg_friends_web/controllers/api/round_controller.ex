@@ -106,9 +106,9 @@ defmodule MtgFriendsWeb.API.RoundController do
         "id" => id
       }) do
     round = Rounds.get_round!(id)
-    {:ok, %Round{}} = Rounds.delete_round(round)
 
-    conn
-    |> send_resp(:no_content, "")
+    with {:ok, %Round{}} <- Rounds.delete_round(round) do
+      send_resp(conn, :no_content, "")
+    end
   end
 end

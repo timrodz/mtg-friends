@@ -50,7 +50,12 @@ defmodule MtgFriendsWeb.API.TournamentJSON do
       is_top_cut_4: tournament.is_top_cut_4,
       participants: participants,
       rounds: rounds,
-      has_enough_participants: MtgFriends.Tournaments.has_enough_participants?(tournament)
+      has_enough_participants:
+        if Ecto.assoc_loaded?(tournament.participants) do
+          MtgFriends.Tournaments.has_enough_participants?(tournament)
+        else
+          nil
+        end
     }
   end
 end

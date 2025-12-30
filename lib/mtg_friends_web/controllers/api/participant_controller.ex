@@ -99,9 +99,9 @@ defmodule MtgFriendsWeb.API.ParticipantController do
 
   def delete(conn, %{"tournament_id" => _tournament_id, "id" => id}) do
     participant = Participants.get_participant!(id)
-    {:ok, %Participant{}} = Participants.delete_participant(participant)
 
-    conn
-    |> send_resp(:no_content, "")
+    with {:ok, %Participant{}} <- Participants.delete_participant(participant) do
+      send_resp(conn, :no_content, "")
+    end
   end
 end

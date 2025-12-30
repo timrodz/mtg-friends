@@ -107,7 +107,9 @@ defmodule MtgFriendsWeb.API.TournamentController do
 
   def delete(conn, %{"tournament_id" => id}) do
     tournament = Tournaments.get_tournament!(id)
-    {:ok, %Tournament{}} = Tournaments.delete_tournament(tournament)
-    send_resp(conn, :no_content, "")
+
+    with {:ok, %Tournament{}} <- Tournaments.delete_tournament(tournament) do
+      send_resp(conn, :no_content, "")
+    end
   end
 end

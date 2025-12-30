@@ -91,9 +91,9 @@ defmodule MtgFriendsWeb.API.PairingController do
         "id" => id
       }) do
     pairing = Pairings.get_pairing!(id)
-    {:ok, %Pairing{}} = Pairings.delete_pairing(pairing)
 
-    conn
-    |> send_resp(:no_content, "")
+    with {:ok, %Pairing{}} <- Pairings.delete_pairing(pairing) do
+      send_resp(conn, :no_content, "")
+    end
   end
 end
