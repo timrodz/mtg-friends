@@ -58,6 +58,7 @@ defmodule MtgFriendsWeb.Schemas do
       title: "TournamentRequest",
       type: :object,
       properties: %{
+        game_id: %Schema{type: :integer, description: "Game ID"},
         name: %Schema{type: :string},
         date: %Schema{type: :string, format: :date},
         location: %Schema{type: :string},
@@ -184,8 +185,7 @@ defmodule MtgFriendsWeb.Schemas do
         decklist: %Schema{type: :string},
         is_tournament_winner: %Schema{type: :boolean},
         is_dropped: %Schema{type: :boolean}
-      },
-      required: [:name]
+      }
     })
   end
 
@@ -243,8 +243,7 @@ defmodule MtgFriendsWeb.Schemas do
         active: %Schema{type: :boolean},
         points: %Schema{type: :integer},
         winner: %Schema{type: :boolean}
-      },
-      required: [:number]
+      }
     })
   end
 

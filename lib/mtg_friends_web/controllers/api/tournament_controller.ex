@@ -87,7 +87,11 @@ defmodule MtgFriendsWeb.API.TournamentController do
   end
 
   def create(conn, tournament_params) do
-    with {:ok, %Tournament{} = tournament} <- Tournaments.create_tournament(tournament_params) do
+    user_id = conn.assigns.current_user.id
+
+    with false <- is_nil(user_id),
+         {:ok, %Tournament{} = tournament} <-
+           Tournaments.create_tournament(tournament_params |> Map.put("user_id", user_id)) do
       conn
       |> put_status(:created)
       |> render(:show, tournament: tournament)
