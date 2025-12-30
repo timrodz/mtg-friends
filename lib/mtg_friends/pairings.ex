@@ -22,6 +22,12 @@ defmodule MtgFriends.Pairings do
     Repo.all(Pairing)
   end
 
+  def list_pairings(tournament_id, round_id) do
+    Repo.all(
+      from p in Pairing, where: p.tournament_id == ^tournament_id and p.round_id == ^round_id
+    )
+  end
+
   @doc """
   Gets a single pairing.
 

@@ -63,6 +63,25 @@ defmodule MtgFriendsWeb.API.RoundController do
       not_found: {"Round not found", "application/json", Schemas.ErrorResponse}
     ]
 
+  operation :index,
+    summary: "List rounds for tournament",
+    security: [],
+    parameters: [
+      tournament_id: [in: :path, description: "Tournament ID", type: :integer, example: 1]
+    ],
+    responses: [
+      ok: {"Rounds list", "application/json", Schemas.RoundsResponse}
+    ]
+
+  def index(conn, %{"tournament_id" => tournament_id}) do
+    rounds =
+      Rounds.list_rounds(tournament_id)
+      # Preload pairings as they are part of the RoundJSON view
+      |> MtgFriends.Repo.preload(pairings: :participant)
+
+    render(conn, :index, rounds: rounds)
+  end
+
   def show(conn, %{"tournament_id" => _tournament_id, "id" => id}) do
     round =
       Rounds.get_round!(id)

@@ -63,6 +63,21 @@ defmodule MtgFriendsWeb.API.ParticipantController do
       not_found: {"Participant not found", "application/json", Schemas.ErrorResponse}
     ]
 
+  operation :index,
+    summary: "List participants for tournament",
+    security: [],
+    parameters: [
+      tournament_id: [in: :path, description: "Tournament ID", type: :integer, example: 1]
+    ],
+    responses: [
+      ok: {"Participants list", "application/json", Schemas.ParticipantsResponse}
+    ]
+
+  def index(conn, %{"tournament_id" => tournament_id}) do
+    participants = Participants.list_participants(tournament_id)
+    render(conn, :index, participants: participants)
+  end
+
   def show(conn, %{"tournament_id" => _tournament_id, "id" => id}) do
     participant = Participants.get_participant!(id)
     render(conn, :show, participant: participant)

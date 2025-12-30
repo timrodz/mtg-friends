@@ -143,6 +143,18 @@ defmodule MtgFriendsWeb.Schemas do
     })
   end
 
+  defmodule RoundsResponse do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "RoundsResponse",
+      type: :object,
+      properties: %{
+        data: %Schema{type: :array, items: Round}
+      }
+    })
+  end
+
   defmodule Participant do
     require OpenApiSpex
 
@@ -185,6 +197,18 @@ defmodule MtgFriendsWeb.Schemas do
       type: :object,
       properties: %{
         data: Participant
+      }
+    })
+  end
+
+  defmodule ParticipantsResponse do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "ParticipantsResponse",
+      type: :object,
+      properties: %{
+        data: %Schema{type: :array, items: Participant}
       }
     })
   end
@@ -232,6 +256,18 @@ defmodule MtgFriendsWeb.Schemas do
       type: :object,
       properties: %{
         data: Pairing
+      }
+    })
+  end
+
+  defmodule PairingsResponse do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PairingsResponse",
+      type: :object,
+      properties: %{
+        data: %Schema{type: :array, items: Pairing}
       }
     })
   end

@@ -39,11 +39,15 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
   end
 
   describe "show pairing" do
-    test "renders pairing", %{conn: conn, tournament: tournament, round: round} do
+    test "renders pairing", %{conn: conn, user: user, tournament: tournament, round: round} do
+      token =
+        MtgFriends.Accounts.generate_user_session_token(user) |> Base.url_encode64(padding: false)
+
+      conn = put_req_header(conn, "authorization", "Bearer #{token}")
       pairing = pairing_fixture(%{round_id: round.id, tournament_id: tournament.id})
 
       conn =
-        get(conn, ~p"/api/tournaments/#{tournament.id}/pairings/#{pairing.id}")
+        get(conn, ~p"/api/tournaments/#{tournament.id}/rounds/#{round.id}/pairings/#{pairing.id}")
 
       assert json_response(conn, 200)["data"]["id"] == pairing.id
     end
@@ -81,7 +85,7 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
 
       assert %{"id" => id} = json_response(conn, 201)["data"]
 
-      conn = get(conn, ~p"/api/tournaments/#{tournament.id}/pairings/#{id}")
+      conn = get(conn, ~p"/api/tournaments/#{tournament.id}/rounds/#{round.id}/pairings/#{id}")
       assert json_response(conn, 200)["data"]["id"] == id
     end
 
@@ -143,7 +147,7 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 
       conn =
-        get(conn, ~p"/api/tournaments/#{tournament.id}/pairings/#{pairing.id}")
+        get(conn, ~p"/api/tournaments/#{tournament.id}/rounds/#{round.id}/pairings/#{pairing.id}")
 
       assert json_response(conn, 200)["data"]["points"] == 1
     end
@@ -199,7 +203,7 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
       assert response(conn, 204)
 
       assert_error_sent 404, fn ->
-        get(conn, ~p"/api/tournaments/#{tournament.id}/pairings/#{pairing.id}")
+        get(conn, ~p"/api/tournaments/#{tournament.id}/rounds/#{round.id}/pairings/#{pairing.id}")
       end
     end
 

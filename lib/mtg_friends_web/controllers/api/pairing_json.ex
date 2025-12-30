@@ -4,6 +4,10 @@ defmodule MtgFriendsWeb.API.PairingJSON do
   @doc """
   Renders a single pairing.
   """
+  def index(%{pairings: pairings}) do
+    %{data: for(pairing <- pairings, do: data(pairing))}
+  end
+
   def show(%{pairing: pairing}) do
     %{data: data(pairing)}
   end

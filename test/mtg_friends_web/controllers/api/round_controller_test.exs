@@ -15,7 +15,11 @@ defmodule MtgFriendsWeb.API.RoundControllerTest do
   end
 
   describe "show round" do
-    test "renders round", %{conn: conn, tournament: tournament} do
+    test "renders round", %{conn: conn, user: user, tournament: tournament} do
+      token =
+        MtgFriends.Accounts.generate_user_session_token(user) |> Base.url_encode64(padding: false)
+
+      conn = put_req_header(conn, "authorization", "Bearer #{token}")
       round = round_fixture(%{tournament_id: tournament.id})
       conn = get(conn, ~p"/api/tournaments/#{tournament.id}/rounds/#{round.id}")
       assert json_response(conn, 200)["data"]["id"] == round.id

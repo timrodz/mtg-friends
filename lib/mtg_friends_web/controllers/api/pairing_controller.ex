@@ -10,6 +10,17 @@ defmodule MtgFriendsWeb.API.PairingController do
 
   tags ["pairings"]
 
+  operation :index,
+    summary: "List pairings for tournament",
+    security: [],
+    parameters: [
+      tournament_id: [in: :path, description: "Tournament ID", type: :integer, example: 1],
+      round_id: [in: :path, description: "Round ID", type: :integer, example: 1]
+    ],
+    responses: [
+      ok: {"Pairings list", "application/json", Schemas.PairingsResponse}
+    ]
+
   operation :show,
     summary: "Show pairing",
     security: [],
@@ -61,6 +72,11 @@ defmodule MtgFriendsWeb.API.PairingController do
       no_content: "Pairing removed",
       not_found: {"Pairing not found", "application/json", Schemas.ErrorResponse}
     ]
+
+  def index(conn, %{"tournament_id" => tournament_id, "round_id" => round_id}) do
+    pairings = Pairings.list_pairings(tournament_id, round_id)
+    render(conn, :index, pairings: pairings)
+  end
 
   def show(conn, %{"tournament_id" => _tournament_id, "id" => id}) do
     pairing = Pairings.get_pairing!(id)

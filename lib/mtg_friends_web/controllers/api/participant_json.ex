@@ -4,6 +4,10 @@ defmodule MtgFriendsWeb.API.ParticipantJSON do
   @doc """
   Renders a single participant.
   """
+  def index(%{participants: participants}) do
+    %{data: for(participant <- participants, do: data(participant))}
+  end
+
   def show(%{participant: participant}) do
     %{data: data(participant)}
   end

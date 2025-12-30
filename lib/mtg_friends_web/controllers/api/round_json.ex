@@ -5,6 +5,10 @@ defmodule MtgFriendsWeb.API.RoundJSON do
   @doc """
   Renders a single round.
   """
+  def index(%{rounds: rounds}) do
+    %{data: for(round <- rounds, do: data(round))}
+  end
+
   def show(%{round: round}) do
     %{data: data(round)}
   end
@@ -16,7 +20,11 @@ defmodule MtgFriendsWeb.API.RoundJSON do
       tournament_id: round.tournament_id,
       is_complete: MtgFriends.Rounds.is_round_complete?(round),
       inserted_at: round.inserted_at,
-      pairings: for(pairing <- round.pairings || [], do: pairing_data(pairing))
+      pairings:
+        if(Ecto.assoc_loaded?(round.pairings),
+          do: for(pairing <- round.pairings, do: pairing_data(pairing)),
+          else: []
+        )
     }
   end
 
@@ -28,7 +36,7 @@ defmodule MtgFriendsWeb.API.RoundJSON do
 
     data = %{
       id: pairing.id,
-      number: pairing.number, # This is the Table Number / Pod Number
+      number: pairing.number,
       participant_id: pairing.participant_id,
       points: pairing.points,
       winner: pairing.winner,

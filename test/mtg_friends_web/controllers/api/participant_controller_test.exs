@@ -25,7 +25,11 @@ defmodule MtgFriendsWeb.API.ParticipantControllerTest do
   end
 
   describe "show participant" do
-    test "renders participant", %{conn: conn, tournament: tournament} do
+    test "renders participant", %{conn: conn, user: user, tournament: tournament} do
+      token =
+        MtgFriends.Accounts.generate_user_session_token(user) |> Base.url_encode64(padding: false)
+
+      conn = put_req_header(conn, "authorization", "Bearer #{token}")
       participant = participant_fixture(%{tournament_id: tournament.id})
       conn = get(conn, ~p"/api/tournaments/#{tournament.id}/participants/#{participant.id}")
       assert json_response(conn, 200)["data"]["id"] == participant.id

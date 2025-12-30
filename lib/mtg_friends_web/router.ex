@@ -63,15 +63,12 @@ defmodule MtgFriendsWeb.Router do
     post "/login", API.SessionController, :create
 
     resources "/tournaments", API.TournamentController, only: [:index, :show] do
-      get "/rounds/:id", API.RoundController, :show
-      get "/participants/:id", API.ParticipantController, :show
-      get "/pairings/:id", API.PairingController, :show
     end
   end
 
   scope "/api" do
     pipe_through :api
-    get "/openapi", OpenApiSpex.Plug.RenderSpec, []
+    get "/openapi", OpenApiSpex.Plug.RenderSpec, [MtgFriendsWeb.Schemas]
     get "/swagger", OpenApiSpex.Plug.SwaggerUI, path: "api/openapi", title: "Tie Breaker API"
   end
 
@@ -85,11 +82,14 @@ defmodule MtgFriendsWeb.Router do
 
       put "/", TournamentController, :update
       delete "/", TournamentController, :delete
-      resources "/participants", ParticipantController, only: [:create, :update, :delete]
-      resources "/rounds", RoundController, only: [:create, :update, :delete]
+
+      resources "/participants", ParticipantController,
+        only: [:index, :show, :create, :update, :delete]
+
+      resources "/rounds", RoundController, only: [:index, :show, :create, :update, :delete]
 
       scope "/rounds/:round_id" do
-        resources "/pairings", PairingController, only: [:create, :update, :delete]
+        resources "/pairings", PairingController, only: [:index, :show, :create, :update, :delete]
       end
     end
   end

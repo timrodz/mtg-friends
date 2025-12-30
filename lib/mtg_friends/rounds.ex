@@ -23,6 +23,10 @@ defmodule MtgFriends.Rounds do
     Repo.all(Round)
   end
 
+  def list_rounds(tournament_id) do
+    Repo.all(from r in Round, where: r.tournament_id == ^tournament_id, order_by: [asc: r.number])
+  end
+
   @doc """
   Gets a single round.
 

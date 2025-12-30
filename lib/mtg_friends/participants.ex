@@ -21,6 +21,10 @@ defmodule MtgFriends.Participants do
     Repo.all(Participant)
   end
 
+  def list_participants(tournament_id) do
+    Repo.all(from p in Participant, where: p.tournament_id == ^tournament_id)
+  end
+
   @doc """
   Gets a single participant.
 
