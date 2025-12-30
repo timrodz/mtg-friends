@@ -59,7 +59,7 @@
             ~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}/pairing/#{pairing_number + 1}/edit"
           }
           phx-click={JS.push_focus()}
-          class={["self-start btn btn-primary", @round_status == :finished && "btn-disabled"]}
+          class="self-start btn btn-primary"
         >
           <%= if pairing_group.active do %>
             Assign pod results
@@ -87,7 +87,7 @@
     tournament_id={@tournament_id}
     round_id={@round_id}
     form={Enum.at(@forms, @selected_pairing_number - 1) |> elem(1)}
-    patch={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}"}
+    navigate={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}"}
   />
 </.modal>
 

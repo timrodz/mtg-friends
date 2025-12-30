@@ -173,7 +173,7 @@ defmodule MtgFriendsWeb.Schemas do
         is_tournament_winner: %Schema{type: :boolean},
         is_dropped: %Schema{type: :boolean}
       },
-      required: [:participant]
+      required: [:name]
     })
   end
 
@@ -220,7 +220,7 @@ defmodule MtgFriendsWeb.Schemas do
         points: %Schema{type: :integer},
         winner: %Schema{type: :boolean}
       },
-      required: [:pairing]
+      required: [:number]
     })
   end
 

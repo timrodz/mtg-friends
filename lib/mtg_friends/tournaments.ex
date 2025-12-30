@@ -6,6 +6,8 @@ defmodule MtgFriends.Tournaments do
   import Ecto.Query, warn: false
   alias MtgFriends.Repo
 
+  require Logger
+
   alias MtgFriends.Tournaments.Tournament
   alias MtgFriends.Rounds.Round
   alias MtgFriends.Participants.Participant
@@ -259,7 +261,8 @@ defmodule MtgFriends.Tournaments do
         end
       )
     rescue
-      _ ->
+      e ->
+        Logger.warning("Failed to validate description with card metadata: #{inspect(e)}")
         String.replace(description_raw, "\n", "</br>")
     end
   end

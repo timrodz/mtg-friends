@@ -1,6 +1,4 @@
 defmodule MtgFriendsWeb.API.TournamentController do
-  require Logger
-
   use MtgFriendsWeb, :controller
   use OpenApiSpex.ControllerSpecs
 

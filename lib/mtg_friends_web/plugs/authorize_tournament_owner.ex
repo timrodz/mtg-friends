@@ -14,24 +14,33 @@ defmodule MtgFriendsWeb.Plugs.AuthorizeTournamentOwner do
     tournament_id = conn.params["tournament_id"]
     current_user = conn.assigns[:current_user]
 
-    if is_nil(current_user) or is_nil(tournament_id) do
-      conn
-      |> put_status(:unauthorized)
-      |> put_view(json: MtgFriendsWeb.ErrorJSON)
-      |> render(:"401")
-      |> halt()
-    else
-      case Tournaments.get_tournament_simple(tournament_id) do
-        %MtgFriends.Tournaments.Tournament{user_id: user_id} = tournament ->
-          if user_id == current_user.id do
-            assign(conn, :tournament, tournament)
-          else
-            halt_unauthorized(conn)
-          end
+    cond do
+      is_nil(current_user) ->
+        conn
+        |> put_status(:unauthorized)
+        |> put_view(json: MtgFriendsWeb.ErrorJSON)
+        |> render(:"401")
+        |> halt()
 
-        nil ->
-          halt_not_found(conn)
-      end
+      is_nil(tournament_id) ->
+        conn
+        |> put_status(:bad_request)
+        |> put_view(json: MtgFriendsWeb.ErrorJSON)
+        |> render(:"400")
+        |> halt()
+
+      true ->
+        case Tournaments.get_tournament_simple(tournament_id) do
+          %MtgFriends.Tournaments.Tournament{user_id: user_id} = tournament ->
+            if user_id == current_user.id do
+              assign(conn, :tournament, tournament)
+            else
+              halt_unauthorized(conn)
+            end
+
+          nil ->
+            halt_not_found(conn)
+        end
     end
   end
 
