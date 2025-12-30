@@ -230,10 +230,16 @@ defmodule MtgFriends.Tournaments do
                   |> Map.take(expected_fields)
 
                 image_uris = Map.get(body, "image_uris")
-                img_large = Map.get(image_uris, "large")
-                name = Map.get(body, "name")
 
-                %{image_uri: img_large, name: name, og_name: card_raw}
+                case image_uris do
+                  nil ->
+                    nil
+
+                  _ ->
+                    img_large = Map.get(image_uris, "large")
+                    name = Map.get(body, "name")
+                    %{image_uri: img_large, name: name, og_name: card_raw}
+                end
               else
                 _ -> nil
               end

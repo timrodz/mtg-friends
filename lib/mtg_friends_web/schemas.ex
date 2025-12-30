@@ -35,8 +35,6 @@ defmodule MtgFriendsWeb.Schemas do
           enum: ["bubble_rounds", "swiss"],
           description: "Tournament subformat"
         },
-        inserted_at: %Schema{type: :string, format: :date_time},
-        updated_at: %Schema{type: :string, format: :date_time},
         has_enough_participants: %Schema{
           type: :boolean,
           description: "Whether the tournament has enough participants"
@@ -60,25 +58,19 @@ defmodule MtgFriendsWeb.Schemas do
       title: "TournamentRequest",
       type: :object,
       properties: %{
-        tournament: %Schema{
-          type: :object,
-          properties: %{
-            name: %Schema{type: :string},
-            date: %Schema{type: :string, format: :date},
-            location: %Schema{type: :string},
-            description_raw: %Schema{type: :string},
-            round_length_minutes: %Schema{type: :integer},
-            is_top_cut_4: %Schema{type: :boolean},
-            round_count: %Schema{type: :integer},
-            status: %Schema{type: :string, enum: ["inactive", "active", "finished"]},
-            format: %Schema{type: :string},
-            subformat: %Schema{type: :string},
-            initial_participants: %Schema{
-              type: :string,
-              description: "List of participants, one per line"
-            }
-          },
-          required: [:name]
+        name: %Schema{type: :string},
+        date: %Schema{type: :string, format: :date},
+        location: %Schema{type: :string},
+        description_raw: %Schema{type: :string},
+        round_length_minutes: %Schema{type: :integer},
+        is_top_cut_4: %Schema{type: :boolean},
+        round_count: %Schema{type: :integer},
+        status: %Schema{type: :string, enum: ["inactive", "active", "finished"]},
+        format: %Schema{type: :string},
+        subformat: %Schema{type: :string},
+        initial_participants: %Schema{
+          type: :string,
+          description: "List of participants, one per line"
         }
       }
     })
@@ -107,6 +99,144 @@ defmodule MtgFriendsWeb.Schemas do
       }
     })
   end
+
+  defmodule Round do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "Round",
+      type: :object,
+      properties: %{
+        id: %Schema{type: :integer},
+        number: %Schema{type: :integer},
+        status: %Schema{type: :string, enum: ["inactive", "active", "finished"]},
+        started_at: %Schema{type: :string, format: :date_time},
+        is_complete: %Schema{type: :boolean}
+      }
+    })
+  end
+
+  defmodule RoundRequest do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "RoundRequest",
+      type: :object,
+      properties: %{
+        number: %Schema{type: :integer},
+        status: %Schema{type: :string, enum: ["inactive", "active", "finished"]},
+        started_at: %Schema{type: :string, format: :date_time},
+        is_complete: %Schema{type: :boolean}
+      }
+    })
+  end
+
+  defmodule RoundResponse do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "RoundResponse",
+      type: :object,
+      properties: %{
+        data: Round
+      }
+    })
+  end
+
+  defmodule Participant do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "Participant",
+      type: :object,
+      properties: %{
+        id: %Schema{type: :integer},
+        name: %Schema{type: :string},
+        points: %Schema{type: :integer},
+        decklist: %Schema{type: :string},
+        is_tournament_winner: %Schema{type: :boolean},
+        is_dropped: %Schema{type: :boolean},
+        tournament_id: %Schema{type: :integer}
+      }
+    })
+  end
+
+  defmodule ParticipantRequest do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "ParticipantRequest",
+      type: :object,
+      properties: %{
+        name: %Schema{type: :string},
+        decklist: %Schema{type: :string},
+        is_tournament_winner: %Schema{type: :boolean},
+        is_dropped: %Schema{type: :boolean}
+      },
+      required: [:participant]
+    })
+  end
+
+  defmodule ParticipantResponse do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "ParticipantResponse",
+      type: :object,
+      properties: %{
+        data: Participant
+      }
+    })
+  end
+
+  defmodule Pairing do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "Pairing",
+      type: :object,
+      properties: %{
+        id: %Schema{type: :integer},
+        number: %Schema{type: :integer},
+        active: %Schema{type: :boolean},
+        points: %Schema{type: :integer},
+        winner: %Schema{type: :boolean},
+        tournament_id: %Schema{type: :integer},
+        round_id: %Schema{type: :integer},
+        participant_id: %Schema{type: :integer}
+      }
+    })
+  end
+
+  defmodule PairingRequest do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PairingRequest",
+      type: :object,
+      properties: %{
+        number: %Schema{type: :integer},
+        active: %Schema{type: :boolean},
+        points: %Schema{type: :integer},
+        winner: %Schema{type: :integer, nullable: true}
+      },
+      required: [:pairing]
+    })
+  end
+
+  defmodule PairingResponse do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PairingResponse",
+      type: :object,
+      properties: %{
+        data: Pairing
+      }
+    })
+  end
+
+  # Generic
 
   defmodule LoginRequest do
     require OpenApiSpex
@@ -143,160 +273,6 @@ defmodule MtgFriendsWeb.Schemas do
           }
         }
       }
-    })
-  end
-
-  defmodule Round do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "Round",
-      type: :object,
-      properties: %{
-        id: %Schema{type: :integer},
-        number: %Schema{type: :integer},
-        status: %Schema{type: :string, enum: ["inactive", "active", "finished"]},
-        started_at: %Schema{type: :string, format: :date_time},
-        inserted_at: %Schema{type: :string, format: :date_time},
-        updated_at: %Schema{type: :string, format: :date_time},
-        is_complete: %Schema{type: :boolean}
-      }
-    })
-  end
-
-  defmodule RoundResponse do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "RoundResponse",
-      type: :object,
-      properties: %{
-        data: Round
-      }
-    })
-  end
-
-  defmodule RoundResultsRequest do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "RoundResultsRequest",
-      type: :object,
-      properties: %{
-        results: %Schema{
-          type: :array,
-          items: %Schema{
-            type: :object,
-            properties: %{
-              participant_id: %Schema{type: :integer},
-              points: %Schema{type: :integer}
-            },
-            required: [:participant_id, :points]
-          }
-        }
-      },
-      required: [:results]
-    })
-  end
-
-  defmodule Participant do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "Participant",
-      type: :object,
-      properties: %{
-        id: %Schema{type: :integer},
-        name: %Schema{type: :string},
-        points: %Schema{type: :integer},
-        decklist: %Schema{type: :string},
-        is_tournament_winner: %Schema{type: :boolean},
-        is_dropped: %Schema{type: :boolean},
-        tournament_id: %Schema{type: :integer}
-      }
-    })
-  end
-
-  defmodule ParticipantResponse do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "ParticipantResponse",
-      type: :object,
-      properties: %{
-        data: Participant
-      }
-    })
-  end
-
-  defmodule ParticipantRequest do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "ParticipantRequest",
-      type: :object,
-      properties: %{
-        participant: %Schema{
-          type: :object,
-          properties: %{
-            name: %Schema{type: :string},
-            decklist: %Schema{type: :string},
-            is_dropped: %Schema{type: :boolean}
-          },
-          required: [:name]
-        }
-      },
-      required: [:participant]
-    })
-  end
-
-  defmodule Pairing do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "Pairing",
-      type: :object,
-      properties: %{
-        id: %Schema{type: :integer},
-        number: %Schema{type: :integer},
-        active: %Schema{type: :boolean},
-        points: %Schema{type: :integer},
-        winner: %Schema{type: :boolean},
-        tournament_id: %Schema{type: :integer},
-        round_id: %Schema{type: :integer},
-        participant_id: %Schema{type: :integer}
-      }
-    })
-  end
-
-  defmodule PairingResponse do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "PairingResponse",
-      type: :object,
-      properties: %{
-        data: Pairing
-      }
-    })
-  end
-
-  defmodule PairingRequest do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "PairingRequest",
-      type: :object,
-      properties: %{
-        pairing: %Schema{
-          type: :object,
-          properties: %{
-            points: %Schema{type: :integer},
-            winner: %Schema{type: :integer, nullable: true}
-          }
-        }
-      },
-      required: [:pairing]
     })
   end
 

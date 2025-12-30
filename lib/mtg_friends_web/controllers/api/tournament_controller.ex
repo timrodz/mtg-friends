@@ -1,6 +1,7 @@
 defmodule MtgFriendsWeb.API.TournamentController do
-  use MtgFriendsWeb, :controller
+  require Logger
 
+  use MtgFriendsWeb, :controller
   use OpenApiSpex.ControllerSpecs
 
   alias MtgFriends.Tournaments
@@ -22,15 +23,6 @@ defmodule MtgFriendsWeb.API.TournamentController do
       ok: {"Tournaments list", "application/json", Schemas.TournamentsResponse}
     ]
 
-  operation :create,
-    summary: "Create tournament",
-    security: [%{"authorization" => []}],
-    request_body: {"Tournament params", "application/json", Schemas.TournamentRequest},
-    responses: [
-      created: {"Tournament created", "application/json", Schemas.TournamentResponse},
-      unprocessable_entity: {"Validation error", "application/json", Schemas.ErrorResponse}
-    ]
-
   operation :show,
     summary: "Show tournament",
     security: [],
@@ -40,6 +32,15 @@ defmodule MtgFriendsWeb.API.TournamentController do
     responses: [
       ok: {"Tournament details", "application/json", Schemas.TournamentResponse},
       not_found: {"Tournament not found", "application/json", Schemas.ErrorResponse}
+    ]
+
+  operation :create,
+    summary: "Create tournament",
+    security: [%{"authorization" => []}],
+    request_body: {"Tournament params", "application/json", Schemas.TournamentRequest},
+    responses: [
+      ok: {"Tournament created", "application/json", Schemas.TournamentResponse},
+      unprocessable_entity: {"Validation error", "application/json", Schemas.ErrorResponse}
     ]
 
   operation :update,
@@ -52,6 +53,17 @@ defmodule MtgFriendsWeb.API.TournamentController do
     responses: [
       ok: {"Tournament updated", "application/json", Schemas.TournamentResponse},
       unprocessable_entity: {"Validation error", "application/json", Schemas.ErrorResponse}
+    ]
+
+  operation :delete,
+    summary: "Remove tournament",
+    security: [%{"authorization" => []}],
+    parameters: [
+      tournament_id: [in: :path, description: "Tournament ID", type: :integer]
+    ],
+    responses: [
+      no_content: "Tournament removed",
+      not_found: {"Tournament not found", "application/json", Schemas.ErrorResponse}
     ]
 
   def index(conn, params) do
@@ -71,46 +83,31 @@ defmodule MtgFriendsWeb.API.TournamentController do
     render(conn, :index, tournaments: tournaments)
   end
 
-  def create(conn, %{"tournament" => tournament_params}) do
-    initial_participants =
-      Map.get(tournament_params, "initial_participants", "")
-      |> String.split("\n", trim: true)
-
-    result =
-      MtgFriends.Repo.transaction(fn ->
-        with {:ok, tournament} <- Tournaments.create_tournament(tournament_params),
-             {:ok, _} <-
-               MtgFriends.Participants.create_x_participants(tournament.id, initial_participants) do
-          tournament
-        else
-          {:error, %Ecto.Changeset{} = changeset} -> MtgFriends.Repo.rollback(changeset)
-          {:error, _name, changeset, _changes} -> MtgFriends.Repo.rollback(changeset)
-        end
-      end)
-
-    case result do
-      {:ok, tournament} ->
-        conn
-        |> put_status(:created)
-        |> put_resp_header("location", ~p"/api/tournaments/#{tournament}")
-        |> render(:show, tournament: tournament)
-
-      {:error, changeset} ->
-        {:error, changeset}
-    end
-  end
-
   def show(conn, %{"id" => id}) do
     tournament = Tournaments.get_tournament!(id)
     render(conn, :show, tournament: tournament)
   end
 
-  def update(conn, %{"tournament" => tournament_params}) do
-    tournament = conn.assigns.tournament
+  def create(conn, tournament_params) do
+    with {:ok, %Tournament{} = tournament} <- Tournaments.create_tournament(tournament_params) do
+      conn
+      |> put_status(:created)
+      |> render(:show, tournament: tournament)
+    end
+  end
+
+  def update(conn, %{"tournament_id" => id} = tournament_params) do
+    tournament = Tournaments.get_tournament!(id)
 
     with {:ok, %Tournament{} = tournament} <-
            Tournaments.update_tournament(tournament, tournament_params) do
       render(conn, :show, tournament: tournament)
     end
+  end
+
+  def delete(conn, %{"tournament_id" => id}) do
+    tournament = Tournaments.get_tournament!(id)
+    {:ok, %Tournament{}} = Tournaments.delete_tournament(tournament)
+    send_resp(conn, :no_content, "")
   end
 end

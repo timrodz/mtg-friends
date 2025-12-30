@@ -14,7 +14,7 @@ defmodule MtgFriendsWeb.Plugs.AuthorizeTournamentOwner do
     tournament_id = conn.params["tournament_id"]
     current_user = conn.assigns[:current_user]
 
-    if is_nil(current_user) do
+    if is_nil(current_user) or is_nil(tournament_id) do
       conn
       |> put_status(:unauthorized)
       |> put_view(json: MtgFriendsWeb.ErrorJSON)

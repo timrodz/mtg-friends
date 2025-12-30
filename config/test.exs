@@ -36,3 +36,5 @@ config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
+
+config :mtg_friends, :disable_rate_limit, true

@@ -1,7 +1,6 @@
 defmodule MtgFriends.Participants.Participant do
   use Ecto.Schema
   import Ecto.Changeset
-  import ValidationHelper
 
   schema "participants" do
     field :name, :string
@@ -19,7 +18,7 @@ defmodule MtgFriends.Participants.Participant do
   def changeset(participant, attrs) do
     participant
     |> cast(attrs, [:name, :points, :decklist, :tournament_id, :is_tournament_winner, :is_dropped])
-    |> allow_empty_strings()
-    |> validate_required([:tournament_id])
+    |> validate_required([:tournament_id, :name])
+    |> validate_length(:name, min: 1)
   end
 end

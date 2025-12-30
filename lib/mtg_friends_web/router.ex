@@ -63,7 +63,9 @@ defmodule MtgFriendsWeb.Router do
     post "/login", API.SessionController, :create
 
     resources "/tournaments", API.TournamentController, only: [:index, :show] do
-      get "/rounds/:number", API.RoundController, :show
+      get "/rounds/:id", API.RoundController, :show
+      get "/participants/:id", API.ParticipantController, :show
+      get "/pairings/:id", API.PairingController, :show
     end
   end
 
@@ -82,15 +84,12 @@ defmodule MtgFriendsWeb.Router do
       pipe_through :authorize_tournament_owner
 
       put "/", TournamentController, :update
+      delete "/", TournamentController, :delete
       resources "/participants", ParticipantController, only: [:create, :update, :delete]
+      resources "/rounds", RoundController, only: [:create, :update, :delete]
 
-      scope "/rounds" do
-        post "/", RoundController, :create
-        put "/:number", RoundController, :update
-
-        scope "/:round_id" do
-          resources "/pairings", PairingController, only: [:update]
-        end
+      scope "/rounds/:round_id" do
+        resources "/pairings", PairingController, only: [:create, :update, :delete]
       end
     end
   end
@@ -157,21 +156,25 @@ defmodule MtgFriendsWeb.Router do
   end
 
   defp rate_limit(conn, _opts) do
-    # Get IP based on RemoteIP or just remote_ip if not using a proxy middleware yet
-    # Since we don't have RemoteIP plug configured in Endpoint (observed in application files), we use conn.remote_ip directly.
-    # Note: If behind a proxy (Fly.io, etc), real IP header parsing is needed.
-    # Assuming standard conn.remote_ip is correct for now or handled by Endpoint configuration.
+    if Application.get_env(:mtg_friends, :disable_rate_limit) do
+      conn
+    else
+      # Get IP based on RemoteIP or just remote_ip if not using a proxy middleware yet
+      # Since we don't have RemoteIP plug configured in Endpoint (observed in application files), we use conn.remote_ip directly.
+      # Note: If behind a proxy (Fly.io, etc), real IP header parsing is needed.
+      # Assuming standard conn.remote_ip is correct for now or handled by Endpoint configuration.
 
-    case MtgFriendsWeb.RateLimit.hit("api:#{inspect(conn.remote_ip)}", 60_000, 60) do
-      {:allow, _count} ->
-        conn
+      case MtgFriendsWeb.RateLimit.hit("api:#{inspect(conn.remote_ip)}", 60_000, 60) do
+        {:allow, _count} ->
+          conn
 
-      {:deny, _limit} ->
-        conn
-        |> put_status(:too_many_requests)
-        |> put_resp_content_type("application/json")
-        |> send_resp(429, Jason.encode!(%{error: "Rate limit exceeded"}))
-        |> halt()
+        {:deny, _limit} ->
+          conn
+          |> put_status(:too_many_requests)
+          |> put_resp_content_type("application/json")
+          |> send_resp(429, Jason.encode!(%{error: "Rate limit exceeded"}))
+          |> halt()
+      end
     end
   end
 end

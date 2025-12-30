@@ -30,7 +30,7 @@ fly deploy
 
 ## Accessing the database
 
-https://fly.io/docs/postgres/connecting/connecting-with-flyctl/
+[Fly connection guide](https://fly.io/docs/postgres/connecting/connecting-with-flyctl/)
 
 Connect via `psql`
 

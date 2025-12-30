@@ -4,6 +4,8 @@ defmodule MtgFriends.Rounds do
   """
 
   import Ecto.Query, warn: false
+  alias MtgFriends.Participants.Participant
+  alias MtgFriends.Tournaments.Tournament
   alias MtgFriends.Repo
 
   alias MtgFriends.Rounds.Round
@@ -40,6 +42,16 @@ defmodule MtgFriends.Rounds do
       Repo.get!(Round, id) |> Repo.preload(tournament: [:participants], pairings: [:participant])
     else
       Repo.get!(Round, id)
+    end
+  end
+
+  def get_round_by_tournament_and_round_id!(tournament_id, id, preload_all \\ false) do
+    if preload_all do
+      Repo.get_by!(Round, tournament_id: tournament_id, id: id)
+      |> Repo.preload(tournament: [:participants, rounds: [:pairings]], pairings: [:participant])
+    else
+      Repo.get_by!(Round, tournament_id: tournament_id, id: id)
+      |> Repo.preload(pairings: [:participant])
     end
   end
 
@@ -151,7 +163,7 @@ defmodule MtgFriends.Rounds do
           is_last_round? = tournament.round_count == round.number + 1
 
           if is_last_round? do
-            finalize_tournament(tournament, round.pairings)
+            {:ok, %Tournament{}} = finalize_tournament(tournament, round.pairings)
             {:ok, round, :tournament_finished}
           else
             {:ok, round, :round_finished}
@@ -179,9 +191,10 @@ defmodule MtgFriends.Rounds do
       winning_pairing = Enum.find(pairings, fn p -> p.winner end)
 
       if winning_pairing do
-        Participants.update_participant(winning_pairing.participant, %{
-          "is_tournament_winner" => true
-        })
+        {:ok, %Participant{}} =
+          Participants.update_participant(winning_pairing.participant, %{
+            "is_tournament_winner" => true
+          })
       end
     end
 
