@@ -6,71 +6,51 @@ defmodule MtgFriends.Pairings do
   import Ecto.Query, warn: false
   alias MtgFriends.Repo
 
-  alias MtgFriends.Pairings
   alias MtgFriends.Pairings.Pairing
+  alias MtgFriends.Pairings.PairingParticipant
 
   @doc """
   Returns the list of pairings.
-
-  ## Examples
-
-      iex> list_pairings()
-      [%Pairing{}, ...]
-
   """
   def list_pairings do
     Repo.all(Pairing)
+    |> Repo.preload(:pairing_participants)
   end
 
   def list_pairings(tournament_id, round_id) do
     Repo.all(
-      from p in Pairing, where: p.tournament_id == ^tournament_id and p.round_id == ^round_id
+      from p in Pairing,
+        where: p.tournament_id == ^tournament_id and p.round_id == ^round_id,
+        preload: [:pairing_participants]
     )
   end
 
   @doc """
   Gets a single pairing.
-
-  Raises `Ecto.NoResultsError` if the Pairing does not exist.
-
-  ## Examples
-
-      iex> get_pairing!(123)
-      %Pairing{}
-
-      iex> get_pairing!(456)
-      ** (Ecto.NoResultsError)
-
   """
-  def get_pairing!(id), do: Repo.get!(Pairing, id)
+  def get_pairing!(id), do: Repo.get!(Pairing, id) |> Repo.preload(:pairing_participants)
 
   def get_pairing(id) do
     case Repo.get(Pairing, id) do
       nil -> {:error, :not_found}
-      pairing -> {:ok, pairing}
+      pairing -> {:ok, Repo.preload(pairing, :pairing_participants)}
     end
   end
 
-  def get_pairing!(tournament_id, round_id, participant_id),
+  def get_pairing_participant!(pairing_id, participant_id),
     do:
-      Repo.get_by(Pairing,
-        tournament_id: tournament_id,
-        round_id: round_id,
+      Repo.get_by!(PairingParticipant,
+        pairing_id: pairing_id,
         participant_id: participant_id
       )
-      |> Repo.preload(:participant)
+
+  # Used for finding the entry to update
+  def get_pairing_participant_by_participant!(participant_id) do
+    Repo.get_by!(PairingParticipant, participant_id: participant_id)
+  end
 
   @doc """
   Creates a pairing.
-
-  ## Examples
-
-      iex> create_pairing(%{field: value})
-      {:ok, %Pairing{}}
-
-      iex> create_pairing(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
   """
   def create_pairing(attrs \\ %{}) do
     %Pairing{}
@@ -78,34 +58,39 @@ defmodule MtgFriends.Pairings do
     |> Repo.insert()
   end
 
-  def create_multiple_pairings(participant_pairings) do
-    now = NaiveDateTime.local_now()
-
-    new_pairings =
-      participant_pairings
-      |> Enum.map(fn p ->
-        p
-        |> Map.put(:inserted_at, now)
-        |> Map.put(:updated_at, now)
-        |> Map.put(:active, true)
-      end)
+  @doc """
+  Creates multiple pairings with nested participants.
+  Expects a list of maps where each map represents a Pairing and has a `pairing_participants` key.
+  """
+  def create_multiple_pairings(pairings_data) do
+    # Since insert_all doesn't support nested associations easily with IDs returned,
+    # and we have a hierarchical structure now, we might need to use Ecto.Multi or Enum.each.
+    # Given the scale of a tournament (tens of pairings), doing sequential inserts in a transaction is fine.
 
     Ecto.Multi.new()
-    |> Ecto.Multi.insert_all(:insert_all, Pairing, new_pairings)
+    |> Ecto.Multi.run(:insert_pairings, fn repo, _ ->
+      results =
+        Enum.map(pairings_data, fn pairing_attrs ->
+          %Pairing{}
+          |> Pairing.changeset(pairing_attrs)
+          |> Ecto.Changeset.put_assoc(:pairing_participants, pairing_attrs.pairing_participants)
+          |> repo.insert()
+        end)
+
+      # If any failed, return error. Otherwise return list of successful pairings.
+      failed = Enum.find(results, fn {status, _} -> status == :error end)
+
+      if failed do
+        failed
+      else
+        {:ok, Enum.map(results, fn {:ok, p} -> p end)}
+      end
+    end)
     |> Repo.transaction()
   end
 
   @doc """
   Updates a pairing.
-
-  ## Examples
-
-      iex> update_pairing(pairing, %{field: new_value})
-      {:ok, %Pairing{}}
-
-      iex> update_pairing(pairing, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
   """
   def update_pairing(%Pairing{} = pairing, attrs) do
     pairing
@@ -114,49 +99,71 @@ defmodule MtgFriends.Pairings do
   end
 
   def update_pairings(tournament_id, round_id, form_params) do
-    participant_scores =
-      Enum.map(Map.drop(form_params, ["pairing-number"]), fn {participant_id_str, score_str} ->
-        participant_id =
-          String.replace_prefix(participant_id_str, "input-points-participant-", "")
+    # form_params contains keys like "input-points-participant-<ID>" => "score"
+    # We need to group these by Pairing (since we determine winner per pairing).
+    # But filtering by tournament_id/round_id isn't directly giving us pairings unless we fetch them.
 
-        {points, ""} = Integer.parse(score_str)
+    pairings = list_pairings(tournament_id, round_id)
 
-        %{
-          "id" => participant_id,
-          "points" => points,
-          "active" => false
-        }
-      end)
-
-    highest_score_pairing =
-      participant_scores
-      |> Enum.max_by(& &1["points"])
-
-    # If this check passes, that means there are more than 1 pairings with the "highest scores", representing a draw
-    highest_score =
-      with score_groups <- participant_scores |> Enum.group_by(& &1["points"]),
-           true <- length(score_groups[highest_score_pairing["points"]]) > 1 do
-        nil
-      else
-        _ -> highest_score_pairing
-      end
+    multi = Ecto.Multi.new()
 
     multi =
-      Enum.reduce(participant_scores, Ecto.Multi.new(), fn %{"id" => participant_id} =
-                                                             params,
-                                                           multi ->
-        with pairing <- Pairings.get_pairing!(tournament_id, round_id, participant_id) do
-          pairing_changeset =
-            Pairings.change_pairing(
-              pairing,
-              Map.put(params, "winner", highest_score["id"] == participant_id)
+      Enum.reduce(pairings, multi, fn pairing, acc_multi ->
+        # Filter params relevant to this pairing's participants
+        participants_in_pairing = Enum.map(pairing.pairing_participants, & &1.participant_id)
+
+        relevant_scores =
+          Enum.map(participants_in_pairing, fn pid ->
+            score_str = form_params["input-points-participant-#{pid}"]
+
+            if score_str do
+              {points, ""} = Integer.parse(score_str)
+              {pid, points}
+            else
+              nil
+            end
+          end)
+          |> Enum.reject(&is_nil/1)
+
+        if Enum.empty?(relevant_scores) do
+          acc_multi
+        else
+          # Determine winner for this pairing
+          {winner_pid, _} =
+            highest = Enum.max_by(relevant_scores, fn {_, points} -> points end)
+
+          # Handle draws - check if duplicates of max score exist
+          max_points = elem(highest, 1)
+          draw = Enum.count(relevant_scores, fn {_, p} -> p == max_points end) > 1
+
+          winner_id = if draw, do: nil, else: winner_pid
+
+          # 1. Update Pairing (winner_id)
+          # We need the PairingParticipant ID for the winner_id
+          winner_pp_id =
+            if winner_id do
+              Enum.find(pairing.pairing_participants, fn pp -> pp.participant_id == winner_id end).id
+            else
+              nil
+            end
+
+          acc_multi =
+            Ecto.Multi.update(
+              acc_multi,
+              "update_pairing_#{pairing.id}",
+              Pairing.changeset(pairing, %{winner_id: winner_pp_id, active: false})
             )
 
-          Ecto.Multi.update(
-            multi,
-            "update_round_#{round_id}_pairing_#{pairing.id}_participant_#{participant_id}",
-            pairing_changeset
-          )
+          # 2. Update PairingParticipants (points)
+          Enum.reduce(relevant_scores, acc_multi, fn {pid, points}, inner_multi ->
+            pp = Enum.find(pairing.pairing_participants, fn pp -> pp.participant_id == pid end)
+
+            Ecto.Multi.update(
+              inner_multi,
+              "update_pp_#{pp.id}",
+              PairingParticipant.changeset(pp, %{points: points})
+            )
+          end)
         end
       end)
 
@@ -165,15 +172,6 @@ defmodule MtgFriends.Pairings do
 
   @doc """
   Deletes a pairing.
-
-  ## Examples
-
-      iex> delete_pairing(pairing)
-      {:ok, %Pairing{}}
-
-      iex> delete_pairing(pairing)
-      {:error, %Ecto.Changeset{}}
-
   """
   def delete_pairing(%Pairing{} = pairing) do
     Repo.delete(pairing)
@@ -181,12 +179,6 @@ defmodule MtgFriends.Pairings do
 
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking pairing changes.
-
-  ## Examples
-
-      iex> change_pairing(pairing)
-      %Ecto.Changeset{data: %Pairing{}}
-
   """
   def change_pairing(%Pairing{} = pairing, attrs \\ %{}) do
     Pairing.changeset(pairing, attrs)

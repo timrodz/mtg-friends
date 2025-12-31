@@ -27,28 +27,28 @@
 
 <section id="pairings">
   <h2>Pairings</h2>
-  <.item_grid id="pairing" items={@pairing_groups}>
-    <:item :let={{pairing_number, pairing_group}} class="justify-between">
+  <.item_grid id="pairing" items={@pairings}>
+    <:item :let={{pairing, index}} class="justify-between">
       <div>
         <h3 class="font-semibold">
-          Pod #{pairing_number + 1} — {(@round_status == :inactive && "Waiting for start") ||
-            (pairing_group.active && "In progress") ||
+          Pod #{index} — {(@round_status == :inactive && "Waiting for start") ||
+            (pairing.active && "In progress") ||
             "Finished"}
         </h3>
         <div
-          :for={pairing <- Enum.sort_by(pairing_group.pairings, fn p -> p.points end, :desc)}
-          id={"tournament-#{@tournament_id}-round-#{@round_id}-pairing-number-#{pairing_number}-#{pairing.id}"}
+          :for={pp <- Enum.sort_by(pairing.pairing_participants, fn p -> p.points end, :desc)}
+          id={"tournament-#{@tournament_id}-round-#{@round_id}-pairing-#{pairing.id}-participant-#{pp.participant.id}"}
           class={[
             "flex justify-between items-center gap-2 py-1 px-2 rounded-md",
-            (pairing.winner && "font-bold bg-success text-success-content") || ""
+            (pairing.winner_id == pp.id && "font-bold bg-success text-success-content") || ""
           ]}
         >
           <p class="flex gap-1 items-center">
-            {pairing.participant.name}
-            <.icon :if={pairing.winner} name="hero-trophy" />
+            {pp.participant.name}
+            <.icon :if={pairing.winner_id == pp.id} name="hero-trophy" />
           </p>
           <p>
-            Points: {pairing.points}
+            Points: {pp.points}
           </p>
         </div>
       </div>
@@ -56,12 +56,12 @@
         <.link
           :if={@current_user_owner && @round_status != :inactive}
           patch={
-            ~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}/pairing/#{pairing_number + 1}/edit"
+            ~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}/pairing/#{pairing.id}/edit"
           }
           phx-click={JS.push_focus()}
           class="self-start btn btn-primary"
         >
-          <%= if pairing_group.active do %>
+          <%= if pairing.active do %>
             Assign pod results
           <% else %>
             Update pod results
@@ -74,19 +74,19 @@
 
 <.modal
   :if={@live_action == :edit}
-  id={"pairing-modal-#{@selected_pairing_number}"}
+  id={"pairing-modal-#{@selected_pairing_id}"}
   show
   on_cancel={JS.patch(~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}")}
 >
   <.live_component
     module={MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent}
     current_user={@current_user}
-    id={@selected_pairing_number}
+    id={@selected_pairing_id}
     title={@page_title}
     action={@live_action}
     tournament_id={@tournament_id}
     round_id={@round_id}
-    form={Enum.at(@forms, @selected_pairing_number - 1) |> elem(1)}
+    form={@forms[@selected_pairing_id] }
     navigate={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}"}
   />
 </.modal>

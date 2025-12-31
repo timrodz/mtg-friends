@@ -89,7 +89,11 @@ defmodule MtgFriends.Tournaments do
         preload: [
           :game,
           participants: ^from(p in Participant, order_by: [asc: p.id]),
-          rounds: ^from(r in Round, order_by: [asc: r.id], preload: :pairings)
+          rounds:
+            ^from(r in Round,
+              order_by: [asc: r.id],
+              preload: [pairings: [pairing_participants: :participant]]
+            )
         ]
       )
 

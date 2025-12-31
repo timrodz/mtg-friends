@@ -15,10 +15,23 @@ defmodule MtgFriendsWeb.API.PairingJSON do
   defp data(%Pairing{} = pairing) do
     %{
       id: pairing.id,
-      participant_id: pairing.participant_id,
-      number: pairing.number,
-      points: pairing.points,
-      winner: pairing.winner
+      active: pairing.active,
+      winner_id: pairing.winner_id,
+      participants: render_participants(pairing)
     }
+  end
+
+  def render_participants(pairing) do
+    if Ecto.assoc_loaded?(pairing.pairing_participants) do
+      Enum.map(pairing.pairing_participants, fn pp ->
+        %{
+          id: pp.id,
+          participant_id: pp.participant_id,
+          points: pp.points
+        }
+      end)
+    else
+      []
+    end
   end
 end

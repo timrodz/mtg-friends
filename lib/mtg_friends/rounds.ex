@@ -4,10 +4,11 @@ defmodule MtgFriends.Rounds do
   """
 
   import Ecto.Query, warn: false
-  alias MtgFriends.Participants.Participant
-  alias MtgFriends.Tournaments.Tournament
   alias MtgFriends.Repo
 
+  alias MtgFriends.Participants.Participant
+  alias MtgFriends.Tournaments.Tournament
+  alias MtgFriends.{Participants, Tournaments}
   alias MtgFriends.Rounds.Round
 
   @doc """
@@ -43,7 +44,8 @@ defmodule MtgFriends.Rounds do
   """
   def get_round!(id, preload_all \\ false) do
     if preload_all do
-      Repo.get!(Round, id) |> Repo.preload(tournament: [:participants], pairings: [:participant])
+      Repo.get!(Round, id)
+      |> Repo.preload(tournament: [:participants], pairings: [pairing_participants: :participant])
     else
       Repo.get!(Round, id)
     end
@@ -52,20 +54,26 @@ defmodule MtgFriends.Rounds do
   def get_round_by_tournament_and_round_id!(tournament_id, id, preload_all \\ false) do
     if preload_all do
       Repo.get_by!(Round, tournament_id: tournament_id, id: id)
-      |> Repo.preload(tournament: [:participants, rounds: [:pairings]], pairings: [:participant])
+      |> Repo.preload(
+        tournament: [:participants, rounds: [:pairings]],
+        pairings: [pairing_participants: :participant]
+      )
     else
       Repo.get_by!(Round, tournament_id: tournament_id, id: id)
-      |> Repo.preload(pairings: [:participant])
+      |> Repo.preload(pairings: [pairing_participants: :participant])
     end
   end
 
   def get_round_by_tournament_and_round_number!(tournament_id, round_number, preload_all \\ false) do
     if preload_all do
       Repo.get_by!(Round, tournament_id: tournament_id, number: round_number)
-      |> Repo.preload(tournament: [:participants, rounds: [:pairings]], pairings: [:participant])
+      |> Repo.preload(
+        tournament: [:participants, rounds: [:pairings]],
+        pairings: [pairing_participants: :participant]
+      )
     else
       Repo.get_by!(Round, tournament_id: tournament_id, number: round_number)
-      |> Repo.preload(pairings: [:participant])
+      |> Repo.preload(pairings: [pairing_participants: :participant])
     end
   end
 
@@ -73,7 +81,10 @@ defmodule MtgFriends.Rounds do
     {number, ""} = Integer.parse(number_str)
 
     Repo.get_by!(Round, tournament_id: tournament_id, number: number - 1)
-    |> Repo.preload(tournament: [:participants, rounds: :pairings], pairings: [:participant])
+    |> Repo.preload(
+      tournament: [:participants, rounds: :pairings],
+      pairings: [pairing_participants: :participant]
+    )
   end
 
   @doc """
@@ -160,21 +171,34 @@ defmodule MtgFriends.Rounds do
     # Force reload pairings to ensure we have latest state
     round = Repo.preload(round, [:pairings], force: true)
 
+    # TODO: When finalizing a round, add pairing scores to each participant cumulatively
+
     # Check if all pairings are inactive
     if Enum.all?(round.pairings, fn p -> p.active == false end) do
-      case update_round(round, %{status: :finished}) do
-        {:ok, round} ->
-          is_last_round? = tournament.round_count == round.number + 1
+      transaction_result =
+        Repo.transaction(fn ->
+          case update_round(round, %{status: :finished}) do
+            {:ok, round} ->
+              # Update scores for all participants
+              MtgFriends.Participants.calculate_and_update_scores(tournament.id)
 
-          if is_last_round? do
-            {:ok, %Tournament{}} = finalize_tournament(tournament, round.pairings)
-            {:ok, round, :tournament_finished}
-          else
-            {:ok, round, :round_finished}
+              is_last_round? = tournament.round_count == round.number + 1
+
+              if is_last_round? do
+                {:ok, %Tournament{}} = finalize_tournament(tournament, round.pairings)
+                {:ok, round, :tournament_finished}
+              else
+                {:ok, round, :round_finished}
+              end
+
+            {:error, changeset} ->
+              Repo.rollback(changeset)
           end
+        end)
 
-        {:error, changeset} ->
-          {:error, changeset}
+      case transaction_result do
+        {:ok, result} -> result
+        {:error, reason} -> {:error, reason}
       end
     else
       # Not complete yet
@@ -183,20 +207,15 @@ defmodule MtgFriends.Rounds do
   end
 
   defp finalize_tournament(tournament, pairings) do
-    alias MtgFriends.{Participants, Tournaments}
-
     # Handle Top Cut 4 Winner Logic
-    if tournament.is_top_cut_4 do
-      # Find the pairing with a winner loaded.
-      # Pairings should be preloaded with participants if we need to update them?
-      # We need to preload participants on these pairings to update them.
-      pairings = Repo.preload(pairings, :participant)
+    if length(pairings) == 1 and tournament.is_top_cut_4 do
+      pairing = Repo.preload(pairings, winner: :participant) |> hd()
 
-      winning_pairing = Enum.find(pairings, fn p -> p.winner end)
+      winning_participant = pairing.winner.participant
 
-      if winning_pairing do
+      with false <- is_nil(winning_participant) do
         {:ok, %Participant{}} =
-          Participants.update_participant(winning_pairing.participant, %{
+          Participants.update_participant(winning_participant, %{
             "is_tournament_winner" => true
           })
       end

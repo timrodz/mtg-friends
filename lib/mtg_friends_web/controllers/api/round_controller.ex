@@ -77,7 +77,7 @@ defmodule MtgFriendsWeb.API.RoundController do
     rounds =
       Rounds.list_rounds(tournament_id)
       # Preload pairings as they are part of the RoundJSON view
-      |> MtgFriends.Repo.preload(pairings: :participant)
+      |> MtgFriends.Repo.preload(pairings: [pairing_participants: :participant])
 
     render(conn, :index, rounds: rounds)
   end
@@ -85,7 +85,7 @@ defmodule MtgFriendsWeb.API.RoundController do
   def show(conn, %{"tournament_id" => _tournament_id, "id" => id}) do
     round =
       Rounds.get_round!(id)
-      |> MtgFriends.Repo.preload(pairings: :participant)
+      |> MtgFriends.Repo.preload(pairings: [pairing_participants: :participant])
 
     conn
     |> render(:show, round: round)
@@ -94,7 +94,7 @@ defmodule MtgFriendsWeb.API.RoundController do
   def create(conn, %{"tournament_id" => tournament_id} = round_params) do
     with {:ok, round} <-
            Rounds.create_round(round_params |> Map.put("tournament_id", tournament_id)) do
-      round = MtgFriends.Repo.preload(round, pairings: :participant)
+      round = MtgFriends.Repo.preload(round, pairings: :pairing_participants)
 
       conn
       |> put_status(:created)
@@ -112,7 +112,7 @@ defmodule MtgFriendsWeb.API.RoundController do
     round = Rounds.get_round!(id)
 
     with {:ok, updated_round} <- Rounds.update_round(round, round_params) do
-      updated_round = MtgFriends.Repo.preload(updated_round, pairings: :participant)
+      updated_round = MtgFriends.Repo.preload(updated_round, pairings: :pairing_participants)
 
       conn
       |> put_status(:ok)

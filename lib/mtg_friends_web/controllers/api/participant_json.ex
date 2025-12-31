@@ -18,7 +18,8 @@ defmodule MtgFriendsWeb.API.ParticipantJSON do
       name: participant.name,
       points: participant.points,
       decklist: participant.decklist,
-      tournament_id: participant.tournament_id
+      is_tournament_winner: participant.is_tournament_winner,
+      is_dropped: participant.is_dropped
     }
   end
 end

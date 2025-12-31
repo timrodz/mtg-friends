@@ -101,6 +101,75 @@ defmodule MtgFriendsWeb.Schemas do
     })
   end
 
+  defmodule PairingParticipant do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PairingParticipant",
+      type: :object,
+      properties: %{
+        id: %Schema{type: :integer},
+        participant_id: %Schema{type: :integer},
+        points: %Schema{type: :integer}
+      }
+    })
+  end
+
+  defmodule Pairing do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "Pairing",
+      type: :object,
+      properties: %{
+        id: %Schema{type: :integer},
+        active: %Schema{type: :boolean},
+        winner_id: %Schema{type: :integer},
+        participants: %Schema{
+          type: :array,
+          items: PairingParticipant
+        }
+      }
+    })
+  end
+
+  defmodule PairingRequest do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PairingRequest",
+      type: :object,
+      properties: %{
+        active: %Schema{type: :boolean},
+        winner_id: %Schema{type: :integer}
+      }
+    })
+  end
+
+  defmodule PairingResponse do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PairingResponse",
+      type: :object,
+      properties: %{
+        data: Pairing
+      }
+    })
+  end
+
+  defmodule PairingsResponse do
+    require OpenApiSpex
+
+    OpenApiSpex.schema(%{
+      title: "PairingsResponse",
+      type: :object,
+      properties: %{
+        data: %Schema{type: :array, items: Pairing}
+      }
+    })
+  end
+
   defmodule Round do
     require OpenApiSpex
 
@@ -109,10 +178,10 @@ defmodule MtgFriendsWeb.Schemas do
       type: :object,
       properties: %{
         id: %Schema{type: :integer},
-        number: %Schema{type: :integer},
         status: %Schema{type: :string, enum: ["inactive", "active", "finished"]},
+        number: %Schema{type: :integer},
         started_at: %Schema{type: :string, format: :date_time},
-        is_complete: %Schema{type: :boolean}
+        pairings: %Schema{type: :array, items: Pairing}
       }
     })
   end
@@ -124,10 +193,9 @@ defmodule MtgFriendsWeb.Schemas do
       title: "RoundRequest",
       type: :object,
       properties: %{
-        number: %Schema{type: :integer},
         status: %Schema{type: :string, enum: ["inactive", "active", "finished"]},
-        started_at: %Schema{type: :string, format: :date_time},
-        is_complete: %Schema{type: :boolean}
+        number: %Schema{type: :integer},
+        started_at: %Schema{type: :string, format: :date_time}
       }
     })
   end
@@ -168,8 +236,7 @@ defmodule MtgFriendsWeb.Schemas do
         points: %Schema{type: :integer},
         decklist: %Schema{type: :string},
         is_tournament_winner: %Schema{type: :boolean},
-        is_dropped: %Schema{type: :boolean},
-        tournament_id: %Schema{type: :integer}
+        is_dropped: %Schema{type: :boolean}
       }
     })
   end
@@ -209,64 +276,6 @@ defmodule MtgFriendsWeb.Schemas do
       type: :object,
       properties: %{
         data: %Schema{type: :array, items: Participant}
-      }
-    })
-  end
-
-  defmodule Pairing do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "Pairing",
-      type: :object,
-      properties: %{
-        id: %Schema{type: :integer},
-        number: %Schema{type: :integer},
-        active: %Schema{type: :boolean},
-        points: %Schema{type: :integer},
-        winner: %Schema{type: :boolean},
-        tournament_id: %Schema{type: :integer},
-        round_id: %Schema{type: :integer},
-        participant_id: %Schema{type: :integer}
-      }
-    })
-  end
-
-  defmodule PairingRequest do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "PairingRequest",
-      type: :object,
-      properties: %{
-        number: %Schema{type: :integer},
-        active: %Schema{type: :boolean},
-        points: %Schema{type: :integer},
-        winner: %Schema{type: :boolean}
-      }
-    })
-  end
-
-  defmodule PairingResponse do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "PairingResponse",
-      type: :object,
-      properties: %{
-        data: Pairing
-      }
-    })
-  end
-
-  defmodule PairingsResponse do
-    require OpenApiSpex
-
-    OpenApiSpex.schema(%{
-      title: "PairingsResponse",
-      type: :object,
-      properties: %{
-        data: %Schema{type: :array, items: Pairing}
       }
     })
   end

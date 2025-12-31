@@ -8,6 +8,7 @@ defmodule MtgFriends.PairingEngine do
 
   require Logger
   alias MtgFriends.{Rounds, Pairings}
+  alias MtgFriends.TournamentUtils
 
   # Configuration constants
   @max_swiss_retries 12
@@ -25,14 +26,16 @@ defmodule MtgFriends.PairingEngine do
     is_last_round? = tournament.round_count == round.number + 1
     is_top_cut_4? = is_last_round? && tournament.is_top_cut_4
 
-    participant_pairings =
+    # This returns a list of pairing structures:
+    # [%{round_id: x, tournament_id: y, pairing_participants: [%{participant_id: z, points: 0}, ...]}, ...]
+    pairings_data =
       if is_top_cut_4? do
-        create_top_cut_pairings(tournament, round, num_pairings)
+        create_top_cut_pairings(tournament, round)
       else
         create_regular_pairings(tournament, round, active_participants, num_pairings)
       end
 
-    Pairings.create_multiple_pairings(participant_pairings)
+    Pairings.create_multiple_pairings(pairings_data)
   end
 
   @doc """
@@ -50,64 +53,68 @@ defmodule MtgFriends.PairingEngine do
 
   # Private functions
 
-  defp create_top_cut_pairings(tournament, round, num_pairings) do
-    # Import scoring functions - we'll need to refactor this later
-    import MtgFriends.TournamentUtils, only: [get_overall_scores: 2]
+  defp create_top_cut_pairings(tournament, round) do
+    top_participants =
+      TournamentUtils.get_overall_scores(tournament.rounds)
+      |> Enum.take(4)
 
-    get_overall_scores(tournament.rounds, num_pairings)
-    |> Enum.take(4)
-    |> Enum.map(fn participant ->
+    # For top cut, we create a single pairing with all 4 participants
+    [
       %{
-        # Single pairing for top cut
-        number: 0,
         tournament_id: tournament.id,
         round_id: round.id,
-        participant_id: participant.id
+        active: true,
+        pairing_participants:
+          Enum.map(top_participants, fn p -> %{participant_id: p.id, points: 0} end)
       }
-    end)
+    ]
   end
 
   defp create_regular_pairings(tournament, round, active_participants, num_pairings) do
-    case round.number do
-      # First round: shuffle participants
-      0 ->
-        Logger.info("Creating first round pairings for tournament #{tournament.id}")
+    # This returns a list where each element is a list of participants for one pod/table
+    grouped_participants =
+      case round.number do
+        # First round: shuffle participants
+        0 ->
+          Logger.info("Creating first round pairings for tournament #{tournament.id}")
 
-        partition_participants_into_pairings(
-          active_participants |> Enum.shuffle(),
-          num_pairings,
-          tournament.format
-        )
+          partition_participants_into_pairings(
+            active_participants |> Enum.shuffle(),
+            num_pairings,
+            tournament.format
+          )
 
-      _ ->
-        case tournament.subformat do
-          :bubble_rounds ->
-            Logger.info("Creating bubble round pairings for tournament #{tournament.id}")
+        _ ->
+          case tournament.subformat do
+            :bubble_rounds ->
+              Logger.info("Creating bubble round pairings for tournament #{tournament.id}")
 
-            create_bubble_round_pairings(tournament.id, round.number)
-            |> partition_participants_into_pairings(num_pairings, tournament.format)
+              create_bubble_round_pairings(tournament.id, round.number)
+              |> partition_participants_into_pairings(num_pairings, tournament.format)
 
-          :swiss ->
-            Logger.info("Creating Swiss pairings for tournament #{tournament.id}")
-            create_swiss_pairings(tournament, num_pairings)
-        end
-    end
-    |> create_pairing_structs(tournament.id, round.id)
+            :swiss ->
+              Logger.info("Creating Swiss pairings for tournament #{tournament.id}")
+              create_swiss_pairings(tournament, num_pairings)
+          end
+      end
+
+    # Transform into proper structures for insertion
+    create_pairing_structs(grouped_participants, tournament.id, round.id)
   end
 
-  defp create_pairing_structs(pairings, tournament_id, round_id) do
-    pairings
-    |> Enum.with_index(fn pairing, index ->
-      for participant <- pairing do
-        %{
-          number: index,
-          tournament_id: tournament_id,
-          round_id: round_id,
-          participant_id: participant.id
-        }
-      end
+  defp create_pairing_structs(grouped_participants, tournament_id, round_id) do
+    grouped_participants
+    |> Enum.map(fn participants_in_pod ->
+      %{
+        tournament_id: tournament_id,
+        round_id: round_id,
+        active: true,
+        pairing_participants:
+          Enum.map(participants_in_pod, fn p ->
+            %{participant_id: p.id, points: 0}
+          end)
+      }
     end)
-    |> List.flatten()
   end
 
   defp partition_participants_into_pairings(participants, num_pairings, tournament_format) do
@@ -172,21 +179,30 @@ defmodule MtgFriends.PairingEngine do
   defp create_bubble_round_pairings(tournament_id, current_round_number) do
     previous_round =
       Rounds.get_round_by_tournament_and_round_number!(tournament_id, current_round_number - 1)
+      |> MtgFriends.Repo.preload(pairings: :pairing_participants)
 
+    # Extract participants and their points from the previous round's pairings
+    # Flatten all participants from all pairings
     previous_round.pairings
-    |> Enum.map(fn pairing ->
-      %{
-        id: pairing.participant_id,
-        name: pairing.participant.name,
-        points: pairing.points,
-        winner: pairing.winner
-      }
+    |> Enum.flat_map(fn pairing ->
+      pairing.pairing_participants
+      |> Enum.map(fn pp ->
+        # Need to fetch participant details if not preloaded, but usually we just need basic info or ID
+        # Assuming we can get name from association if needed, or re-fetch active participants
+        # For simplicity in bubble rounds, we just need ID and points
+        %{
+          id: pp.participant_id,
+          points: pp.points
+        }
+      end)
     end)
     |> Enum.group_by(fn p -> p.points end)
     |> Enum.sort(:desc)
     |> Enum.flat_map(fn {_, participants} ->
       Enum.shuffle(participants)
     end)
+    # Re-map to participant structs for consistency with other functions
+    |> Enum.map(fn p -> %{id: p.id} end)
   end
 
   defp create_swiss_pairings(tournament, num_pairings) do
@@ -198,25 +214,32 @@ defmodule MtgFriends.PairingEngine do
 
     player_pairing_matrix = build_player_pairing_matrix(tournament, participant_ids)
 
-    case attempt_optimal_swiss_pairings(player_pairing_matrix, num_pairings, tournament.format) do
-      {:ok, pairings} ->
-        pairings
+    # returns list of lists of participant IDs: [[1, 2], [3, 4]]
+    paired_ids =
+      case attempt_optimal_swiss_pairings(player_pairing_matrix, num_pairings, tournament.format) do
+        {:ok, pairings} ->
+          pairings
 
-      {:fallback, _reason} ->
-        generate_swiss_pairings_with_retries(
-          @max_swiss_retries,
-          num_pairings,
-          player_pairing_matrix,
-          [],
-          tournament.format
-        )
-        |> Enum.map(fn %{total_repeated_opponents: _, pairing: pairing} ->
-          pairing |> Enum.map(&%{id: elem(&1, 0)})
-        end)
-    end
+        {:fallback, _reason} ->
+          generate_swiss_pairings_with_retries(
+            @max_swiss_retries,
+            num_pairings,
+            player_pairing_matrix,
+            [],
+            tournament.format
+          )
+          |> Enum.map(fn %{pairing: pairing} -> pairing end)
+      end
+
+    # Map back to participant objects for consistency
+    paired_ids
+    |> Enum.map(fn ids_in_pod ->
+      Enum.map(ids_in_pod, fn id -> %{id: id} end)
+    end)
   end
 
   defp build_player_pairing_matrix(tournament, participant_ids) do
+    # Need to extract pairing history from previous rounds
     mapped_rounds = extract_round_pairings(tournament.rounds)
 
     participant_ids
@@ -231,29 +254,31 @@ defmodule MtgFriends.PairingEngine do
   end
 
   defp extract_round_pairings(rounds) do
+    # Transform rounds -> pairings -> lists of participant IDs in same pod
     rounds
+    |> MtgFriends.Repo.preload(pairings: :pairing_participants)
     |> Enum.map(fn round ->
       round.pairings
-      |> Enum.map(fn pairing -> Map.take(pairing, [:number, :participant_id]) end)
-    end)
-    |> Enum.map(fn round ->
-      Enum.group_by(round, & &1.number)
-      |> Enum.map(fn {_round_number, participants} ->
-        participants |> Enum.map(& &1.participant_id)
+      |> Enum.map(fn pairing ->
+        pairing.pairing_participants |> Enum.map(& &1.participant_id)
       end)
     end)
   end
 
   defp find_previous_opponents(mapped_rounds, participant_id) do
     mapped_rounds
-    |> Enum.flat_map(fn round ->
-      Enum.find(round, fn participants ->
-        participants |> Enum.find(&(&1 == participant_id))
+    |> Enum.flat_map(fn round_pairings_lists ->
+      # Find the pod this player was in
+      Enum.find(round_pairings_lists, fn pod_participants ->
+        participant_id in pod_participants
       end) || []
     end)
+    # Remove self
     |> Enum.reject(&(&1 == participant_id))
     |> Enum.uniq()
   end
+
+  # ... (rest of matrix/swiss logic remains mostly same logic just acting on IDs) ...
 
   defp calculate_unplayed_opponents(participant_ids, current_id, players_played_against) do
     :ordsets.subtract(
@@ -278,9 +303,11 @@ defmodule MtgFriends.PairingEngine do
         {:fallback, "Could not create unique pairings"}
 
       false ->
+        # result_pairings needs to reflect the structure expected by create_swiss_pairings
+        # which expects list of lists of IDs
         result_pairings =
           partition_participants_into_pairings(
-            unique_pairings |> Enum.map(fn id -> %{id: id} end),
+            unique_pairings,
             num_pairings,
             tournament_format
           )
@@ -365,6 +392,7 @@ defmodule MtgFriends.PairingEngine do
 
     shuffled_matrix = Enum.shuffle(player_matrix)
 
+    # Pairings here is list of lists of matrix entries {id, played, unplayed}
     pairings =
       partition_participants_into_pairings(shuffled_matrix, num_pairings, tournament_format)
 
@@ -409,16 +437,18 @@ defmodule MtgFriends.PairingEngine do
 
   defp evaluate_pairing_quality(pairings) do
     pairings
-    |> Enum.map(fn pairing ->
-      players_in_pod = Enum.map(pairing, &elem(&1, 0))
+    |> Enum.map(fn pairing_matrix_entries ->
+      # pairing_matrix_entries is list of {id, played, unplayed} tuples
+      players_in_pod = Enum.map(pairing_matrix_entries, &elem(&1, 0))
 
       repeated_opponents =
-        Enum.flat_map(pairing, &elem(&1, 1))
+        Enum.flat_map(pairing_matrix_entries, &elem(&1, 1))
         |> Enum.reject(&Enum.member?(players_in_pod, &1))
         |> Enum.frequencies()
         |> Enum.reduce(0, fn {_id, repetitions}, acc -> repetitions + acc end)
 
-      %{total_repeated_opponents: repeated_opponents, pairing: pairing}
+      # Return structure: pairing is list of IDs
+      %{total_repeated_opponents: repeated_opponents, pairing: players_in_pod}
     end)
   end
 end

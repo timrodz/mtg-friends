@@ -1,4 +1,5 @@
 defmodule MtgFriends.RoundsTest do
+  alias MtgFriends.Pairings.Pairing
   use MtgFriends.DataCase
 
   alias MtgFriends.Rounds
@@ -54,6 +55,33 @@ defmodule MtgFriends.RoundsTest do
     test "change_round/1 returns a round changeset" do
       round = round_fixture()
       assert %Ecto.Changeset{} = Rounds.change_round(round)
+    end
+
+    test "check_and_finalize/2 updates participant scores" do
+      tournament = tournament_fixture()
+      p1 = MtgFriends.ParticipantsFixtures.participant_fixture(%{tournament_id: tournament.id})
+      p2 = MtgFriends.ParticipantsFixtures.participant_fixture(%{tournament_id: tournament.id})
+
+      {:ok, round} =
+        Rounds.create_round(%{tournament_id: tournament.id, number: 1, status: :active})
+
+      # Create a pairing for p1 and p2
+      {:ok, %Pairing{}} =
+        MtgFriends.Pairings.create_pairing(%{
+          tournament_id: tournament.id,
+          round_id: round.id,
+          active: false,
+          pairing_participants: [
+            %{participant_id: p1.id, points: 3},
+            %{participant_id: p2.id, points: 0}
+          ]
+        })
+
+      # check_and_finalize
+      {:ok, _round, _status} = Rounds.check_and_finalize(round, tournament)
+
+      assert MtgFriends.Participants.get_participant!(p1.id).points == 3
+      assert MtgFriends.Participants.get_participant!(p2.id).points == 0
     end
   end
 end

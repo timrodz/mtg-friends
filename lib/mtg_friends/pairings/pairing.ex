@@ -4,13 +4,13 @@ defmodule MtgFriends.Pairings.Pairing do
 
   schema "pairings" do
     field :active, :boolean
-    field :number, :integer
-    field :points, :integer
-    field :winner, :boolean
 
     belongs_to :tournament, MtgFriends.Tournaments.Tournament
     belongs_to :round, MtgFriends.Rounds.Round
-    belongs_to :participant, MtgFriends.Participants.Participant
+    belongs_to :winner, MtgFriends.Pairings.PairingParticipant
+
+    has_many :pairing_participants, MtgFriends.Pairings.PairingParticipant, on_replace: :delete
+    has_many :participants, through: [:pairing_participants, :participant]
 
     timestamps()
   end
@@ -18,16 +18,8 @@ defmodule MtgFriends.Pairings.Pairing do
   @doc false
   def changeset(pairing, attrs) do
     pairing
-    |> cast(attrs, [
-      :active,
-      :number,
-      :points,
-      :winner,
-      :tournament_id,
-      :round_id,
-      :participant_id
-    ])
-    |> validate_required([:number, :tournament_id, :round_id, :participant_id])
-    |> validate_number(:number, greater_than_or_equal_to: 0)
+    |> cast(attrs, [:active, :tournament_id, :round_id, :winner_id])
+    |> cast_assoc(:pairing_participants)
+    |> validate_required([:tournament_id, :round_id])
   end
 end

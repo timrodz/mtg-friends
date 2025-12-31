@@ -29,49 +29,53 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
   defp apply_action(socket, :edit, %{
          "tournament_id" => tournament_id,
          "round_number" => round_number,
-         "pairing_number" => pairing_number_str
+         "pairing_id" => pairing_id_str
        }) do
-    {pairing_number, ""} = Integer.parse(pairing_number_str)
+    {pairing_id, ""} = Integer.parse(pairing_id_str)
 
     socket
-    |> assign(:selected_pairing_number, pairing_number)
+    |> assign(:selected_pairing_id, pairing_id)
     |> generate_socket(tournament_id, round_number, :edit)
   end
 
+  # Fallback for old URL structure if necessary, though simpler to just update links
+  # But assuming URLs might now use ID instead of number for uniqueness/simplicity
+  # The router likely still captures `pairing_number` or we change it.
+  # Let's keep it robust. If we link by ID, we use ID.
+  # If the router says :pairing_number but we want ID, we might need to change router or just use index.
+  # Current Pairing model doesn't have `number` field anymore, so rely on implicit index or ID.
+
   defp generate_socket(socket, tournament_id, round_number, action) do
     round = Rounds.get_round_from_round_number_str!(tournament_id, round_number)
+    # Ensure pairings are loaded with participants
+    round = MtgFriends.Repo.preload(round, pairings: [pairing_participants: :participant])
 
-    pairing_groups =
-      Enum.group_by(round.pairings, fn pairing -> pairing.number end)
-      |> Enum.map(fn {index, pairings} ->
-        {index,
-         %{
-           pairings: pairings,
-           active: Enum.any?(pairings, fn p -> p.active == true end),
-           pairing_winner: Enum.find(pairings, fn p -> p.winner end)
-         }}
-      end)
+    # Map pairings to a structure easier for the template
+    # We can use the list index as "Table Number" for display since we removed `number` column
+    pairings_with_index = Enum.with_index(round.pairings, 1)
 
     forms =
-      pairing_groups
-      |> Enum.map(fn {index, pairing_group} ->
-        {index,
+      pairings_with_index
+      |> Enum.map(fn {pairing, index} ->
+        {pairing.id,
          to_form(%{
-           "pairing_number" => index,
-           "winner_id" => "",
+           "pairing_id" => pairing.id,
+           "table_number" => index,
+           "winner_id" => pairing.winner_id,
            "participants" =>
              Enum.map(
-               Enum.sort_by(pairing_group.pairings, fn pairings -> pairings.points end, :desc),
-               fn pairing ->
+               Enum.sort_by(pairing.pairing_participants, fn pp -> pp.points end, :desc),
+               fn pp ->
                  %{
-                   id: pairing.participant.id,
-                   points: pairing.points || 0,
-                   name: pairing.participant.name
+                   id: pp.participant.id,
+                   points: pp.points || 0,
+                   name: pp.participant.name
                  }
                end
              )
          })}
       end)
+      |> Map.new()
 
     round_finish_time =
       case round.started_at do
@@ -102,16 +106,17 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
       tournament_name: round.tournament.name,
       tournament_rounds: round.tournament.rounds,
       participants: round.tournament.participants,
-      pairing_groups: pairing_groups,
+      # passing list of {pairing, index}
+      pairings: pairings_with_index,
       page_title:
         case action do
           :index ->
             "#{round.tournament.name} / Round #{round.number + 1}"
 
           :edit ->
-            "#{round.tournament.name} / Round #{round.number + 1} / Pod ##{socket.assigns.selected_pairing_number}"
+            "#{round.tournament.name} / Round #{round.number + 1} / Edit Pairing"
         end,
-      num_pairings: round(Float.ceil(length(round.tournament.participants) / 4)),
+      # num_pairings logic was just for display, now we have explicit pairings
       forms: forms
     )
     |> UserAuth.assign_current_user_owner(

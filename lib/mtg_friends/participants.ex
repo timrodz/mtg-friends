@@ -185,4 +185,34 @@ defmodule MtgFriends.Participants do
   def change_participant(%Participant{} = participant, attrs \\ %{}) do
     Participant.changeset(participant, attrs)
   end
+
+  def calculate_and_update_scores(tournament_id) do
+    # 1. Fetch all participants for the tournament
+    participants = list_participants(tournament_id)
+
+    # 2. For each participant, calculate their total score from all pairings
+    # We can use a query or load associations. Since we need to sum points,
+    # let's try a query approach for efficiency or verify via loading.
+    # Given the previous context, simpler might be better:
+    # Load all pairing_participants for the tournament (via rounds -> pairings)
+    # OR simpler: just query PairingParticipant joined with Pairing and Round
+
+    # Let's do it in a transaction to be safe
+    Repo.transaction(fn ->
+      Enum.each(participants, fn participant ->
+        total_points =
+          MtgFriends.Repo.one(
+            from pp in MtgFriends.Pairings.PairingParticipant,
+              join: p in MtgFriends.Pairings.Pairing,
+              on: p.id == pp.pairing_id,
+              join: r in MtgFriends.Rounds.Round,
+              on: r.id == p.round_id,
+              where: pp.participant_id == ^participant.id and r.tournament_id == ^tournament_id,
+              select: sum(pp.points)
+          ) || 0
+
+        update_participant(participant, %{points: total_points})
+      end)
+    end)
+  end
 end

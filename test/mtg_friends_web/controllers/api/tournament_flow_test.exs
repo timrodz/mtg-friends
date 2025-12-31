@@ -48,59 +48,61 @@ defmodule MtgFriendsWeb.API.TournamentFlowTest do
       end
 
     # 3. Create Round 1
-    # POST /api/tournaments/:id/rounds
     conn = post(conn, ~p"/api/tournaments/#{tournament_id}/rounds", %{number: 0})
     round_data = json_response(conn, 201)["data"]
     round_id = round_data["id"]
 
     # Manual Pairing Construction for Round 1
-    # Pair participants into matches (tables)
-    participant_ids
-    |> Enum.chunk_every(2)
-    |> Enum.with_index(1)
-    |> Enum.each(fn {chunk, table_number} ->
-      assert length(chunk) <= 2
+    pairing_ids =
+      participant_ids
+      |> Enum.chunk_every(2)
+      |> Enum.map(fn chunk ->
+        pairing_participants =
+          Enum.map(chunk, fn p_id ->
+            %{participant_id: p_id, points: 0}
+          end)
 
-      for p_id <- chunk do
-        post(conn, ~p"/api/tournaments/#{tournament_id}/rounds/#{round_id}/pairings",
-          participant_id: p_id,
-          number: table_number,
-          active: true,
-          points: 0
-        )
-      end
-    end)
+        conn =
+          post(conn, ~p"/api/tournaments/#{tournament_id}/rounds/#{round_id}/pairings", %{
+            pairing_participants: pairing_participants,
+            active: true
+          })
 
-    # Refresh round data to verify pairings and get pairing objects
+        json_response(conn, 201)["data"]["id"]
+      end)
+
+    # Refresh round data
     conn = get(conn, ~p"/api/tournaments/#{tournament_id}/rounds/#{round_id}")
     round_data = json_response(conn, 200)["data"]
 
     assert round_data["number"] == 0
-    assert length(round_data["pairings"]) == 16
-
-    pairings = round_data["pairings"]
+    assert length(round_data["pairings"]) == 8
 
     # 4. Submit Results
-    grouped_pairings = Enum.group_by(pairings, fn p -> p["number"] end)
-    assert map_size(grouped_pairings) == 8
+    for pairing_id <- pairing_ids do
+      conn =
+        get(conn, ~p"/api/tournaments/#{tournament_id}/rounds/#{round_id}/pairings/#{pairing_id}")
 
-    for {_table, table_pairings} <- grouped_pairings do
-      # For simplicity: first player wins, others lose
-      table_pairings
-      |> Enum.with_index()
-      |> Enum.each(fn {pairing, index} ->
-        points = if index == 0, do: 3, else: 0
-        winner = if index == 0, do: true, else: false
+      pairing_data = json_response(conn, 200)["data"]
+      [pp1, pp2] = pairing_data["participants"]
 
-        conn =
-          put(
-            conn,
-            ~p"/api/tournaments/#{tournament_id}/rounds/#{round_id}/pairings/#{pairing["id"]}",
-            %{points: points, winner: winner, active: false}
-          )
+      # First player wins (3 pts), second loses (0 pts)
+      conn =
+        put(
+          conn,
+          ~p"/api/tournaments/#{tournament_id}/rounds/#{round_id}/pairings/#{pairing_id}",
+          %{
+            winner_id: pp1["id"],
+            active: false,
+            pairing_participants: [
+              %{id: pp1["id"], points: 3},
+              %{id: pp2["id"], points: 0}
+            ]
+          }
+        )
 
-        assert json_response(conn, 200)["data"]["points"] == points
-      end)
+      data = json_response(conn, 200)["data"]
+      assert data["winner_id"] == pp1["id"]
     end
 
     # 5. Create Round 2
@@ -108,21 +110,19 @@ defmodule MtgFriendsWeb.API.TournamentFlowTest do
     round_2_data = json_response(conn, 201)["data"]
     round_2_id = round_2_data["id"]
 
-    # Manual Pairing Construction for Round 2 (mock pairing logic: same pairings for simplicity in test)
+    # Manual Pairing Construction for Round 2
     participant_ids
     |> Enum.chunk_every(2)
-    |> Enum.with_index(1)
-    |> Enum.each(fn {chunk, table_number} ->
-      assert length(chunk) <= 2
+    |> Enum.each(fn chunk ->
+      pairing_participants =
+        Enum.map(chunk, fn p_id ->
+          %{participant_id: p_id, points: 0}
+        end)
 
-      for p_id <- chunk do
-        post(conn, ~p"/api/tournaments/#{tournament_id}/rounds/#{round_2_id}/pairings",
-          participant_id: p_id,
-          number: table_number,
-          active: true,
-          points: 0
-        )
-      end
+      post(conn, ~p"/api/tournaments/#{tournament_id}/rounds/#{round_2_id}/pairings", %{
+        pairing_participants: pairing_participants,
+        active: true
+      })
     end)
 
     # Refresh Round 2
@@ -130,6 +130,6 @@ defmodule MtgFriendsWeb.API.TournamentFlowTest do
     round_2_data = json_response(conn, 200)["data"]
 
     assert round_2_data["number"] == 1
-    assert length(round_2_data["pairings"]) == 16
+    assert length(round_2_data["pairings"]) == 8
   end
 end

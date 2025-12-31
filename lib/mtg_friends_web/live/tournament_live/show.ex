@@ -16,13 +16,11 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
-    tournament = Tournaments.get_tournament!(id)
-
-    num_pairings =
-      TournamentUtils.get_num_pairings(length(tournament.participants), tournament.format)
+    tournament =
+      Tournaments.get_tournament!(id)
 
     participant_score_lookup =
-      TournamentUtils.get_overall_scores(tournament.rounds, num_pairings)
+      TournamentUtils.get_overall_scores(tournament.rounds)
       |> Map.new(fn %{id: id, total_score: total_score, win_rate: win_rate} ->
         {id,
          %{
@@ -104,7 +102,6 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   def handle_event("create-round", _, socket) do
     tournament = socket.assigns.tournament
     round_count = length(tournament.rounds)
-    first_round? = round_count == 0
 
     with {:ok, round} <-
            Rounds.create_round_for_tournament(
@@ -116,10 +113,6 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
              tournament,
              round
            ) do
-      if first_round? do
-        {:ok, _} = Tournaments.update_tournament(tournament, %{"status" => :active})
-      end
-
       {:noreply,
        socket
        |> put_flash(:success, "Round #{round.number + 1} created successfully")
