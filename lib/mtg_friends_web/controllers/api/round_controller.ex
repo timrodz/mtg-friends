@@ -11,6 +11,16 @@ defmodule MtgFriendsWeb.API.RoundController do
 
   tags ["rounds"]
 
+  operation :index,
+    summary: "List rounds for tournament",
+    security: [],
+    parameters: [
+      tournament_id: [in: :path, description: "Tournament ID", type: :integer, example: 1]
+    ],
+    responses: [
+      ok: {"Rounds list", "application/json", Schemas.RoundsResponse}
+    ]
+
   operation :show,
     summary: "Show round",
     security: [],
@@ -61,16 +71,6 @@ defmodule MtgFriendsWeb.API.RoundController do
     responses: [
       no_content: "Round removed",
       not_found: {"Round not found", "application/json", Schemas.ErrorResponse}
-    ]
-
-  operation :index,
-    summary: "List rounds for tournament",
-    security: [],
-    parameters: [
-      tournament_id: [in: :path, description: "Tournament ID", type: :integer, example: 1]
-    ],
-    responses: [
-      ok: {"Rounds list", "application/json", Schemas.RoundsResponse}
     ]
 
   def index(conn, %{"tournament_id" => tournament_id}) do

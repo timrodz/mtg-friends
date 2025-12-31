@@ -63,6 +63,11 @@ defmodule MtgFriendsWeb.Router do
     post "/login", API.SessionController, :create
 
     resources "/tournaments", API.TournamentController, only: [:index, :show] do
+      resources "/participants", API.ParticipantController, only: [:index, :show]
+
+      resources "/rounds", API.RoundController, only: [:index, :show] do
+        resources "/pairings", API.PairingController, only: [:index, :show]
+      end
     end
   end
 
@@ -75,21 +80,20 @@ defmodule MtgFriendsWeb.Router do
   scope "/api", MtgFriendsWeb do
     pipe_through [:api, :api_authenticated]
 
-    resources "/tournaments", API.TournamentController, only: [:create]
+    scope "/tournaments", API do
+      post "/", TournamentController, :create
 
-    scope "/tournaments/:tournament_id", API do
-      pipe_through :authorize_tournament_owner
+      scope "/:tournament_id" do
+        pipe_through :authorize_tournament_owner
 
-      put "/", TournamentController, :update
-      delete "/", TournamentController, :delete
+        put "/", TournamentController, :update
+        delete "/", TournamentController, :delete
 
-      resources "/participants", ParticipantController,
-        only: [:index, :show, :create, :update, :delete]
+        resources "/participants", ParticipantController, only: [:create, :update, :delete]
 
-      resources "/rounds", RoundController, only: [:index, :show, :create, :update, :delete]
-
-      scope "/rounds/:round_id" do
-        resources "/pairings", PairingController, only: [:index, :show, :create, :update, :delete]
+        resources "/rounds", RoundController, only: [:create, :update, :delete] do
+          resources "/pairings", PairingController, only: [:create, :update, :delete]
+        end
       end
     end
   end

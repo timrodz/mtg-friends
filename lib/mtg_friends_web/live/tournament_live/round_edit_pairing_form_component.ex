@@ -93,7 +93,7 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent do
       {:error, _changeset} ->
         {:noreply,
          socket
-         |> put_flash(:error, "Failed to finalize round")
+         |> put_flash(:error, "Failed to finalize round. Please check your inputs and try again.")
          |> push_navigate(to: socket.assigns.navigate)}
     end
   end
