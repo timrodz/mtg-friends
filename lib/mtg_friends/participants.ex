@@ -22,6 +22,19 @@ defmodule MtgFriends.Participants do
   end
 
   @doc """
+  Returns the list of participants for a tournament
+
+  ## Examples
+
+      iex> list_participants_by_tournament(1)
+      [%Participant{}, ...]
+
+  """
+  def list_participants_by_tournament(tournament_id) do
+    Repo.all(from p in Participant, where: p.tournament_id == ^tournament_id)
+  end
+
+  @doc """
   Gets a single participant.
 
   Raises `Ecto.NoResultsError` if the Participant does not exist.
@@ -180,5 +193,49 @@ defmodule MtgFriends.Participants do
   """
   def change_participant(%Participant{} = participant, attrs \\ %{}) do
     Participant.changeset(participant, attrs)
+  end
+
+  def calculate_and_update_scores(tournament_id) do
+    # 1. Fetch all participants for the tournament
+    participants = list_participants_by_tournament(tournament_id)
+
+    # 2. Inspect round count to determine denominator (or use match count)
+    # The previous logic used `round_count` from the list of rounds.
+    # To be consistent with "Win Rate", using matches played is safer for dropped players,
+    # OR using tournament round count if that's the intention.
+    # Let's use matches played (count of pairings) as the denominator for match win rate.
+
+    Repo.transaction(fn ->
+      Enum.each(participants, fn participant ->
+        stats =
+          MtgFriends.Repo.one(
+            from pp in MtgFriends.Pairings.PairingParticipant,
+              join: p in MtgFriends.Pairings.Pairing,
+              on: p.id == pp.pairing_id,
+              join: r in MtgFriends.Rounds.Round,
+              on: r.id == p.round_id,
+              where: pp.participant_id == ^participant.id and r.tournament_id == ^tournament_id,
+              select: %{
+                total_points: sum(pp.points),
+                match_count: count(pp.id),
+                wins: filter(count(pp.id), p.winner_id == pp.id)
+              }
+          )
+
+        total_points = stats.total_points || 0
+        match_count = stats.match_count || 0
+        wins = stats.wins || 0
+
+        # Avoid division by zero
+        win_rate =
+          if match_count > 0 do
+            wins / match_count * 100
+          else
+            0.0
+          end
+
+        update_participant(participant, %{points: total_points, win_rate: win_rate})
+      end)
+    end)
   end
 end

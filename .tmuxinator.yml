@@ -1,9 +1,0 @@
-name: mtg-friends
-root: ~/src/personal-projects/mtg-friends
-
-windows:
-  - shell:
-      layout: even-horizontal
-      panes:
-        - source .env; code ~/src/elixir-phoenix.code-workspace
-        - source .env; mix phx.server

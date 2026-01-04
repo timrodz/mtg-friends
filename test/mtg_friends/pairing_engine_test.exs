@@ -71,7 +71,8 @@ defmodule MtgFriends.PairingEngineTest do
       tournament: tournament,
       round: round
     } do
-      {:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
+      {:ok, %{insert_pairings: pairings}} = PairingEngine.create_pairings(tournament, round)
+      pairing_count = pairings |> Enum.flat_map(& &1.pairing_participants) |> length()
 
       # Should create 8 participants / 4 per pod = 2 pairings * 4 participants each = 8 total records
       assert pairing_count == 8
@@ -102,7 +103,8 @@ defmodule MtgFriends.PairingEngineTest do
       tournament = Tournaments.get_tournament!(tournament.id)
       round = Rounds.get_round!(round.id, true)
 
-      {:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
+      {:ok, %{insert_pairings: pairings}} = PairingEngine.create_pairings(tournament, round)
+      pairing_count = pairings |> Enum.flat_map(& &1.pairing_participants) |> length()
 
       # Should create 6 participants / 2 per pairing = 3 pairings * 2 participants each = 6 total records
       assert pairing_count == 6
@@ -139,7 +141,8 @@ defmodule MtgFriends.PairingEngineTest do
       tournament = Tournaments.get_tournament!(tournament.id)
       round = Rounds.get_round!(round.id, true)
 
-      {:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
+      {:ok, %{insert_pairings: pairings}} = PairingEngine.create_pairings(tournament, round)
+      pairing_count = pairings |> Enum.flat_map(& &1.pairing_participants) |> length()
 
       # Should create 6 participants total in pairings
       assert pairing_count == 6
@@ -153,7 +156,8 @@ defmodule MtgFriends.PairingEngineTest do
       tournament = Tournaments.get_tournament!(tournament.id)
       round = Rounds.get_round!(round.id, true)
 
-      {:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
+      {:ok, %{insert_pairings: pairings}} = PairingEngine.create_pairings(tournament, round)
+      pairing_count = pairings |> Enum.flat_map(& &1.pairing_participants) |> length()
 
       # Should create 9 participants total in pairings
       assert pairing_count == 9
@@ -169,7 +173,8 @@ defmodule MtgFriends.PairingEngineTest do
       tournament = Tournaments.get_tournament!(tournament.id)
       round = Rounds.get_round!(round.id, true)
 
-      {:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
+      {:ok, %{insert_pairings: pairings}} = PairingEngine.create_pairings(tournament, round)
+      pairing_count = pairings |> Enum.flat_map(& &1.pairing_participants) |> length()
 
       # Should create pairings for all 10 players
       assert pairing_count == 10
@@ -211,7 +216,8 @@ defmodule MtgFriends.PairingEngineTest do
     end
 
     test "excludes dropped participants from pairings", %{tournament: tournament, round: round} do
-      {:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
+      {:ok, %{insert_pairings: pairings}} = PairingEngine.create_pairings(tournament, round)
+      pairing_count = pairings |> Enum.flat_map(& &1.pairing_participants) |> length()
 
       # Should only pair 6 active participants (8 - 2 dropped)
       assert pairing_count == 6
@@ -255,7 +261,8 @@ defmodule MtgFriends.PairingEngineTest do
     end
 
     test "creates top cut pairings for final round", %{tournament: tournament, round: round} do
-      {:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
+      {:ok, %{insert_pairings: pairings}} = PairingEngine.create_pairings(tournament, round)
+      pairing_count = pairings |> Enum.flat_map(& &1.pairing_participants) |> length()
 
       # Top cut should include top 4 players
       assert pairing_count == 4
@@ -301,7 +308,8 @@ defmodule MtgFriends.PairingEngineTest do
       tournament: tournament,
       round: round
     } do
-      {:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
+      {:ok, %{insert_pairings: pairings}} = PairingEngine.create_pairings(tournament, round)
+      pairing_count = pairings |> Enum.flat_map(& &1.pairing_participants) |> length()
 
       # Should create pairings for all active participants
       assert pairing_count == 8
@@ -314,7 +322,8 @@ defmodule MtgFriends.PairingEngineTest do
       # This test verifies the Swiss algorithm runs without error
       # The specific opponent avoidance logic is complex and would require
       # more sophisticated fixtures to test deterministically
-      {:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
+      {:ok, %{insert_pairings: pairings}} = PairingEngine.create_pairings(tournament, round)
+      pairing_count = pairings |> Enum.flat_map(& &1.pairing_participants) |> length()
 
       # Swiss algorithm should create pairings
       assert pairing_count > 0
@@ -360,7 +369,8 @@ defmodule MtgFriends.PairingEngineTest do
       tournament: tournament,
       round: round
     } do
-      {:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
+      {:ok, %{insert_pairings: pairings}} = PairingEngine.create_pairings(tournament, round)
+      pairing_count = pairings |> Enum.flat_map(& &1.pairing_participants) |> length()
 
       # Should create pairings for all participants
       assert pairing_count == 8
@@ -370,7 +380,8 @@ defmodule MtgFriends.PairingEngineTest do
       tournament: tournament,
       round: round
     } do
-      {:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
+      {:ok, %{insert_pairings: pairings}} = PairingEngine.create_pairings(tournament, round)
+      pairing_count = pairings |> Enum.flat_map(& &1.pairing_participants) |> length()
 
       # Should create pairings for all participants
       assert pairing_count == 8
@@ -401,19 +412,22 @@ defmodule MtgFriends.PairingEngineTest do
     |> Enum.shuffle()
     |> Enum.chunk_every(4)
     |> Enum.with_index()
-    |> Enum.each(fn {pod_participants, pairing_number} ->
-      Enum.with_index(pod_participants, fn participant, _index ->
-        {:ok, _pairing} =
-          Pairings.create_pairing(%{
-            number: pairing_number,
-            tournament_id: tournament.id,
-            round_id: round.id,
+    |> Enum.each(fn {pod_participants, _pairing_number} ->
+      pairing_participants =
+        Enum.map(pod_participants, fn participant ->
+          %{
             participant_id: participant.id,
-            # Random points for scoring
-            points: Enum.random(0..3),
-            winner: Enum.random([true, false])
-          })
-      end)
+            points: Enum.random(0..3)
+          }
+        end)
+
+      {:ok, _pairing} =
+        Pairings.create_pairing(%{
+          tournament_id: tournament.id,
+          round_id: round.id,
+          active: false,
+          pairing_participants: pairing_participants
+        })
     end)
   end
 
@@ -426,19 +440,22 @@ defmodule MtgFriends.PairingEngineTest do
     |> Enum.zip(point_distributions)
     |> Enum.chunk_every(4)
     |> Enum.with_index()
-    |> Enum.each(fn {pod_participants, pairing_number} ->
-      Enum.each(pod_participants, fn {participant, points} ->
-        {:ok, _pairing} =
-          Pairings.create_pairing(%{
-            number: pairing_number,
-            tournament_id: tournament.id,
-            round_id: round.id,
+    |> Enum.each(fn {pod_participants, _pairing_number} ->
+      pairing_participants =
+        Enum.map(pod_participants, fn {participant, points} ->
+          %{
             participant_id: participant.id,
-            points: points,
-            # Winners are those with 2+ points
-            winner: points > 1
-          })
-      end)
+            points: points
+          }
+        end)
+
+      {:ok, _pairing} =
+        Pairings.create_pairing(%{
+          tournament_id: tournament.id,
+          round_id: round.id,
+          active: false,
+          pairing_participants: pairing_participants
+        })
     end)
   end
 end

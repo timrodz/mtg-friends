@@ -1,9 +1,9 @@
 defmodule MtgFriends.TournamentUtils do
   @moduledoc """
   Core tournament utilities and scoring functions.
-  
+
   This module has been refactored to focus on core business logic,
-  with rendering moved to TournamentRenderer and pairing algorithms 
+  with rendering moved to TournamentRenderer and pairing algorithms
   moved to PairingEngine.
   """
 
@@ -28,53 +28,19 @@ defmodule MtgFriends.TournamentUtils do
 
   @doc """
   Calculates overall scores for all participants across tournament rounds.
-  
+
   Returns a list of participant score maps sorted by total score and win rate.
   """
-  def get_overall_scores(rounds, num_pairings) do
-    rounds
-    |> Enum.flat_map(fn round -> round.pairings end)
-    |> Enum.group_by(&Map.get(&1, :participant_id))
-    |> Enum.map(fn {id, pairings} ->
-      total_score =
-        Enum.reduce(pairings, 0, fn cur_pairing, acc ->
-          calculate_participant_round_score(rounds, num_pairings, cur_pairing, acc)
-        end)
-        |> Decimal.from_float()
-        |> Decimal.round(3)
-
-      total_wins =
-        Enum.reduce(pairings, 0, fn pairing, acc -> 
-          (pairing.winner && 1 + acc) || acc 
-        end)
-
+  def get_overall_scores(participants) do
+    participants
+    |> Enum.map(fn participant ->
       %{
-        id: id,
-        total_score: total_score,
-        win_rate: (total_wins / length(rounds) * 100) |> Decimal.from_float()
+        id: participant.id,
+        total_score: participant.points || 0,
+        win_rate: Decimal.from_float(participant.win_rate || 0.0)
       }
     end)
+    # Sort by total score (desc) and then win rate (desc)
     |> Enum.sort_by(&{&1.total_score, &1.win_rate}, :desc)
-  end
-
-  # Private function to calculate a participant's score for a specific round
-  defp calculate_participant_round_score(rounds, num_pairings, cur_pairing, acc) do
-    cur_round = Enum.find(rounds, fn r -> r.id == cur_pairing.round_id end)
-
-    # Convert to float for consistent calculations
-    if cur_round.status == :active do
-      cur_pairing.points + 0.0 + acc
-    else
-      case cur_round.number do
-        0 ->
-          cur_pairing.points + 0.0 + acc
-
-        _ ->
-          {decimals, ""} =
-            Float.parse("0.00#{abs(num_pairings - cur_pairing.number)}")
-
-          cur_pairing.points + decimals + acc
-      end
-    end
   end
 end

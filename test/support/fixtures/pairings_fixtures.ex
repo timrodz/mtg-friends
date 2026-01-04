@@ -19,13 +19,15 @@ defmodule MtgFriends.PairingsFixtures do
     {:ok, pairing} =
       attrs
       |> Enum.into(%{
-        number: 0,
         tournament_id: tournament.id,
         round_id: round.id,
-        participant_id: participant.id,
-        points: 0,
-        winner: false,
-        active: false
+        active: true,
+        pairing_participants: [
+          %{
+            participant_id: participant.id,
+            points: Map.get(attrs, :points, 0)
+          }
+        ]
       })
       |> MtgFriends.Pairings.create_pairing()
 
