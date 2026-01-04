@@ -22,7 +22,7 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
          "round_number" => round_number
        }) do
     socket
-    |> assign(:selected_pairing_number, nil)
+    |> assign(:selected_pairing_id, nil)
     |> generate_socket(tournament_id, round_number, :index)
   end
 
