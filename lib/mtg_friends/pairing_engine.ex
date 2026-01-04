@@ -55,7 +55,7 @@ defmodule MtgFriends.PairingEngine do
 
   defp create_top_cut_pairings(tournament, round) do
     top_participants =
-      TournamentUtils.get_overall_scores(tournament.rounds)
+      TournamentUtils.get_overall_scores(tournament.participants)
       |> Enum.take(4)
 
     # For top cut, we create a single pairing with all 4 participants

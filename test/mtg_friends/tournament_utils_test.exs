@@ -3,207 +3,59 @@ defmodule MtgFriends.TournamentUtilsTest do
   alias MtgFriends.TournamentUtils
 
   describe "get_overall_scores/2" do
-    test "correctly sums points and calculates win rates for tournament of 8 players and 2 rounds" do
-      rounds = [
-        %{
-          id: 1,
-          status: :finished,
-          number: 1,
-          pairings: [
-            %{
-              id: 101,
-              round_id: 1,
-              winner_id: 1001,
-              # Assuming pairing.winner_id points to the pairing_participant.id of the winner
-              pairing_participants: [
-                %{id: 1001, participant_id: 1, points: 4},
-                %{id: 1002, participant_id: 2, points: 3},
-                %{id: 1003, participant_id: 3, points: 2},
-                %{id: 1004, participant_id: 4, points: 1}
-              ]
-            },
-            %{
-              id: 102,
-              round_id: 1,
-              winner_id: 1008,
-              # Assuming pairing.winner_id points to the pairing_participant.id of the winner
-              pairing_participants: [
-                %{id: 1005, participant_id: 5, points: 1},
-                %{id: 1006, participant_id: 6, points: 2},
-                %{id: 1007, participant_id: 7, points: 3},
-                %{id: 1008, participant_id: 8, points: 4}
-              ]
-            }
-          ]
-        },
-        %{
-          id: 2,
-          status: :finished,
-          number: 2,
-          pairings: [
-            %{
-              id: 201,
-              round_id: 2,
-              winner_id: 1004,
-              pairing_participants: [
-                %{id: 1001, participant_id: 1, points: 1},
-                %{id: 1002, participant_id: 2, points: 2},
-                %{id: 1003, participant_id: 3, points: 3},
-                %{id: 1004, participant_id: 4, points: 4}
-              ]
-            },
-            %{
-              id: 202,
-              round_id: 2,
-              winner_id: 1008,
-              pairing_participants: [
-                %{id: 1005, participant_id: 5, points: 1},
-                %{id: 1006, participant_id: 6, points: 2},
-                %{id: 1007, participant_id: 7, points: 3},
-                %{id: 1008, participant_id: 8, points: 4}
-              ]
-            }
-          ]
-        }
+    test "correctly maps and sorts participants by total score and win rate" do
+      participants = [
+        %{id: 1, points: 5, win_rate: 50.0},
+        %{id: 2, points: 5, win_rate: 0.0},
+        %{id: 3, points: 5, win_rate: 0.0},
+        %{id: 4, points: 5, win_rate: 50.0},
+        %{id: 5, points: 2, win_rate: 0.0},
+        %{id: 6, points: 4, win_rate: 0.0},
+        %{id: 7, points: 6, win_rate: 0.0},
+        %{id: 8, points: 8, win_rate: 100.0}
       ]
 
-      # num_pairings isn't used in the new logic but was in the signature
-      results = TournamentUtils.get_overall_scores(rounds)
+      results = TournamentUtils.get_overall_scores(participants)
 
       assert length(results) == 8
 
-      p1_stats = Enum.find(results, &(&1.id == 1))
-      p2_stats = Enum.find(results, &(&1.id == 2))
-      p3_stats = Enum.find(results, &(&1.id == 3))
-      p4_stats = Enum.find(results, &(&1.id == 4))
-      p5_stats = Enum.find(results, &(&1.id == 5))
-      p6_stats = Enum.find(results, &(&1.id == 6))
-      p7_stats = Enum.find(results, &(&1.id == 7))
-      p8_stats = Enum.find(results, &(&1.id == 8))
+      [first, second, third, fourth, fifth, sixth, seventh, eighth] = results
 
-      assert p1_stats.total_score == 5
-      assert p1_stats.win_rate == Decimal.from_float(50.0)
+      # 1st: 8 points, 100% win rate (Player 8)
+      assert first.id == 8
+      assert first.total_score == 8
+      assert first.win_rate == Decimal.from_float(100.0)
 
-      assert p2_stats.total_score == 5
-      assert p2_stats.win_rate == Decimal.from_float(0.0)
+      # 2nd: 6 points (Player 7)
+      assert second.id == 7
+      assert second.total_score == 6
 
-      assert p3_stats.total_score == 5
-      assert p3_stats.win_rate == Decimal.from_float(0.0)
+      # 3rd/4th: 5 points, 50% win rate (Player 1 and 4)
+      # Order between equal score/win_rate is not strictly defined, but they should be next
+      assert third.id in [1, 4]
+      assert third.total_score == 5
+      assert third.win_rate == Decimal.from_float(50.0)
 
-      assert p4_stats.total_score == 5
-      assert p4_stats.win_rate == Decimal.from_float(50.0)
+      assert fourth.id in [1, 4]
+      assert fourth.total_score == 5
 
-      assert p5_stats.total_score == 2
-      assert p5_stats.win_rate == Decimal.from_float(0.0)
+      # 5th/6th: 5 points, 0% win rate (Player 2 and 3)
+      assert fifth.id in [2, 3]
+      assert fifth.total_score == 5
+      assert fifth.win_rate == Decimal.from_float(0.0)
 
-      assert p6_stats.total_score == 4
-      assert p6_stats.win_rate == Decimal.from_float(0.0)
+      assert sixth.id in [2, 3]
 
-      assert p7_stats.total_score == 6
-      assert p7_stats.win_rate == Decimal.from_float(0.0)
+      # 7th: 4 points (Player 6)
+      assert seventh.id == 6
+      assert seventh.total_score == 4
 
-      assert p8_stats.total_score == 8
-      assert p8_stats.win_rate == Decimal.from_float(100.0)
+      # 8th: 2 points (Player 5)
+      assert eighth.id == 5
+      assert eighth.total_score == 2
     end
 
-    test "correctly sums points and calculates win rates for tournament of 7 players and 2 rounds" do
-      rounds = [
-        %{
-          id: 1,
-          status: :finished,
-          number: 1,
-          pairings: [
-            %{
-              id: 101,
-              round_id: 1,
-              winner_id: 1001,
-              # Assuming pairing.winner_id points to the pairing_participant.id of the winner
-              pairing_participants: [
-                %{id: 1001, participant_id: 1, points: 4},
-                %{id: 1002, participant_id: 2, points: 3},
-                %{id: 1003, participant_id: 3, points: 2},
-                %{id: 1004, participant_id: 4, points: 1}
-              ]
-            },
-            %{
-              id: 102,
-              round_id: 1,
-              winner_id: 1007,
-              # Assuming pairing.winner_id points to the pairing_participant.id of the winner
-              pairing_participants: [
-                %{id: 1005, participant_id: 5, points: 2},
-                %{id: 1006, participant_id: 6, points: 3},
-                %{id: 1007, participant_id: 7, points: 4}
-              ]
-            }
-          ]
-        },
-        %{
-          id: 2,
-          status: :finished,
-          number: 2,
-          pairings: [
-            %{
-              id: 201,
-              round_id: 2,
-              winner_id: 1004,
-              pairing_participants: [
-                %{id: 1001, participant_id: 1, points: 1},
-                %{id: 1002, participant_id: 2, points: 2},
-                %{id: 1003, participant_id: 3, points: 3},
-                %{id: 1004, participant_id: 4, points: 4}
-              ]
-            },
-            %{
-              id: 202,
-              round_id: 2,
-              winner_id: 1007,
-              pairing_participants: [
-                %{id: 1005, participant_id: 5, points: 2},
-                %{id: 1006, participant_id: 6, points: 3},
-                %{id: 1007, participant_id: 7, points: 4}
-              ]
-            }
-          ]
-        }
-      ]
-
-      # num_pairings isn't used in the new logic but was in the signature
-      results = TournamentUtils.get_overall_scores(rounds)
-
-      assert length(results) == 7
-
-      p1_stats = Enum.find(results, &(&1.id == 1))
-      p2_stats = Enum.find(results, &(&1.id == 2))
-      p3_stats = Enum.find(results, &(&1.id == 3))
-      p4_stats = Enum.find(results, &(&1.id == 4))
-      p5_stats = Enum.find(results, &(&1.id == 5))
-      p6_stats = Enum.find(results, &(&1.id == 6))
-      p7_stats = Enum.find(results, &(&1.id == 7))
-
-      assert p1_stats.total_score == 5
-      assert p1_stats.win_rate == Decimal.from_float(50.0)
-
-      assert p2_stats.total_score == 5
-      assert p2_stats.win_rate == Decimal.from_float(0.0)
-
-      assert p3_stats.total_score == 5
-      assert p3_stats.win_rate == Decimal.from_float(0.0)
-
-      assert p4_stats.total_score == 5
-      assert p4_stats.win_rate == Decimal.from_float(50.0)
-
-      assert p5_stats.total_score == 4
-      assert p5_stats.win_rate == Decimal.from_float(0.0)
-
-      assert p6_stats.total_score == 6
-      assert p6_stats.win_rate == Decimal.from_float(0.0)
-
-      assert p7_stats.total_score == 8
-      assert p7_stats.win_rate == Decimal.from_float(100.0)
-    end
-
-    test "handles empty rounds" do
+    test "handles empty participants" do
       assert TournamentUtils.get_overall_scores([]) == []
     end
   end

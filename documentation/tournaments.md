@@ -134,25 +134,6 @@ The scoring system uses a sophisticated algorithm that considers:
 3. **Win Rate**: Percentage of rounds won for tiebreaking
 4. **Decimal Precision**: Scores calculated to 3 decimal places for fine-grained ranking
 
-```elixir
-def get_overall_scores(rounds, num_pairings) do
-  rounds
-  |> Enum.flat_map(fn round -> round.pairings end)
-  |> Enum.group_by(&Map.get(&1, :participant_id))
-  |> Enum.map(fn {id, pairings} ->
-    total_score = calculate_participant_total_score(pairings, rounds, num_pairings)
-    total_wins = count_wins(pairings)
-
-    %{
-      id: id,
-      total_score: total_score |> Decimal.from_float() |> Decimal.round(3),
-      win_rate: (total_wins / length(rounds) * 100) |> Decimal.from_float()
-    }
-  end)
-  |> Enum.sort_by(&{&1.total_score, &1.win_rate}, :desc)
-end
-```
-
 ## Tournament Formats
 
 ### EDH/Commander Format

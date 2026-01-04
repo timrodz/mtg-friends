@@ -190,17 +190,15 @@ defmodule MtgFriends.Participants do
     # 1. Fetch all participants for the tournament
     participants = list_participants(tournament_id)
 
-    # 2. For each participant, calculate their total score from all pairings
-    # We can use a query or load associations. Since we need to sum points,
-    # let's try a query approach for efficiency or verify via loading.
-    # Given the previous context, simpler might be better:
-    # Load all pairing_participants for the tournament (via rounds -> pairings)
-    # OR simpler: just query PairingParticipant joined with Pairing and Round
+    # 2. Inspect round count to determine denominator (or use match count)
+    # The previous logic used `round_count` from the list of rounds.
+    # To be consistent with "Win Rate", using matches played is safer for dropped players,
+    # OR using tournament round count if that's the intention.
+    # Let's use matches played (count of pairings) as the denominator for match win rate.
 
-    # Let's do it in a transaction to be safe
     Repo.transaction(fn ->
       Enum.each(participants, fn participant ->
-        total_points =
+        stats =
           MtgFriends.Repo.one(
             from pp in MtgFriends.Pairings.PairingParticipant,
               join: p in MtgFriends.Pairings.Pairing,
@@ -208,10 +206,26 @@ defmodule MtgFriends.Participants do
               join: r in MtgFriends.Rounds.Round,
               on: r.id == p.round_id,
               where: pp.participant_id == ^participant.id and r.tournament_id == ^tournament_id,
-              select: sum(pp.points)
-          ) || 0
+              select: %{
+                total_points: sum(pp.points),
+                match_count: count(pp.id),
+                wins: filter(count(pp.id), p.winner_id == pp.id)
+              }
+          )
 
-        update_participant(participant, %{points: total_points})
+        total_points = stats.total_points || 0
+        match_count = stats.match_count || 0
+        wins = stats.wins || 0
+
+        # Avoid division by zero
+        win_rate =
+          if match_count > 0 do
+            wins / match_count * 100
+          else
+            0.0
+          end
+
+        update_participant(participant, %{points: total_points, win_rate: win_rate})
       end)
     end)
   end

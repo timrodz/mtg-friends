@@ -20,7 +20,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
       Tournaments.get_tournament!(id)
 
     participant_score_lookup =
-      TournamentUtils.get_overall_scores(tournament.rounds)
+      TournamentUtils.get_overall_scores(tournament.participants)
       |> Map.new(fn %{id: id, total_score: total_score, win_rate: win_rate} ->
         {id,
          %{

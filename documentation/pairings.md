@@ -178,21 +178,6 @@ end
 **Purpose:** Create elimination bracket from top performers
 **Algorithm:** Score-based selection of top 4 players
 
-```elixir
-def create_top_cut_pairings(tournament, round, num_pairings) do
-  get_overall_scores(tournament.rounds, num_pairings)
-  |> Enum.take(4)  # Top 4 players only
-  |> Enum.map(fn participant ->
-    %{
-      number: 0,           # Single pairing number for finale
-      tournament_id: tournament.id,
-      round_id: round.id,
-      participant_id: participant.id
-    }
-  end)
-end
-```
-
 **Characteristics:**
 
 - **Merit-Based**: Only top-scoring players advance
