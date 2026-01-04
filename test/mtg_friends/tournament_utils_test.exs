@@ -2,7 +2,7 @@ defmodule MtgFriends.TournamentUtilsTest do
   use MtgFriends.DataCase
   alias MtgFriends.TournamentUtils
 
-  describe "get_overall_scores/2" do
+  describe "get_overall_scores/1" do
     test "correctly maps and sorts participants by total score and win rate" do
       participants = [
         %{id: 1, points: 5, win_rate: 50.0},

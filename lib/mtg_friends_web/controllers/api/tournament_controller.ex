@@ -37,7 +37,7 @@ defmodule MtgFriendsWeb.API.TournamentController do
     security: [%{"authorization" => []}],
     request_body: {"Tournament params", "application/json", Schemas.TournamentRequest},
     responses: [
-      ok: {"Tournament created", "application/json", Schemas.TournamentResponse},
+      created: {"Tournament created", "application/json", Schemas.TournamentResponse},
       unprocessable_entity: {"Validation error", "application/json", Schemas.ErrorResponse}
     ]
 
@@ -89,8 +89,7 @@ defmodule MtgFriendsWeb.API.TournamentController do
   def create(conn, tournament_params) do
     user_id = conn.assigns.current_user.id
 
-    with false <- is_nil(user_id),
-         {:ok, %Tournament{} = tournament} <-
+    with {:ok, %Tournament{} = tournament} <-
            Tournaments.create_tournament(tournament_params |> Map.put("user_id", user_id)) do
       conn
       |> put_status(:created)

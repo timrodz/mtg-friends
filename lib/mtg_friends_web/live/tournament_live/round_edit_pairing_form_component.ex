@@ -74,8 +74,6 @@ defmodule MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent do
     tournament = Tournaments.get_tournament_simple!(tournament_id)
     round = Rounds.get_round!(round_id)
 
-    IO.puts("SAVED PAIRINGS")
-
     # Check logic via Rounds context
     case Rounds.check_and_finalize(round, tournament) do
       {:ok, _round, :tournament_finished} ->

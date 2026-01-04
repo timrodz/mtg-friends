@@ -21,7 +21,16 @@ defmodule MtgFriends.Participants do
     Repo.all(Participant)
   end
 
-  def list_participants(tournament_id) do
+  @doc """
+  Returns the list of participants for a tournament
+
+  ## Examples
+
+      iex> list_participants_by_tournament(1)
+      [%Participant{}, ...]
+
+  """
+  def list_participants_by_tournament(tournament_id) do
     Repo.all(from p in Participant, where: p.tournament_id == ^tournament_id)
   end
 
@@ -188,7 +197,7 @@ defmodule MtgFriends.Participants do
 
   def calculate_and_update_scores(tournament_id) do
     # 1. Fetch all participants for the tournament
-    participants = list_participants(tournament_id)
+    participants = list_participants_by_tournament(tournament_id)
 
     # 2. Inspect round count to determine denominator (or use match count)
     # The previous logic used `round_count` from the list of rounds.

@@ -44,11 +44,6 @@ defmodule MtgFriends.Pairings do
         participant_id: participant_id
       )
 
-  # Used for finding the entry to update
-  def get_pairing_participant_by_participant!(participant_id) do
-    Repo.get_by!(PairingParticipant, participant_id: participant_id)
-  end
-
   @doc """
   Creates a pairing.
   """

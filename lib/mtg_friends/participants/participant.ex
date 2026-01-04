@@ -29,6 +29,5 @@ defmodule MtgFriends.Participants.Participant do
       :win_rate
     ])
     |> validate_required([:tournament_id])
-    |> validate_length(:name, min: 1)
   end
 end

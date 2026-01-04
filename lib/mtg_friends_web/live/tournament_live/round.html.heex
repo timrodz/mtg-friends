@@ -40,12 +40,12 @@
           id={"tournament-#{@tournament_id}-round-#{@round_id}-pairing-#{pairing.id}-participant-#{pp.participant.id}"}
           class={[
             "flex justify-between items-center gap-2 py-1 px-2 rounded-md",
-            (pairing.winner_id == pp.id && "font-bold bg-success text-success-content") || ""
+             (pairing.winner_id == pp.participant_id && "font-bold bg-success text-success-content") || ""
           ]}
         >
           <p class="flex gap-1 items-center">
             {pp.participant.name}
-            <.icon :if={pairing.winner_id == pp.id} name="hero-trophy" />
+            <.icon :if={pairing.winner_id == pp.participant_id} name="hero-trophy" />
           </p>
           <p>
             Points: {pp.points}

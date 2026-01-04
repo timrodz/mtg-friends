@@ -160,6 +160,8 @@ defmodule MtgFriendsWeb.API.ParticipantControllerTest do
       conn = delete(conn, ~p"/api/tournaments/#{tournament.id}/participants/#{participant.id}")
       assert response(conn, 204)
 
+      conn = recycle(conn) |> put_req_header("authorization", "Bearer #{token}")
+
       assert_error_sent 404, fn ->
         get(conn, ~p"/api/tournaments/#{tournament.id}/participants/#{participant.id}")
       end

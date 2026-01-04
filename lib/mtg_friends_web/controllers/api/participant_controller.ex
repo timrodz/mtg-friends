@@ -74,7 +74,7 @@ defmodule MtgFriendsWeb.API.ParticipantController do
     ]
 
   def index(conn, %{"tournament_id" => tournament_id}) do
-    participants = Participants.list_participants(tournament_id)
+    participants = Participants.list_participants_by_tournament(tournament_id)
     render(conn, :index, participants: participants)
   end
 

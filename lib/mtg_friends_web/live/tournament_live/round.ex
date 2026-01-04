@@ -38,13 +38,6 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
     |> generate_socket(tournament_id, round_number, :edit)
   end
 
-  # Fallback for old URL structure if necessary, though simpler to just update links
-  # But assuming URLs might now use ID instead of number for uniqueness/simplicity
-  # The router likely still captures `pairing_number` or we change it.
-  # Let's keep it robust. If we link by ID, we use ID.
-  # If the router says :pairing_number but we want ID, we might need to change router or just use index.
-  # Current Pairing model doesn't have `number` field anymore, so rely on implicit index or ID.
-
   defp generate_socket(socket, tournament_id, round_number, action) do
     round = Rounds.get_round_from_round_number_str!(tournament_id, round_number)
     # Ensure pairings are loaded with participants

@@ -31,6 +31,6 @@ defmodule MtgFriends.Repo.Migrations.BackfillScoresAndWinRates do
 
   def down do
     # No-op, or set win_rate to 0.0
-    execute "UPDATE participants SET win_rate = 0.0"
+    execute "UPDATE participants SET win_rate = 0.0, points = 0"
   end
 end

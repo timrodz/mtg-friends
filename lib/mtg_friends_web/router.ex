@@ -16,7 +16,6 @@ defmodule MtgFriendsWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
-    plug :fetch_session
     plug OpenApiSpex.Plug.PutApiSpec, module: MtgFriendsWeb.ApiSpec
     plug :rate_limit
   end

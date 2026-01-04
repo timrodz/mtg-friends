@@ -8,27 +8,6 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
   import MtgFriends.GamesFixtures
   import MtgFriends.ParticipantsFixtures
 
-  @create_attrs %{
-    active: true,
-    winner_id: nil,
-    pairing_participants: [
-      %{
-        participant_id: 1,
-        points: 1
-      }
-    ]
-  }
-  @update_attrs %{
-    active: false,
-    winner_id: nil,
-    pairing_participants: [
-      %{
-        participant_id: 1,
-        points: 2
-      }
-    ]
-  }
-
   setup %{conn: conn} do
     user = user_fixture()
     other_user = user_fixture()
@@ -37,16 +16,27 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
     round = round_fixture(%{tournament_id: tournament.id})
     participant = participant_fixture(%{tournament_id: tournament.id})
 
-    # Force ID to 1 if possible, otherwise we're stuck because user forbids changing @create_attrs
-    # and they reverted dynamic merging.
-    # Note: This is an attempt to satisfy the strict constraints.
-    try do
-      MtgFriends.Repo.query!("UPDATE participants SET id = 1 WHERE id = $1", [participant.id])
-    rescue
-      _ -> :ok
-    end
+    create_attrs = %{
+      active: true,
+      winner_id: nil,
+      pairing_participants: [
+        %{
+          participant_id: participant.id,
+          points: 1
+        }
+      ]
+    }
 
-    participant = MtgFriends.Participants.get_participant!(1)
+    update_attrs = %{
+      active: false,
+      winner_id: nil,
+      pairing_participants: [
+        %{
+          participant_id: participant.id,
+          points: 2
+        }
+      ]
+    }
 
     {:ok,
      conn: conn,
@@ -54,6 +44,8 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
      other_user: other_user,
      tournament: tournament,
      round: round,
+     create_attrs: create_attrs,
+     update_attrs: update_attrs,
      participant: participant}
   end
 
@@ -78,6 +70,7 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
       user: user,
       tournament: tournament,
       round: round,
+      create_attrs: create_attrs,
       participant: _participant
     } do
       token =
@@ -89,7 +82,7 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
         post(
           conn,
           ~p"/api/tournaments/#{tournament.id}/rounds/#{round.id}/pairings",
-          @create_attrs
+          create_attrs
         )
 
       assert %{"id" => id} = json_response(conn, 201)["data"]
@@ -103,6 +96,7 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
       other_user: other_user,
       tournament: tournament,
       round: round,
+      create_attrs: create_attrs,
       participant: _participant
     } do
       token =
@@ -115,7 +109,7 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
         post(
           conn,
           ~p"/api/tournaments/#{tournament.id}/rounds/#{round.id}/pairings",
-          @create_attrs
+          create_attrs
         )
 
       assert json_response(conn, 403)
@@ -140,6 +134,7 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
       tournament: tournament,
       round: round,
       pairing: pairing,
+      update_attrs: update_attrs,
       participant: _participant
     } do
       token =
@@ -151,7 +146,7 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
         put(
           conn,
           ~p"/api/tournaments/#{tournament.id}/rounds/#{round.id}/pairings/#{pairing.id}",
-          @update_attrs
+          update_attrs
         )
 
       id = pairing.id
@@ -170,7 +165,8 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
       other_user: other_user,
       tournament: tournament,
       round: round,
-      pairing: pairing
+      pairing: pairing,
+      update_attrs: update_attrs
     } do
       token =
         MtgFriends.Accounts.generate_user_session_token(other_user)
@@ -182,7 +178,7 @@ defmodule MtgFriendsWeb.API.PairingControllerTest do
         put(
           conn,
           ~p"/api/tournaments/#{tournament.id}/rounds/#{round.id}/pairings/#{pairing.id}",
-          @update_attrs
+          update_attrs
         )
 
       assert json_response(conn, 403)

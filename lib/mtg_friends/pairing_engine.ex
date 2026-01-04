@@ -254,12 +254,15 @@ defmodule MtgFriends.PairingEngine do
   end
 
   defp extract_round_pairings(rounds) do
-    # Transform rounds -> pairings -> lists of participant IDs in same pod
     rounds
-    |> MtgFriends.Repo.preload(pairings: :pairing_participants)
     |> Enum.map(fn round ->
-      round.pairings
-      |> Enum.map(fn pairing ->
+      # Check if already preloaded to avoid redundant queries
+      pairings =
+        if Ecto.assoc_loaded?(round.pairings),
+          do: round.pairings,
+          else: MtgFriends.Repo.preload(round, pairings: :pairing_participants).pairings
+
+      Enum.map(pairings, fn pairing ->
         pairing.pairing_participants |> Enum.map(& &1.participant_id)
       end)
     end)
@@ -277,8 +280,6 @@ defmodule MtgFriends.PairingEngine do
     |> Enum.reject(&(&1 == participant_id))
     |> Enum.uniq()
   end
-
-  # ... (rest of matrix/swiss logic remains mostly same logic just acting on IDs) ...
 
   defp calculate_unplayed_opponents(participant_ids, current_id, players_played_against) do
     :ordsets.subtract(
