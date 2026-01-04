@@ -68,7 +68,8 @@ defmodule MtgFriends.MixProject do
       {:gen_smtp, "~> 1.1"},
       {:hammer, "~> 7.0"},
       {:open_api_spex, "~> 3.18"},
-      {:expletive, "~> 0.1.0"}
+      {:expletive, "~> 0.1.0"},
+      {:remote_ip, "~> 1.1"}
     ]
   end
 

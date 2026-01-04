@@ -162,12 +162,9 @@ defmodule MtgFriendsWeb.Router do
     if Application.get_env(:mtg_friends, :disable_rate_limit) do
       conn
     else
-      # Get IP based on RemoteIP or just remote_ip if not using a proxy middleware yet
-      # Since we don't have RemoteIP plug configured in Endpoint (observed in application files), we use conn.remote_ip directly.
-      # Note: If behind a proxy (Fly.io, etc), real IP header parsing is needed.
-      # Assuming standard conn.remote_ip is correct for now or handled by Endpoint configuration.
+      ip_string = conn.remote_ip |> :inet.ntoa() |> to_string()
 
-      case MtgFriendsWeb.RateLimit.hit("api:#{inspect(conn.remote_ip)}", 60_000, 60) do
+      case MtgFriendsWeb.RateLimit.hit("api:#{ip_string}", 60_000, 60) do
         {:allow, _count} ->
           conn
 

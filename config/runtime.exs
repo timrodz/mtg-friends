@@ -36,6 +36,13 @@ if config_env() == :prod do
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
     socket_options: maybe_ipv6
 
+  config :remote_ip,
+    headers: ["fly-client-ip"],
+    # Trusted proxies can be configured here if needed, but Fly-Client-IP is usually sufficient/authoritative on Fly.
+    # Source: https://fly.io/docs/networking/request-headers/
+    # We leave proxies default (loopback/private) or empty since we trust the header from the platform.
+    proxies: []
+
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
   # want to use a different value for prod and you most likely don't want
