@@ -40,8 +40,6 @@ defmodule MtgFriendsWeb.TournamentLive.Round do
 
   defp generate_socket(socket, tournament_id, round_number, action) do
     round = Rounds.get_round_from_round_number_str!(tournament_id, round_number)
-    # Ensure pairings are loaded with participants
-    round = MtgFriends.Repo.preload(round, pairings: [pairing_participants: :participant])
 
     # Map pairings to a structure easier for the template
     # We can use the list index as "Table Number" for display since we removed `number` column

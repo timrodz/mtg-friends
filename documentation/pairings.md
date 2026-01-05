@@ -48,7 +48,7 @@ The system chooses pairing algorithms based on round number and tournament confi
 **Characteristics:**
 
 - **No History**: Ignores any previous matchups
-- **Pure Random**: Usess a shuffle mechanism for unpredictable ordering
+- **Pure Random**: Uses a shuffle mechanism for unpredictable ordering
 - **Format Aware**: Respects EDH pod sizes vs Standard match sizes
 
 ### 2. Swiss Pairing System
