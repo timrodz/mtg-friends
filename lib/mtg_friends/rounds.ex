@@ -105,15 +105,54 @@ defmodule MtgFriends.Rounds do
     |> Repo.insert()
   end
 
-  def create_round_for_tournament(tournament_id, tournament_rounds) do
-    %Round{}
-    |> Round.changeset(%{
-      tournament_id: tournament_id,
-      number: tournament_rounds,
-      status: :active,
-      started_at: NaiveDateTime.utc_now()
-    })
-    |> Repo.insert()
+  def start_round(tournament) do
+    # Preload necessary associations if not already loaded
+    tournament = Repo.preload(tournament, [:participants, :rounds])
+
+    with true <- Tournaments.has_enough_participants?(tournament),
+         true <- Tournaments.all_participants_named?(tournament),
+         false <- is_any_round_active?(tournament.rounds) do
+      Repo.transaction(fn ->
+        round_number = length(tournament.rounds)
+
+        # 1. Create Round
+        {:ok, round} =
+          %Round{}
+          |> Round.changeset(%{
+            tournament_id: tournament.id,
+            number: round_number,
+            status: :active,
+            started_at: NaiveDateTime.utc_now()
+          })
+          |> Repo.insert()
+
+        # 2. Create Pairings
+        # We need to use Pairings context, so we'll add alias MtgFriends.Pairings to the module top if needed,
+        # or use fully qualified name. Let's use fully qualified name or ensure alias.
+        # Checking existing aliases... we have alias MtgFriends.{Participants, Tournaments}
+        # Let's use MtgFriends.Pairings.create_pairings_for_round
+
+        {:ok, _pairings} = MtgFriends.Pairings.create_pairings_for_round(tournament, round)
+
+        # 3. Update Tournament if first round
+        if round_number == 0 do
+          Tournaments.update_tournament(tournament, %{"status" => :active})
+        end
+
+        round
+      end)
+    else
+      false ->
+        {:error, "Conditions not met to start a round"}
+
+      # We should return specific errors ideally
+      _ ->
+        {:error, "Cannot start round: Ensure 4+ participants, all named, and no active rounds."}
+    end
+  end
+
+  defp is_any_round_active?(rounds) do
+    Enum.any?(rounds, fn r -> r.status == :active end)
   end
 
   @doc """

@@ -13,7 +13,7 @@ The tournament system is built around several interconnected modules:
 - **Tournaments Context** - Main business logic and CRUD operations
 - **Tournament Schema** - Database schema and validation
 - **Tournament LiveView** - User interface and real-time updates
-- **Tournament Utils** - Core utilities and scoring functions
+- **Tournament LiveView** - User interface and real-time updates
 - **Tournament Renderer** - Display logic and formatting
 
 ### Database Schema

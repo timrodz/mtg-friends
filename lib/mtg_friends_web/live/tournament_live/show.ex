@@ -1,7 +1,7 @@
 defmodule MtgFriendsWeb.TournamentLive.Show do
   use MtgFriendsWeb, :live_view
 
-  alias MtgFriends.{TournamentUtils, TournamentRenderer}
+  alias MtgFriends.TournamentRenderer
   alias MtgFriendsWeb.UserAuth
   alias MtgFriends.Tournaments
   alias MtgFriends.Participants
@@ -20,7 +20,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
       Tournaments.get_tournament!(id)
 
     participant_score_lookup =
-      TournamentUtils.get_overall_scores(tournament.participants)
+      Participants.get_participant_standings(tournament.participants)
       |> Map.new(fn %{id: id, total_score: total_score, win_rate: win_rate} ->
         {id,
          %{
@@ -101,31 +101,16 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   @impl true
   def handle_event("create-round", _, socket) do
     tournament = socket.assigns.tournament
-    round_count = length(tournament.rounds)
 
-    with {:ok, round} <-
-           Rounds.create_round_for_tournament(
-             tournament.id,
-             round_count
-           ),
-         {:ok, _} <-
-           TournamentUtils.create_pairings(
-             tournament,
-             round
-           ) do
-      {:noreply,
-       socket
-       |> put_flash(:success, "Round #{round.number + 1} created successfully")
-       |> push_navigate(to: ~p"/tournaments/#{tournament.id}/rounds/#{round.number + 1}")}
-    else
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Something wrong happened when creating a round")}
+    case Rounds.start_round(tournament) do
+      {:ok, round} ->
+        {:noreply,
+         socket
+         |> put_flash(:success, "Round #{round.number + 1} created successfully")
+         |> push_navigate(to: ~p"/tournaments/#{tournament.id}/rounds/#{round.number + 1}")}
 
-      {:error, %Ecto.Changeset{} = _} ->
-        {:noreply, put_flash(socket, :error, "Something wrong happened when creating a round")}
-
-      _ ->
-        nil
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, reason)}
     end
   end
 

@@ -113,6 +113,15 @@ defmodule MtgFriends.Tournaments do
     length(tournament.participants) >= 4
   end
 
+  def all_participants_named?(%Tournament{participants: participants}) do
+    Enum.all?(participants, fn p -> not is_nil(p.name) and p.name != "" end)
+  end
+
+  def all_participants_named?(%Tournament{} = tournament) do
+    tournament = Repo.preload(tournament, :participants)
+    all_participants_named?(tournament)
+  end
+
   @doc """
   Creates a tournament.
 

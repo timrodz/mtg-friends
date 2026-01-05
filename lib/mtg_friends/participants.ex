@@ -238,4 +238,22 @@ defmodule MtgFriends.Participants do
       end)
     end)
   end
+
+  @doc """
+  Calculates overall standings for all participants based on stored points and win rate.
+
+  Returns a list of participant score maps sorted by total score and win rate.
+  """
+  def get_participant_standings(participants) do
+    participants
+    |> Enum.map(fn participant ->
+      %{
+        id: participant.id,
+        total_score: participant.points || 0,
+        win_rate: Decimal.from_float(participant.win_rate || 0.0)
+      }
+    end)
+    # Sort by total score (desc) and then win rate (desc)
+    |> Enum.sort_by(&{&1.total_score, &1.win_rate}, :desc)
+  end
 end

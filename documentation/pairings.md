@@ -10,10 +10,10 @@ The pairing system is the heart of tournament management in MTG Friends, respons
 
 The pairing system is structured across multiple modules with clear separation of concerns:
 
-- **PairingEngine** - Core pairing algorithms and logic
-- **Pairings Context** - CRUD operations and business logic
+- **Pairings Context** - Main entry point, CRUD operations, and pairing algorithms
 - **Pairing Schema** - Database schema and validation
-- **TournamentUtils** - Integration layer and scoring
+- **TournamentRenderer** - Display logic
+- **Participants** - Scoring logic
 
 ### Database Schema
 

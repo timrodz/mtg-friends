@@ -1,8 +1,8 @@
-defmodule MtgFriends.TournamentUtilsTest do
+defmodule MtgFriends.ParticipantsRankingTest do
   use MtgFriends.DataCase
-  alias MtgFriends.TournamentUtils
+  alias MtgFriends.Participants
 
-  describe "get_overall_scores/1" do
+  describe "get_participant_standings/1" do
     test "correctly maps and sorts participants by total score and win rate" do
       participants = [
         %{id: 1, points: 5, win_rate: 50.0},
@@ -15,7 +15,7 @@ defmodule MtgFriends.TournamentUtilsTest do
         %{id: 8, points: 8, win_rate: 100.0}
       ]
 
-      results = TournamentUtils.get_overall_scores(participants)
+      results = Participants.get_participant_standings(participants)
 
       assert length(results) == 8
 
@@ -56,7 +56,7 @@ defmodule MtgFriends.TournamentUtilsTest do
     end
 
     test "handles empty participants" do
-      assert TournamentUtils.get_overall_scores([]) == []
+      assert Participants.get_participant_standings([]) == []
     end
   end
 end
