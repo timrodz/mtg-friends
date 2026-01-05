@@ -79,9 +79,8 @@ defmodule MtgFriends.RoundsTest do
       # Set winner to p1's pairing_participant
       # Need to reload to get the auto-generated IDs of pairing_participants
       pairing = MtgFriends.Repo.preload(pairing, :pairing_participants)
-      p1_pp = Enum.find(pairing.pairing_participants, &(&1.participant_id == p1.id))
 
-      {:ok, _} = MtgFriends.Pairings.update_pairing(pairing, %{winner_id: p1_pp.id})
+      {:ok, _} = MtgFriends.Pairings.update_pairing(pairing, %{winner_id: p1.id})
 
       # check_and_finalize
       {:ok, _round, _status} = Rounds.check_and_finalize(round, tournament)

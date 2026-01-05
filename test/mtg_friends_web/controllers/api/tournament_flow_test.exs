@@ -92,7 +92,7 @@ defmodule MtgFriendsWeb.API.TournamentFlowTest do
           conn,
           ~p"/api/tournaments/#{tournament_id}/rounds/#{round_id}/pairings/#{pairing_id}",
           %{
-            winner_id: pp1["id"],
+            winner_id: pp1["participant_id"],
             active: false,
             pairing_participants: [
               %{id: pp1["id"], points: 3},
@@ -102,7 +102,7 @@ defmodule MtgFriendsWeb.API.TournamentFlowTest do
         )
 
       data = json_response(conn, 200)["data"]
-      assert data["winner_id"] == pp1["id"]
+      assert data["winner_id"] == pp1["participant_id"]
     end
 
     # 5. Create Round 2

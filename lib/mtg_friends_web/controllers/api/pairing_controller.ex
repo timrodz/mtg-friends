@@ -141,7 +141,7 @@ defmodule MtgFriendsWeb.API.PairingController do
         [pp] = pairing.pairing_participants
 
         if pairing_params["winner"] do
-          Map.put(pairing_params, "winner_id", pp.id)
+          Map.put(pairing_params, "winner_id", pp.participant_id)
         else
           pairing_params
         end

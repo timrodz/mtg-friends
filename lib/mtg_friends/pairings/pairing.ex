@@ -7,7 +7,7 @@ defmodule MtgFriends.Pairings.Pairing do
 
     belongs_to :tournament, MtgFriends.Tournaments.Tournament
     belongs_to :round, MtgFriends.Rounds.Round
-    belongs_to :winner, MtgFriends.Pairings.PairingParticipant
+    belongs_to :winner, MtgFriends.Participants.Participant
 
     has_many :pairing_participants, MtgFriends.Pairings.PairingParticipant, on_replace: :delete
     has_many :participants, through: [:pairing_participants, :participant]

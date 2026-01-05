@@ -138,20 +138,11 @@ defmodule MtgFriends.Pairings do
 
           winner_id = if draw, do: nil, else: winner_pid
 
-          # 1. Update Pairing (winner_id)
-          # We need the PairingParticipant ID for the winner_id
-          winner_pp_id =
-            if winner_id do
-              Enum.find(pairing.pairing_participants, fn pp -> pp.participant_id == winner_id end).id
-            else
-              nil
-            end
-
           acc_multi =
             Ecto.Multi.update(
               acc_multi,
               "update_pairing_#{pairing.id}",
-              Pairing.changeset(pairing, %{winner_id: winner_pp_id, active: false})
+              Pairing.changeset(pairing, %{winner_id: winner_id, active: false})
             )
 
           # 2. Update PairingParticipants (points)

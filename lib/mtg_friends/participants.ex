@@ -218,7 +218,7 @@ defmodule MtgFriends.Participants do
               select: %{
                 total_points: sum(pp.points),
                 match_count: count(pp.id),
-                wins: filter(count(pp.id), p.winner_id == pp.id)
+                wins: filter(count(pp.id), p.winner_id == pp.participant_id)
               }
           )
 
