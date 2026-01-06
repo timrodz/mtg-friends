@@ -210,8 +210,6 @@ defmodule MtgFriends.Rounds do
     # Force reload pairings to ensure we have latest state
     round = Repo.preload(round, [:pairings], force: true)
 
-    # TODO: When finalizing a round, add pairing scores to each participant cumulatively
-
     # Check if all pairings are inactive
     if Enum.all?(round.pairings, fn p -> p.active == false end) do
       transaction_result =
@@ -246,20 +244,32 @@ defmodule MtgFriends.Rounds do
   end
 
   defp finalize_tournament(tournament, pairings) do
-    # Handle Top Cut 4 Winner Logic
-    if length(pairings) == 1 and tournament.is_top_cut_4 do
-      pairing = Repo.preload(pairings, winner: :participant) |> hd()
+    winning_participant = get_winning_participant(tournament, pairings)
 
-      winning_participant = pairing.winner.participant
-
-      with false <- is_nil(winning_participant) do
-        {:ok, %Participant{}} =
-          Participants.update_participant(winning_participant, %{
-            "is_tournament_winner" => true
-          })
-      end
+    with false <- is_nil(winning_participant) do
+      {:ok, %Participant{}} =
+        Participants.update_participant(winning_participant, %{
+          "is_tournament_winner" => true
+        })
     end
 
     Tournaments.update_tournament(tournament, %{"status" => :finished})
+  end
+
+  defp get_winning_participant(tournament, pairings)
+       when length(pairings) == 1 and tournament.is_top_cut_4 do
+    pairing = Repo.preload(pairings, winner: :participant) |> hd()
+
+    pairing.winner.participant
+  end
+
+  defp get_winning_participant(tournament, _pairings) do
+    tournament =
+      if Ecto.assoc_loaded?(tournament.participants),
+        do: tournament.participants,
+        else: Repo.preload(tournament, :participants)
+
+    tournament.participants
+    |> Enum.max_by(&{&1.points, &1.win_rate})
   end
 end
