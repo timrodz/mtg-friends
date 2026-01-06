@@ -28,8 +28,8 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           value={@selected_game_code}
         />
         <.input field={@form[:format]} type="select" options={@format_options} label="Format" />
-        <.input field={@form[:name]} type="text" label="Name" min="5" />
-        <.input field={@form[:location]} type="text" label="Location" />
+        <.input field={@form[:name]} type="text" label="Name" min="4" />
+        <.input field={@form[:location]} type="text" label="Location" min="4" />
         <.input field={@form[:date]} type="datetime-local" label="Date" />
 
         <.input
@@ -83,7 +83,12 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         />
         <:actions>
           <.button phx-disable-with="Saving..." variant="primary">
-            <.icon name="hero-rocket-launch-solid" /> Submit Tournament
+            <.icon name="hero-rocket-launch-solid" />
+            <%= if @action == :edit do %>
+              Edit Tournament
+            <% else %>
+              Create Tournament
+            <% end %>
           </.button>
         </:actions>
       </.simple_form>
@@ -172,9 +177,17 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         notify_parent({:saved, updated_tournament})
 
         {:noreply,
-         socket
-         |> put_flash(:success, "Tournament updated successfully")
-         |> push_navigate(to: ~p"/tournaments/#{updated_tournament}")}
+         cond do
+           path = Map.get(socket.assigns, :navigate) ->
+             socket
+             |> put_flash(:success, "Tournament updated successfully")
+             |> push_navigate(to: path)
+
+           true ->
+             socket
+             |> put_flash(:success, "Tournament updated successfully")
+             |> push_navigate(to: ~p"/tournaments/#{updated_tournament}")
+         end}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign_form(socket, changeset)}

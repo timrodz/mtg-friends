@@ -6,7 +6,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
 
   alias MtgFriends.TournamentRenderer
   alias MtgFriendsWeb.CoreComponents
-  alias MtgFriends.DateUtils
+  alias MtgFriends.Utils.Date
 
   @doc ~S"""
   Renders a container with generic styling.
@@ -91,7 +91,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     <p id="date-time" class={["icon-text", @class]}>
       <CoreComponents.icon :if={not @no_icon} name="hero-clock-solid" />
       {@label}
-      <span>{@dt |> DateUtils.render_naive_datetime_full()}</span>
+      <span>{@dt |> Date.render_naive_datetime_full()}</span>
     </p>
     """
   end
@@ -106,7 +106,7 @@ defmodule MtgFriendsWeb.ExtendedCoreComponents do
     <p class={["icon-text", @class]}>
       <CoreComponents.icon :if={not @no_icon} name="hero-calendar-solid" />
       {@label}
-      <span>{@dt |> DateUtils.render_naive_datetime_date()}</span>
+      <span>{@dt |> Date.render_naive_datetime_date()}</span>
     </p>
     """
   end

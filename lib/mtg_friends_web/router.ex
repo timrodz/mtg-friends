@@ -1,5 +1,6 @@
 defmodule MtgFriendsWeb.Router do
   use MtgFriendsWeb, :router
+  alias OpenApiSpex
 
   import MtgFriendsWeb.UserAuth
 
@@ -15,6 +16,16 @@ defmodule MtgFriendsWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug OpenApiSpex.Plug.PutApiSpec, module: MtgFriendsWeb.ApiSpec
+    plug :rate_limit
+  end
+
+  pipeline :api_authenticated do
+    plug MtgFriendsWeb.APIAuthPlug
+  end
+
+  pipeline :authorize_tournament_owner do
+    plug MtgFriendsWeb.Plugs.AuthorizeTournamentOwner
   end
 
   scope "/", MtgFriendsWeb do
@@ -30,7 +41,7 @@ defmodule MtgFriendsWeb.Router do
       live "/tournaments/new", TournamentLive.Index, :new
       live "/tournaments/:id/edit", TournamentLive.Index, :edit
 
-      live "/tournaments/:tournament_id/rounds/:round_number/pairing/:pairing_number/edit",
+      live "/tournaments/:tournament_id/rounds/:round_number/pairing/:pairing_id/edit",
            TournamentLive.Round,
            :edit
     end
@@ -45,10 +56,46 @@ defmodule MtgFriendsWeb.Router do
     live "/tournaments/:tournament_id/rounds/:round_number", TournamentLive.Round, :index
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", MtgFriendsWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", MtgFriendsWeb do
+    pipe_through :api
+
+    post "/login", API.SessionController, :create
+
+    resources "/tournaments", API.TournamentController, only: [:index, :show] do
+      resources "/participants", API.ParticipantController, only: [:index, :show]
+
+      resources "/rounds", API.RoundController, only: [:index, :show] do
+        resources "/pairings", API.PairingController, only: [:index, :show]
+      end
+    end
+  end
+
+  scope "/api" do
+    pipe_through :api
+    get "/openapi", OpenApiSpex.Plug.RenderSpec, [MtgFriendsWeb.Schemas]
+    get "/swagger", OpenApiSpex.Plug.SwaggerUI, path: "api/openapi", title: "Tie Breaker API"
+  end
+
+  scope "/api", MtgFriendsWeb do
+    pipe_through [:api, :api_authenticated]
+
+    scope "/tournaments", API do
+      post "/", TournamentController, :create
+
+      scope "/:tournament_id" do
+        pipe_through :authorize_tournament_owner
+
+        put "/", TournamentController, :update
+        delete "/", TournamentController, :delete
+
+        resources "/participants", ParticipantController, only: [:create, :update, :delete]
+
+        resources "/rounds", RoundController, only: [:create, :update, :delete] do
+          resources "/pairings", PairingController, only: [:create, :update, :delete]
+        end
+      end
+    end
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:mtg_friends, :dev_routes) do
@@ -108,6 +155,26 @@ defmodule MtgFriendsWeb.Router do
 
       live "/games/:id", GameLive.Show, :show
       live "/games/:id/show/edit", GameLive.Show, :edit
+    end
+  end
+
+  defp rate_limit(conn, _opts) do
+    if Application.get_env(:mtg_friends, :disable_rate_limit) do
+      conn
+    else
+      ip_string = conn.remote_ip |> :inet.ntoa() |> to_string()
+
+      case MtgFriendsWeb.RateLimit.hit("api:#{ip_string}", 60_000, 60) do
+        {:allow, _count} ->
+          conn
+
+        {:deny, _limit} ->
+          conn
+          |> put_status(:too_many_requests)
+          |> put_resp_content_type("application/json")
+          |> send_resp(429, Jason.encode!(%{error: "Rate limit exceeded"}))
+          |> halt()
+      end
     end
   end
 end

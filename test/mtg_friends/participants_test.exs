@@ -16,6 +16,14 @@ defmodule MtgFriends.ParticipantsTest do
       assert Participants.list_participants() == [participant]
     end
 
+    test "list_participants_by_tournament/1 returns all participants" do
+      tournament = tournament_fixture()
+      p_1 = participant_fixture(%{tournament: tournament})
+      p_2 = participant_fixture(%{tournament: tournament})
+
+      assert Participants.list_participants_by_tournament(tournament.id) == [p_1, p_2]
+    end
+
     test "get_participant!/1 returns the participant with given id" do
       participant = participant_fixture()
       assert Participants.get_participant!(participant.id) == participant

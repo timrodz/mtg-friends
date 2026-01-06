@@ -208,7 +208,7 @@ defmodule MtgFriendsWeb.CoreComponents do
   attr :class, :string, default: nil
 
   attr :rest, :global,
-    include: ~w(autocomplete name rel action enctype method novalidate target),
+    include: ~w(autocomplete name rel action enctype method novalidate target csrf_token),
     doc: "the arbitrary HTML attributes to apply to the form tag"
 
   attr :as_flex, :boolean, default: false
@@ -247,7 +247,7 @@ defmodule MtgFriendsWeb.CoreComponents do
       <.button navigate={~p"/"}>Home</.button>
   """
   attr :rest, :global, include: ~w(href navigate patch disabled)
-  attr :variant, :string, values: ~w(primary secondary accent)
+  attr :variant, :string, values: ~w(primary secondary accent accent-soft accent-outline)
   slot :inner_block, required: true
 
   def button(%{rest: rest} = assigns) do

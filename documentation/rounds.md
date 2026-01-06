@@ -10,25 +10,20 @@ The rounds system in MTG Friends manages the temporal structure of tournaments, 
 
 The rounds system is organized around several interconnected modules:
 
-- **Rounds Context** (`lib/mtg_friends/rounds.ex`) - CRUD operations and business logic
-- **Round Schema** (`lib/mtg_friends/rounds/round.ex`) - Database schema and validation
+- **Rounds Context** - CRUD operations and business logic
+- **Round Schema** - Database schema and validation
 - **Integration with Tournaments** - Rounds belong to tournaments and contain pairings
 - **LiveView Integration** - Real-time round management through web interface
 
 ### Database Schema
 
-```elixir
-schema "rounds" do
-  field :status, Ecto.Enum, values: [:inactive, :active, :finished], default: :inactive
-  field :number, :integer              # 0-indexed round number (0, 1, 2, ...)
-  field :started_at, :naive_datetime   # When round officially started
+Rounds are stored with the following key data points:
 
-  belongs_to :tournament, MtgFriends.Tournaments.Tournament
-  has_many :pairings, MtgFriends.Pairings.Pairing
-
-  timestamps()
-end
-```
+- **Status**: Tracks the lifecycle, defaulting to inactive
+- **Number**: Sequential identifier (0-indexed)
+- **Started At**: Timestamp for when the round officially began
+- **Relationships**: Belongs to a Tournament and has many Pairings
+- **Timestamps**: Standard creation and update tracking
 
 **Key Relationships:**
 
@@ -41,95 +36,42 @@ end
 
 ### 1. Round Creation
 
-**Primary Creation Function:**
-
-```elixir
-def create_round_for_tournament(tournament_id, tournament_rounds) do
-  %Round{}
-  |> Round.changeset(%{
-    tournament_id: tournament_id,
-    number: tournament_rounds      # 0-indexed (0, 1, 2, ...)
-  })
-  |> Repo.insert()
-end
-```
-
 **Creation Context:**
 
 - **Tournament Association**: Round immediately linked to parent tournament
 - **Sequential Numbering**: Round numbers assigned sequentially (0, 1, 2, ...)
-- **Default Status**: Rounds start in `:inactive` status
-- **Timestamp Tracking**: Automatic `inserted_at` and `updated_at` timestamps
+- **Default Status**: Rounds start in an inactive status
+- **Timestamp Tracking**: Automatic insertion and update timestamps
 
 **Typical Creation Flow:**
 
-```elixir
-# During tournament progression
-for round_number <- 0..(tournament.round_count - 1) do
-  {:ok, round} = Rounds.create_round_for_tournament(tournament.id, round_number)
-
-  # Generate pairings for this round
-  tournament = Tournaments.get_tournament!(tournament.id)
-  round = Rounds.get_round!(round.id, true)  # Preload associations
-
-  {:ok, _pairings} = PairingEngine.create_pairings(tournament, round)
-end
-```
+Rounds are typically created in a loop based on the tournament's configured round count. As each round is created, it is linked to the tournament. Pairings are then generated for the round using the tournament's pairing engine, creating the matchups for that specific round.
 
 ### 2. Round Status Management
 
 **Status Progression:**
 
-```
-:inactive → :active → :finished
-```
+Inactive -> Active -> Finished
 
 **Status Meanings:**
 
-- **`:inactive`** - Round created but not yet started, pairings may be generated
-- **`:active`** - Round currently being played, scores being collected
-- **`:finished`** - Round completed, all scores recorded, ready for next round
+- **Inactive** - Round created but not yet started, pairings may be generated
+- **Active** - Round currently being played, scores being collected
+- **Finished** - Round completed, all scores recorded, ready for next round
 
 **Status Transitions:**
 
-```elixir
-# Start a round
-{:ok, round} = Rounds.update_round(round, %{
-  status: :active,
-  started_at: NaiveDateTime.local_now()
-})
-
-# Finish a round (typically after all scores collected)
-{:ok, round} = Rounds.update_round(round, %{status: :finished})
-```
+Rounds transition from inactive to active when a tournament organizer starts the round. This sets a timestamp. When all games are complete and scores are entered, the round is moved to finished status.
 
 ### 3. Round Data Retrieval
 
 **Basic Retrieval:**
 
-```elixir
-# Simple round lookup
-round = Rounds.get_round!(round_id)
-
-# Round with all associations preloaded
-round = Rounds.get_round!(round_id, true)
-# Includes: tournament with participants, pairings with participants
-```
+Rounds can be looked up by their ID. Optionally, related data like the tournament (with its participants) and pairings (with their participants) can be preloaded for complete context.
 
 **Tournament-Context Retrieval:**
 
-```elixir
-# Get round by tournament and round number
-round = Rounds.get_round_by_tournament_and_round_number!(
-  tournament_id,
-  round_number,
-  preload_all: true
-)
-
-# Get round from string-based round number (UI integration)
-round = Rounds.get_round_from_round_number_str!(tournament_id, "2")
-# Converts "2" to 1 (adjusts for 1-indexed display vs 0-indexed storage)
-```
+Rounds can also be retrieved by specifying the tournament ID and the round number. This is common when navigating through a tournament's history. For user interfaces that use 1-based indexing (Round 1, Round 2), the system handles the conversion to the 0-based storage index used in the database.
 
 ## Round Management Features
 
@@ -137,18 +79,7 @@ round = Rounds.get_round_from_round_number_str!(tournament_id, "2")
 
 **Selective Preloading:**
 
-```elixir
-def get_round!(id, preload_all \\ false) do
-  if preload_all do
-    Repo.get!(Round, id)
-    |> Repo.preload(tournament: [:participants], pairings: [:participant])
-  else
-    Repo.get!(Round, id)
-  end
-end
-```
-
-**Benefits:**
+The system supports fetching rounds with or without their associations. This optimization ensures that:
 
 - **Performance Control**: Only load associated data when needed
 - **Memory Efficiency**: Avoid loading unnecessary associations
@@ -158,45 +89,13 @@ end
 
 **Round-Tournament Relationship:**
 
-```elixir
-def get_round_by_tournament_and_round_number!(tournament_id, round_number, preload_all \\ false) do
-  base_query = Repo.get_by!(Round, tournament_id: tournament_id, number: round_number)
-
-  if preload_all do
-    base_query
-    |> Repo.preload(tournament: [:participants, rounds: [:pairings]], pairings: [:participant])
-  else
-    base_query
-    |> Repo.preload(pairings: [:participant])
-  end
-end
-```
-
-**Deep Association Loading:**
-
-- **Tournament Context**: Loads parent tournament with all participants
-- **Sibling Rounds**: Includes other rounds for comparison and scoring
-- **Nested Pairings**: Each round's pairings with participant details
+When fetching rounds within a tournament context, deep loading of associations is often employed. This includes the parent tournament (and its participants), sibling rounds (for scoring calculations), and nested pairings with participant details.
 
 ### Display Number Conversion
 
 **UI Integration:**
 
-```elixir
-def get_round_from_round_number_str!(tournament_id, number_str) do
-  {number, ""} = Integer.parse(number_str)
-
-  # Convert from 1-indexed display to 0-indexed storage
-  Repo.get_by!(Round, tournament_id: tournament_id, number: number - 1)
-  |> Repo.preload(tournament: [:participants, rounds: :pairings], pairings: [:participant])
-end
-```
-
-**Conversion Logic:**
-
-- **Database Storage**: 0-indexed (0, 1, 2, 3 for 4-round tournament)
-- **User Display**: 1-indexed (Round 1, Round 2, Round 3, Round 4)
-- **Automatic Conversion**: Handles display-to-storage conversion seamlessly
+The database stores rounds with a 0-based index (0, 1, 2...), but users expect to see Round 1, Round 2, etc. The system handles this translation seamlessly, converting user input strings into the correct database integer values.
 
 ## Round State Management
 
@@ -204,17 +103,7 @@ end
 
 **Current Round Logic:**
 
-```elixir
-# In tournament LiveView
-assign(:is_current_round_active?,
-  with len <- length(tournament.rounds), true <- len > 0 do
-    round = Enum.at(tournament.rounds, len - 1)  # Last round
-    round.status != :finished
-  else
-    _ -> false
-  end
-)
-```
+The system identifies the current round by checking the sequence of rounds. If the last created round is not yet finished, it is considered the "active" or "current" round.
 
 **Usage Patterns:**
 
@@ -226,49 +115,13 @@ assign(:is_current_round_active?,
 
 **Sequential Round Creation:**
 
-```elixir
-def start_next_round(tournament) do
-  current_round_count = length(tournament.rounds)
-
-  if current_round_count < tournament.round_count do
-    # Create next round
-    {:ok, round} = create_round_for_tournament(tournament.id, current_round_count)
-
-    # Generate pairings
-    tournament = reload_tournament_with_associations(tournament.id)
-    round = get_round!(round.id, true)
-
-    {:ok, _pairings} = PairingEngine.create_pairings(tournament, round)
-
-    # Activate the round
-    update_round(round, %{status: :active, started_at: NaiveDateTime.local_now()})
-  else
-    {:error, :tournament_complete}
-  end
-end
-```
+Moving to the next round involves creating the next sequential round record, generating pairings for it based on current scores, and then activating it. This process can only occur if the tournament round limit has not been reached.
 
 ### Time Tracking
 
 **Round Timing:**
 
-```elixir
-# Record when round starts
-{:ok, round} = Rounds.update_round(round, %{
-  status: :active,
-  started_at: NaiveDateTime.local_now()
-})
-
-# Calculate round duration (in views/utilities)
-def round_duration(round) do
-  case round.started_at do
-    nil -> nil
-    start_time ->
-      end_time = round.updated_at  # When status changed to :finished
-      NaiveDateTime.diff(end_time, start_time, :second)
-  end
-end
-```
+The start time is recorded when a round becomes active. Duration can be calculated by comparing this start time to when the round was marked as finished.
 
 ## Integration with Other Systems
 
@@ -280,65 +133,27 @@ end
 - Pairings are created immediately after round creation
 - Round status affects pairing behavior (scoring only when active)
 
-```elixir
-# Typical round-pairing workflow
-{:ok, round} = Rounds.create_round_for_tournament(tournament.id, round_number)
-tournament = Tournaments.get_tournament!(tournament.id)
-round = Rounds.get_round!(round.id, true)
+**Typical Workflow:**
 
-# Generate pairings using sophisticated algorithms
-{:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
-
-# Activate round for scoring
-{:ok, round} = Rounds.update_round(round, %{status: :active})
-```
+1.  Round is created.
+2.  Pairings are generated.
+3.  Round is set to active for play.
 
 ### Tournament System Integration
 
 **Round Limits:**
 
-```elixir
-# Tournament schema defines round limits
-field :round_count, :integer, default: 4
-
-# Round creation respects tournament limits
-def can_create_round?(tournament) do
-  length(tournament.rounds) < tournament.round_count
-end
-```
+Tournaments have a pre-defined number of rounds. The system enforces this limit, preventing the creation of rounds beyond the scheduled count.
 
 **Special Round Logic:**
 
-```elixir
-# Last round detection for top cut
-is_last_round? = tournament.round_count == round.number + 1
-is_top_cut_4? = is_last_round? && tournament.is_top_cut_4
-
-if is_top_cut_4? do
-  create_top_cut_pairings(tournament, round, num_pairings)
-else
-  create_regular_pairings(tournament, round, active_participants, num_pairings)
-end
-```
+The final round is detected by comparing the round number to the tournament's total round count. This allows for special logic, such as triggering a "Top Cut" elimination bracket for the top 4 players instead of standard pairings.
 
 ### Scoring System Integration
 
 **Score Collection Context:**
 
-```elixir
-# Rounds provide context for score updates
-def update_pairings(tournament_id, round_id, form_params) do
-  # Find all pairings for this specific round
-  participant_scores = extract_scores_from_form(form_params)
-
-  multi = Enum.reduce(participant_scores, Ecto.Multi.new(), fn params, multi ->
-    pairing = Pairings.get_pairing!(tournament_id, round_id, participant_id)
-    # ... update pairing with scores
-  end)
-
-  Repo.transaction(multi)
-end
-```
+Rounds provide the container for score updates. Scores are submitted for pairings within a specific round, and these updates are processed transactionally to ensure data integrity.
 
 ## LiveView Integration
 
@@ -346,20 +161,7 @@ end
 
 **Round Status Updates:**
 
-```elixir
-# In TournamentLive.Show
-def handle_event("start_round", %{"round_id" => round_id}, socket) do
-  round = Rounds.get_round!(round_id)
-
-  case Rounds.update_round(round, %{status: :active, started_at: NaiveDateTime.local_now()}) do
-    {:ok, _round} ->
-      # Broadcast update to all connected clients
-      {:noreply, socket |> put_flash(:info, "Round started!") |> push_navigate(...)}
-    {:error, changeset} ->
-      {:noreply, socket |> put_flash(:error, "Failed to start round")}
-  end
-end
-```
+The web interface allows organizers to start rounds with a button press. This updates the round status and broadcasts the change to all connected clients, ensuring everyone sees the "Active" status immediately.
 
 **Dynamic UI Updates:**
 
@@ -371,94 +173,46 @@ end
 
 **Round Management Forms:**
 
-```elixir
-# Round editing component
-defmodule MtgFriendsWeb.TournamentLive.RoundEditPairingFormComponent do
-  def update(%{round: round}, socket) do
-    changeset = Rounds.change_round(round)
-
-    {:ok,
-     socket
-     |> assign(:round, round)
-     |> assign(:form, to_form(changeset))}
-  end
-
-  def handle_event("save", %{"round" => round_params}, socket) do
-    case Rounds.update_round(socket.assigns.round, round_params) do
-      {:ok, round} ->
-        notify_parent({:saved, round})
-        {:noreply, socket |> put_flash(:success, "Round updated successfully")}
-      {:error, changeset} ->
-        {:noreply, assign(socket, form: to_form(changeset))}
-    end
-  end
-end
-```
+LiveView forms allow for editing round details or pairings. Changes made in these forms are validated and saved to the database, providing immediate feedback to the user.
 
 ## Error Handling and Edge Cases
 
 ### Validation Errors
 
-**Required Fields:**
+**Required Operations:**
 
-- `tournament_id` - Must reference valid tournament
-- `number` - Must be non-negative integer
-- `status` - Must be valid enum value
+- Validating tournament linkage
+- Ensuring non-negative, sequential round numbers
+- Enforcing valid status values
 
 **Business Logic Validation:**
 
-```elixir
-def validate_round_creation(tournament, round_number) do
-  cond do
-    length(tournament.rounds) >= tournament.round_count ->
-      {:error, "Tournament round limit reached"}
-
-    Enum.any?(tournament.rounds, fn r -> r.number == round_number end) ->
-      {:error, "Round number already exists"}
-
-    round_number < 0 ->
-      {:error, "Round number cannot be negative"}
-
-    true ->
-      :ok
-  end
-end
-```
+- Checking against tournament round limits
+- Preventing duplicate round numbers
+- Ensuring round numbers are not negative
 
 ### State Management Issues
 
 **Invalid Status Transitions:**
 
-```elixir
-def valid_status_transition?(current_status, new_status) do
-  case {current_status, new_status} do
-    {:inactive, :active} -> true
-    {:active, :finished} -> true
-    {:inactive, :finished} -> true  # Allow skip to finished
-    _ -> false
-  end
-end
-```
+The system enforces a logical flow for status updates: Inactive -> Active -> Finished. Logic exists to validate these transitions and allow skipping to finished if necessary.
 
 **Concurrent Round Management:**
 
 - Database constraints prevent duplicate round numbers
 - Transaction isolation prevents race conditions
-- Optimistic locking through `updated_at` timestamps
+- Optimistic locking ensures safe concurrent updates
 
 ### Data Integrity
 
 **Orphaned Round Prevention:**
 
-```elixir
-# Foreign key constraints in migration
-add :tournament_id, references(:tournaments, on_delete: :delete_all), null: false
-```
+Foreign key constraints ensure that rounds cannot exist without a parent tournament. This prevents data inconsistency.
 
 **Pairing Consistency:**
 
-- Rounds cannot be deleted if they have pairings
-- Round status changes validated against pairing states
+- Rounds cannot be deleted if they have pairings (referential integrity)
+- Round status changes are validated against pairing states
 - Cascade deletes ensure cleanup when tournaments removed
 
 ## Performance Considerations
@@ -467,33 +221,11 @@ add :tournament_id, references(:tournaments, on_delete: :delete_all), null: fals
 
 **Strategic Preloading:**
 
-```elixir
-# Expensive but comprehensive
-tournament = Repo.get!(Tournament, id)
-|> Repo.preload([
-  participants: [],
-  rounds: [pairings: [:participant]]
-])
-
-# Selective loading for specific needs
-round = Repo.get!(Round, id)
-|> Repo.preload([pairings: [:participant]])
-```
+The system offers flexibility in how much data is loaded. Full loading retrieves the complete tournament tree, while lighter queries fetch only the round and its immediate pairings.
 
 **Batch Operations:**
 
-```elixir
-# Create multiple rounds efficiently
-rounds_data = for round_num <- 0..3, do: %{
-  tournament_id: tournament.id,
-  number: round_num,
-  status: :inactive,
-  inserted_at: now,
-  updated_at: now
-}
-
-Repo.insert_all(Round, rounds_data)
-```
+When multiple rounds need to be created or updated at once, the system uses batch insert/update operations to interact with the database efficiently.
 
 ### Memory Management
 
@@ -513,55 +245,17 @@ Repo.insert_all(Round, rounds_data)
 
 ### Standard Round Flow
 
-```elixir
-# 1. Create tournament with round limit
-{:ok, tournament} = Tournaments.create_tournament(%{
-  round_count: 3,
-  # ... other attributes
-})
-
-# 2. For each round in tournament
-for round_number <- 0..(tournament.round_count - 1) do
-  # Create round
-  {:ok, round} = Rounds.create_round_for_tournament(tournament.id, round_number)
-
-  # Generate pairings
-  tournament = Tournaments.get_tournament!(tournament.id)
-  round = Rounds.get_round!(round.id, true)
-  {:ok, _pairings} = PairingEngine.create_pairings(tournament, round)
-
-  # Start round
-  {:ok, round} = Rounds.update_round(round, %{
-    status: :active,
-    started_at: NaiveDateTime.local_now()
-  })
-
-  # ... collect scores from games ...
-
-  # Finish round
-  {:ok, round} = Rounds.update_round(round, %{status: :finished})
-end
-
-# 3. Tournament complete
-Tournaments.update_tournament(tournament, %{status: :finished})
-```
+1.  **Tournament Creation**: Define round count.
+2.  **Round Interval**: For each round:
+    - Create the round record.
+    - Generate pairings based on current standings.
+    - Set status to active.
+    - Play games and collect scores.
+    - Set status to finished.
+3.  **Completion**: Mark tournament as finished.
 
 ### Round Analysis
 
-```elixir
-# Analyze round completion times
-def analyze_round_durations(tournament) do
-  tournament.rounds
-  |> Enum.map(fn round ->
-    duration = calculate_round_duration(round)
-    %{
-      round_number: round.number + 1,  # Display as 1-indexed
-      duration_minutes: duration / 60,
-      started_at: round.started_at,
-      status: round.status
-    }
-  end)
-end
-```
+System utilities allow for analyzing rounds, such as calculating duration statistics or reviewing historical status transitions.
 
 The rounds system provides the temporal framework that organizes tournament play into manageable segments while maintaining data integrity and supporting real-time tournament management through sophisticated state tracking and LiveView integration.

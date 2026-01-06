@@ -17,7 +17,7 @@ defmodule MtgFriends.TournamentsFixtures do
     {:ok, tournament} =
       attrs
       |> Enum.into(%{
-        name: "Test Tournament",
+        name: "My Tournament",
         date: NaiveDateTime.utc_now(),
         location: "Test Location",
         description_raw: "A test tournament description",

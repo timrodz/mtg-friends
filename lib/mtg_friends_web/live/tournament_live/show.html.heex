@@ -77,7 +77,7 @@
               "badge-secondary"
           end
         ]}>
-          <%= if @tournament.status == :finished do %>
+          <%= if @tournament.status == :finished and p["is_tournament_winner"] do %>
             Winner
           <% else %>
             #{index + 1}
@@ -193,7 +193,7 @@
       </div>
       <.link
         patch={~p"/tournaments/#{@tournament.id}/rounds/#{round.number + 1}"}
-        class={["p-0 btn btn-info btn-soft", round.status == :finished && ""]}
+        class={["btn btn-info btn-soft", round.status == :finished && ""]}
       >
         <.icon name="hero-chevron-right" /> View round
       </.link>

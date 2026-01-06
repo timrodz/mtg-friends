@@ -55,5 +55,44 @@ defmodule MtgFriends.RoundsTest do
       round = round_fixture()
       assert %Ecto.Changeset{} = Rounds.change_round(round)
     end
+
+    test "check_and_finalize/2 updates participant scores and win rates" do
+      tournament = tournament_fixture()
+      p1 = MtgFriends.ParticipantsFixtures.participant_fixture(%{tournament_id: tournament.id})
+      p2 = MtgFriends.ParticipantsFixtures.participant_fixture(%{tournament_id: tournament.id})
+
+      {:ok, round} =
+        Rounds.create_round(%{tournament_id: tournament.id, number: 1, status: :active})
+
+      # Create a pairing for p1 and p2
+      {:ok, pairing} =
+        MtgFriends.Pairings.create_pairing(%{
+          tournament_id: tournament.id,
+          round_id: round.id,
+          active: false,
+          pairing_participants: [
+            %{participant_id: p1.id, points: 3},
+            %{participant_id: p2.id, points: 0}
+          ]
+        })
+
+      # Set winner to p1's pairing_participant
+      # Need to reload to get the auto-generated IDs of pairing_participants
+      pairing = MtgFriends.Repo.preload(pairing, :pairing_participants)
+
+      {:ok, _} = MtgFriends.Pairings.update_pairing(pairing, %{winner_id: p1.id})
+
+      # check_and_finalize
+      {:ok, _round, _status} = Rounds.check_and_finalize(round, tournament)
+
+      p1_updated = MtgFriends.Participants.get_participant!(p1.id)
+      p2_updated = MtgFriends.Participants.get_participant!(p2.id)
+
+      assert p1_updated.points == 3
+      assert p1_updated.win_rate == 100.0
+
+      assert p2_updated.points == 0
+      assert p2_updated.win_rate == 0.0
+    end
   end
 end

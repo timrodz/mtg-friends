@@ -10,111 +10,57 @@ The pairing system is the heart of tournament management in MTG Friends, respons
 
 The pairing system is structured across multiple modules with clear separation of concerns:
 
-- **PairingEngine** (`lib/mtg_friends/pairing_engine.ex`) - Core pairing algorithms and logic
-- **Pairings Context** (`lib/mtg_friends/pairings.ex`) - CRUD operations and business logic
-- **Pairing Schema** (`lib/mtg_friends/pairings/pairing.ex`) - Database schema and validation
-- **TournamentUtils** (`lib/mtg_friends/tournament_utils.ex`) - Integration layer and scoring
+- **Pairings Context** - Main entry point, CRUD operations, and pairing algorithms
+- **Pairing Schema** - Database schema and validation
+- **TournamentRenderer** - Display logic
+- **Participants** - Scoring logic
 
 ### Database Schema
 
-```elixir
-schema "pairings" do
-  field :active, :boolean          # Whether pairing is currently active
-  field :number, :integer          # Pairing/pod number within the round
-  field :points, :integer          # Points earned by participant in this pairing
-  field :winner, :boolean          # Whether this participant won their pairing
+The `pairings` table acts as a container for a match or pod. The actual players involved are linked via a join table.
 
-  belongs_to :tournament, MtgFriends.Tournaments.Tournament
-  belongs_to :round, MtgFriends.Rounds.Round
-  belongs_to :participant, MtgFriends.Participants.Participant
-end
-```
+- **Active**: Boolean flag indicating if the pairing is currently active.
+- **Relationships**:
+  - Belongs to a Tournament and a Round.
+  - Has many `pairing_participants` (join table).
+  - Has many `participants` through the join table.
+  - Belongs to a `winner` (referencing a `pairing_participant`).
+- **Timestamps**: Standard creation and update tracking.
 
 **Key Relationships:**
 
-- Each pairing belongs to exactly one tournament, round, and participant
-- Multiple pairings with the same `number` represent players in the same pod/match
-- Points and winner status track individual performance within the group
+- Each pairing belongs to exactly one tournament and one round.
+- A pairing represents a group of players (pod or match).
+- Participants are associated with the pairing through the `pairing_participants` table.
+- The `winner` field on the pairing explicitly points to the winning participant record within that pairing context.
 
 ## Pairing Algorithms
 
 ### Algorithm Selection
 
-The system chooses pairing algorithms based on round number and tournament configuration:
-
-```elixir
-def create_pairings(tournament, round) do
-  case round.number do
-    0 -> create_first_round_pairings(tournament, round)  # Random
-    _ ->
-      case tournament.subformat do
-        :swiss -> create_swiss_pairings(tournament, round)
-        :bubble_rounds -> create_bubble_round_pairings(tournament, round)
-      end
-  end
-end
-```
+The system chooses pairing algorithms based on round number and tournament configuration. Initial rounds often use random pairing, while subsequent rounds use Swiss or Bubble Round logic depending on the tournament subformat.
 
 ### 1. First Round (Random) Pairings
 
-**Purpose:** Establish initial random matchups for fair tournament start
-**Algorithm:** Simple shuffle and partition
-
-```elixir
-def create_first_round_pairings(tournament, round) do
-  active_participants = filter_active_participants(tournament.participants)
-  num_pairings = calculate_num_pairings(length(active_participants), tournament.format)
-
-  active_participants
-  |> Enum.shuffle()  # Randomize order
-  |> partition_participants_into_pairings(num_pairings, tournament.format)
-  |> create_pairing_structs(tournament.id, round.id)
-end
-```
+**Purpose:** Establish initial random matchups for fair tournament start.
+**Algorithm:** Simple shuffle and partition.
 
 **Characteristics:**
 
 - **No History**: Ignores any previous matchups
-- **Pure Random**: Uses `Enum.shuffle()` for unpredictable ordering
+- **Pure Random**: Uses a shuffle mechanism for unpredictable ordering
 - **Format Aware**: Respects EDH pod sizes vs Standard match sizes
 
 ### 2. Swiss Pairing System
 
-**Purpose:** Minimize repeat opponents while maintaining competitive balance
-**Algorithm:** Multi-retry optimization with opponent history tracking
-
-```elixir
-def create_swiss_pairings(tournament, num_pairings) do
-  # Build matrix of who has played whom
-  player_pairing_matrix = build_player_pairing_matrix(tournament, participant_ids)
-
-  # Try optimal algorithm first
-  case attempt_optimal_swiss_pairings(player_pairing_matrix, num_pairings, tournament.format) do
-    {:ok, pairings} -> pairings
-    {:fallback, _reason} ->
-      # Fall back to retry-based algorithm
-      generate_swiss_pairings_with_retries(12, num_pairings, player_pairing_matrix, [], tournament.format)
-  end
-end
-```
+**Purpose:** Minimize repeat opponents while maintaining competitive balance.
+**Algorithm:** Multi-retry optimization with opponent history tracking.
 
 #### Swiss Algorithm Components
 
 **Opponent History Matrix:**
 
-```elixir
-def build_player_pairing_matrix(tournament, participant_ids) do
-  mapped_rounds = extract_round_pairings(tournament.rounds)
-
-  participant_ids
-  |> Enum.map(fn id ->
-    players_played_against = find_previous_opponents(mapped_rounds, id)
-    players_not_played_with = calculate_unplayed_opponents(participant_ids, id, players_played_against)
-
-    {id, players_played_against, players_not_played_with}
-  end)
-end
-```
+The system builds a matrix of who has played whom by analyzing previous rounds. This allows it to identify valid opponents for each player.
 
 **Optimal Pairing Attempt:**
 
@@ -124,22 +70,7 @@ end
 
 **Retry-Based Fallback:**
 
-```elixir
-def generate_swiss_pairings_with_retries(retries_left, num_pairings, player_matrix, best_round, tournament_format) do
-  shuffled_matrix = Enum.shuffle(player_matrix)
-  pairings = partition_participants_into_pairings(shuffled_matrix, num_pairings, tournament_format)
-
-  # Evaluate quality - count repeat opponents
-  pairing_results = evaluate_pairing_quality(pairings)
-  total_repeated = sum_repeated_opponents(pairing_results)
-
-  # Keep best result across all attempts
-  new_best = if total_repeated < best_score, do: pairing_results, else: best_round
-
-  # Recursively try remaining attempts
-  generate_swiss_pairings_with_retries(retries_left - 1, ...)
-end
-```
+If an optimal solution isn't found immediately, the system attempts to generate valid pairings multiple times (up to a limit), shuffling the potential matches each time. It evaluates each attempt based on the number of repeated opponents and selects the best one.
 
 **Quality Evaluation:**
 
@@ -149,22 +80,8 @@ end
 
 ### 3. Bubble Rounds Pairing
 
-**Purpose:** Group players of similar performance levels together
-**Algorithm:** Score-based grouping with shuffling within tiers
-
-```elixir
-def create_bubble_round_pairings(tournament_id, current_round_number) do
-  previous_round = get_previous_round_results(tournament_id, current_round_number - 1)
-
-  previous_round.pairings
-  |> extract_participant_scores()
-  |> Enum.group_by(fn p -> p.points end)  # Group by score
-  |> Enum.sort(:desc)                     # Best scores first
-  |> Enum.flat_map(fn {_, participants} ->
-      Enum.shuffle(participants)          # Randomize within score tier
-     end)
-end
-```
+**Purpose:** Group players of similar performance levels together.
+**Algorithm:** Score-based grouping with shuffling within tiers.
 
 **Characteristics:**
 
@@ -175,23 +92,8 @@ end
 
 ### 4. Top Cut Pairings
 
-**Purpose:** Create elimination bracket from top performers
-**Algorithm:** Score-based selection of top 4 players
-
-```elixir
-def create_top_cut_pairings(tournament, round, num_pairings) do
-  get_overall_scores(tournament.rounds, num_pairings)
-  |> Enum.take(4)  # Top 4 players only
-  |> Enum.map(fn participant ->
-    %{
-      number: 0,           # Single pairing number for finale
-      tournament_id: tournament.id,
-      round_id: round.id,
-      participant_id: participant.id
-    }
-  end)
-end
-```
+**Purpose:** Create elimination bracket from top performers.
+**Algorithm:** Score-based selection of top 4 players.
 
 **Characteristics:**
 
@@ -206,20 +108,7 @@ end
 
 **Pod Size Management:**
 
-```elixir
-def partition_edh_participants(participants, participant_count, num_pairings) do
-  corrected_num_complete_pairings = calculate_complete_pairings(participant_count, num_pairings)
-
-  case corrected_num_complete_pairings do
-    0 ->
-      # All 3-player pods
-      participants |> Enum.chunk_every(3)
-    _ ->
-      # Mix of 4-player and 3-player pods
-      complete_4_player_pods ++ remaining_3_player_pods
-  end
-end
-```
+The system attempts to create pods of 4 players. If the total number of players doesn't divide evenly by 4, it creates 3-player pods as necessary to ensure everyone plays.
 
 **Special Cases Handled:**
 
@@ -238,11 +127,7 @@ end
 
 **Match Creation:**
 
-```elixir
-def partition_standard_participants(participants, _participant_count, _num_pairings) do
-  participants |> Enum.chunk_every(2)  # Simple 2-player matches
-end
-```
+Standard pairings are simpler, always grouping players into pairs.
 
 **Characteristics:**
 
@@ -256,23 +141,7 @@ end
 
 **Bulk Creation Process:**
 
-```elixir
-def create_multiple_pairings(participant_pairings) do
-  now = NaiveDateTime.local_now()
-
-  new_pairings =
-    participant_pairings
-    |> Enum.map(fn p ->
-        p
-        |> Map.put(:inserted_at, now)
-        |> Map.put(:updated_at, now)
-       end)
-
-  Ecto.Multi.new()
-  |> Ecto.Multi.insert_all(:insert_all, Pairing, new_pairings)
-  |> Repo.transaction()
-end
-```
+Pairings are created in bulk to ensure efficiency and consistency. All pairings for a round are inserted in a single database transaction.
 
 **Benefits:**
 
@@ -285,30 +154,13 @@ end
 
 **Score Collection Process:**
 
-```elixir
-def update_pairings(tournament_id, round_id, form_params) do
-  participant_scores = extract_scores_from_form(form_params)
-
-  # Determine winner (highest score, handle ties)
-  highest_score_participant = find_winner(participant_scores)
-
-  # Update all pairings in transaction
-  multi = Enum.reduce(participant_scores, Ecto.Multi.new(), fn params, multi ->
-    pairing = get_pairing!(tournament_id, round_id, participant_id)
-    changeset = change_pairing(pairing, add_winner_flag(params, highest_score_participant))
-
-    Ecto.Multi.update(multi, "update_pairing_#{pairing.id}", changeset)
-  end)
-
-  Repo.transaction(multi)
-end
-```
+Scores are entered via a form. The system processes these inputs and updates the corresponding pairings.
 
 **Winner Determination:**
 
-- **Highest Score Wins**: Player with most points wins the pod/match
-- **Tie Handling**: No winner declared if multiple players tie for highest
-- **Group Scoring**: All participants get points, only one gets winner flag
+- **Highest Score Wins**: Player with most points wins the pod/match.
+- **Tie Handling**: No winner declared if multiple players tie for highest.
+- **Explicit Winner Tracking**: The pairing record is updated to point to the winning participant (via `winner_id` association).
 
 ## Advanced Features
 
@@ -316,11 +168,7 @@ end
 
 **Filtering Logic:**
 
-```elixir
-def filter_active_participants(participants) do
-  Enum.filter(participants, fn p -> not p.is_dropped end)
-end
-```
+Players marked as "dropped" are filtered out before pairings are generated.
 
 **Impact:**
 
@@ -333,12 +181,7 @@ end
 
 **Pairing Engine Settings:**
 
-```elixir
-@max_swiss_retries 12                    # Maximum optimization attempts
-@edh_players_per_pod 4                   # Preferred EDH pod size
-@edh_min_players_per_pod 3               # Minimum acceptable EDH pod size
-@standard_players_per_pairing 2          # Standard match size
-```
+The engine uses configurable constants for things like maximum retry attempts for Swiss pairings and preferred pod sizes for EDH.
 
 **Tuning Considerations:**
 
@@ -356,15 +199,7 @@ end
 
 **Pairing Quality Assessment:**
 
-```elixir
-def evaluate_pairing_quality(pairings) do
-  pairings
-  |> Enum.map(fn pairing ->
-    repeated_opponents = count_repeated_opponents_in_pairing(pairing)
-    %{total_repeated_opponents: repeated_opponents, pairing: pairing}
-  end)
-end
-```
+The system evaluates the quality of a set of pairings by calculating a "cost" based on repeated opponents, choosing the set with the lowest cost.
 
 ## Error Handling and Edge Cases
 
@@ -390,50 +225,18 @@ end
 
 ### Standard Pairing Flow
 
-```elixir
-# 1. Create round
-{:ok, round} = Rounds.create_round_for_tournament(tournament.id, round_number)
-
-# 2. Generate pairings
-tournament = Tournaments.get_tournament!(tournament.id)  # Reload with associations
-round = Rounds.get_round!(round.id, true)               # Preload associations
-
-{:ok, %{insert_all: {pairing_count, _}}} = PairingEngine.create_pairings(tournament, round)
-
-# 3. Collect and update scores
-scores = collect_scores_from_games()
-{:ok, _} = Pairings.update_pairings(tournament.id, round.id, scores)
-```
+1.  **Create Round**: A new round is initialized.
+2.  **Generate Pairings**: The engine analyzes the tournament state and creates pairing records for the round. The system handles all necessary data reloading to ensure the pairing engine has the latest state.
+3.  **Collect Scores**: After games are played, scores are submitted and processed in a transaction.
 
 ### Custom Pairing Requirements
 
-```elixir
-# Override for special tournament rules
-def create_custom_pairings(tournament, round) do
-  active_participants = get_active_participants(tournament)
+**Overrides:**
 
-  # Custom logic here - e.g., seeded brackets, regional groupings, etc.
-  custom_groupings = apply_custom_logic(active_participants)
-
-  # Convert to standard pairing format
-  create_pairing_structs(custom_groupings, tournament.id, round.id)
-end
-```
+While the standard algorithms cover most cases, the system is designed to allow for custom pairing logic if needed, such as manual overrides or special event rules.
 
 ### Pairing Analysis
 
-```elixir
-# Analyze pairing history for fairness
-def analyze_opponent_distribution(tournament) do
-  pairings = get_all_tournament_pairings(tournament)
-
-  opponent_counts = pairings
-  |> build_opponent_matrix()
-  |> calculate_pairing_frequency()
-  |> identify_imbalances()
-
-  generate_fairness_report(opponent_counts)
-end
-```
+The system provides capabilities to analyze pairing history, which is useful for verifying fairness and checking distribution of match-ups across a tournament.
 
 The pairing system provides sophisticated, format-aware algorithms that ensure fair and engaging tournament experiences while handling the complex edge cases inherent in multiplayer Magic: The Gathering tournaments.
