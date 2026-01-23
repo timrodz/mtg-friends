@@ -15,6 +15,25 @@ defmodule MtgFriends.Pairings.Pairing do
     timestamps()
   end
 
+  @type t :: %__MODULE__{
+          id: integer() | nil,
+          active: boolean() | nil,
+          tournament_id: integer() | nil,
+          tournament:
+            MtgFriends.Tournaments.Tournament.t() | Ecto.Association.NotLoaded.t() | nil,
+          round_id: integer() | nil,
+          round: MtgFriends.Rounds.Round.t() | Ecto.Association.NotLoaded.t() | nil,
+          winner_id: integer() | nil,
+          winner: MtgFriends.Participants.Participant.t() | nil | Ecto.Association.NotLoaded.t(),
+          pairing_participants:
+            [MtgFriends.Pairings.PairingParticipant.t()]
+            | Ecto.Association.NotLoaded.t(),
+          participants:
+            [MtgFriends.Participants.Participant.t()] | Ecto.Association.NotLoaded.t(),
+          inserted_at: NaiveDateTime.t() | nil,
+          updated_at: NaiveDateTime.t() | nil
+        }
+
   @doc false
   def changeset(pairing, attrs) do
     pairing

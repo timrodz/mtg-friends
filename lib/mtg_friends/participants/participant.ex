@@ -16,6 +16,24 @@ defmodule MtgFriends.Participants.Participant do
     timestamps()
   end
 
+  @type t :: %__MODULE__{
+          id: integer() | nil,
+          name: String.t() | nil,
+          points: integer() | nil,
+          decklist: String.t() | nil,
+          is_tournament_winner: boolean() | nil,
+          is_dropped: boolean() | nil,
+          win_rate: float() | nil,
+          tournament_id: integer() | nil,
+          tournament:
+            MtgFriends.Tournaments.Tournament.t() | Ecto.Association.NotLoaded.t() | nil,
+          pairing_participants:
+            [MtgFriends.Pairings.PairingParticipant.t()]
+            | Ecto.Association.NotLoaded.t(),
+          inserted_at: NaiveDateTime.t() | nil,
+          updated_at: NaiveDateTime.t() | nil
+        }
+
   @doc false
   def changeset(participant, attrs) do
     participant

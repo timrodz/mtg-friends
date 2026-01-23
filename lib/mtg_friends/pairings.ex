@@ -3,6 +3,31 @@ defmodule MtgFriends.Pairings do
   The Pairings context.
   """
 
+  defmodule PairingQuality do
+    @moduledoc """
+    Struct for pairing quality evaluation.
+    """
+    defstruct [:total_repeated_opponents, :pairing]
+
+    @type t :: %__MODULE__{
+            total_repeated_opponents: integer(),
+            pairing: [integer()]
+          }
+  end
+
+  defmodule PlayerPairing do
+    @moduledoc """
+    Struct for player pairing matrix entries.
+    """
+    defstruct [:id, :players_played_against, :players_not_played_with]
+
+    @type t :: %__MODULE__{
+            id: integer(),
+            players_played_against: [integer()],
+            players_not_played_with: [integer()]
+          }
+  end
+
   import Ecto.Query, warn: false
   alias MtgFriends.Repo
 
@@ -17,11 +42,13 @@ defmodule MtgFriends.Pairings do
   @doc """
   Returns the list of pairings.
   """
+  @spec list_pairings() :: [Pairing.t()]
   def list_pairings do
     Repo.all(Pairing)
     |> Repo.preload(:pairing_participants)
   end
 
+  @spec list_pairings(integer(), integer()) :: [Pairing.t()]
   def list_pairings(tournament_id, round_id) do
     Repo.all(
       from p in Pairing,
@@ -33,8 +60,10 @@ defmodule MtgFriends.Pairings do
   @doc """
   Gets a single pairing.
   """
+  @spec get_pairing!(integer()) :: Pairing.t() | no_return()
   def get_pairing!(id), do: Repo.get!(Pairing, id) |> Repo.preload(:pairing_participants)
 
+  @spec get_pairing(integer()) :: {:ok, Pairing.t()} | {:error, :not_found}
   def get_pairing(id) do
     case Repo.get(Pairing, id) do
       nil -> {:error, :not_found}
@@ -42,6 +71,7 @@ defmodule MtgFriends.Pairings do
     end
   end
 
+  @spec get_pairing_participant!(integer(), integer()) :: PairingParticipant.t() | no_return()
   def get_pairing_participant!(pairing_id, participant_id),
     do:
       Repo.get_by!(PairingParticipant,
@@ -52,6 +82,7 @@ defmodule MtgFriends.Pairings do
   @doc """
   Creates a pairing.
   """
+  @spec create_pairing(map()) :: {:ok, Pairing.t()} | {:error, Ecto.Changeset.t()}
   def create_pairing(attrs \\ %{}) do
     %Pairing{}
     |> Pairing.changeset(attrs)
@@ -62,6 +93,8 @@ defmodule MtgFriends.Pairings do
   Creates multiple pairings with nested participants.
   Expects a list of maps where each map represents a Pairing and has a `pairing_participants` key.
   """
+  @spec create_multiple_pairings([map()]) ::
+          {:ok, [Pairing.t()]} | {:error, any()} | {:error, Ecto.Multi.name(), any(), map()}
   def create_multiple_pairings(pairings_data) do
     # Since insert_all doesn't support nested associations easily with IDs returned,
     # and we have a hierarchical structure now, we might need to use Ecto.Multi or Enum.each.
@@ -92,12 +125,15 @@ defmodule MtgFriends.Pairings do
   @doc """
   Updates a pairing.
   """
+  @spec update_pairing(Pairing.t(), map()) :: {:ok, Pairing.t()} | {:error, Ecto.Changeset.t()}
   def update_pairing(%Pairing{} = pairing, attrs) do
     pairing
     |> Pairing.changeset(attrs)
     |> Repo.update()
   end
 
+  @spec update_pairings(integer(), integer(), map()) ::
+          {:ok, map()} | {:error, any()} | {:error, Ecto.Multi.name(), any(), map()}
   def update_pairings(tournament_id, round_id, form_params) do
     # form_params contains keys like "input-points-participant-<ID>" => "score"
     # We need to group these by Pairing (since we determine winner per pairing).
@@ -164,6 +200,7 @@ defmodule MtgFriends.Pairings do
   @doc """
   Deletes a pairing.
   """
+  @spec delete_pairing(Pairing.t()) :: {:ok, Pairing.t()} | {:error, Ecto.Changeset.t()}
   def delete_pairing(%Pairing{} = pairing) do
     Repo.delete(pairing)
   end
@@ -171,6 +208,7 @@ defmodule MtgFriends.Pairings do
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking pairing changes.
   """
+  @spec change_pairing(Pairing.t(), map()) :: Ecto.Changeset.t()
   def change_pairing(%Pairing{} = pairing, attrs \\ %{}) do
     Pairing.changeset(pairing, attrs)
   end
@@ -178,6 +216,8 @@ defmodule MtgFriends.Pairings do
   @doc """
   Creates pairings for a tournament round using the appropriate algorithm.
   """
+  @spec create_pairings_for_round(Tournament.t(), Round.t()) ::
+          {:ok, [Pairing.t()]} | {:error, any()} | {:error, Ecto.Multi.name(), any(), map()}
   def create_pairings_for_round(tournament, round) do
     active_participants = Enum.filter(tournament.participants, fn p -> not p.is_dropped end)
     tournament_format = tournament.format
@@ -198,6 +238,7 @@ defmodule MtgFriends.Pairings do
   @doc """
   Calculates the number of pairings needed based on participant count and format.
   """
+  @spec calculate_num_pairings(integer(), atom()) :: integer()
   def calculate_num_pairings(participant_count, format) do
     edh_players_per_pod = 4
     standard_players_per_pairing = 2
@@ -402,6 +443,7 @@ defmodule MtgFriends.Pairings do
     end)
   end
 
+  @spec build_player_pairing_matrix(Tournament.t(), [integer()]) :: [PlayerPairing.t()]
   defp build_player_pairing_matrix(tournament, participant_ids) do
     # Need to extract pairing history from previous rounds
     mapped_rounds = extract_round_pairings(tournament.rounds)
@@ -413,7 +455,11 @@ defmodule MtgFriends.Pairings do
       players_not_played_with =
         calculate_unplayed_opponents(participant_ids, id, players_played_against)
 
-      {id, players_played_against, players_not_played_with}
+      %PlayerPairing{
+        id: id,
+        players_played_against: players_played_against,
+        players_not_played_with: players_not_played_with
+      }
     end)
   end
 
@@ -489,7 +535,7 @@ defmodule MtgFriends.Pairings do
         # No available players
         [nil]
 
-      {primary_id, _, available_opponents} ->
+      %PlayerPairing{id: primary_id, players_not_played_with: available_opponents} ->
         available_opponents_filtered =
           available_opponents |> Enum.filter(&(not Enum.member?(taken_ids, &1)))
 
@@ -509,7 +555,7 @@ defmodule MtgFriends.Pairings do
 
   defp find_available_player(matrix, taken_ids) do
     matrix
-    |> Enum.filter(fn {player_id, _, _} -> not Enum.member?(taken_ids, player_id) end)
+    |> Enum.filter(fn %PlayerPairing{id: player_id} -> not Enum.member?(taken_ids, player_id) end)
     |> Enum.at(0)
   end
 
@@ -534,13 +580,16 @@ defmodule MtgFriends.Pairings do
 
   defp find_common_unplayed_opponent(matrix, taken_ids, existing_members) do
     matrix
-    |> Enum.find(fn {candidate_id, _, unplayed_opponents} ->
+    |> Enum.find(fn %PlayerPairing{
+                      id: candidate_id,
+                      players_not_played_with: unplayed_opponents
+                    } ->
       not Enum.member?(taken_ids, candidate_id) and
         Enum.all?(existing_members, &Enum.member?(unplayed_opponents, &1))
     end)
     |> case do
       nil -> nil
-      {id, _, _} -> id
+      %PlayerPairing{id: id} -> id
     end
   end
 
@@ -601,20 +650,21 @@ defmodule MtgFriends.Pairings do
     best_round
   end
 
+  @spec evaluate_pairing_quality([[PlayerPairing.t()]]) :: [PairingQuality.t()]
   defp evaluate_pairing_quality(pairings) do
     pairings
     |> Enum.map(fn pairing_matrix_entries ->
-      # pairing_matrix_entries is list of {id, played, unplayed} tuples
-      players_in_pod = Enum.map(pairing_matrix_entries, &elem(&1, 0))
+      # pairing_matrix_entries is list of PlayerPairing structs
+      players_in_pod = Enum.map(pairing_matrix_entries, & &1.id)
 
       repeated_opponents =
-        Enum.flat_map(pairing_matrix_entries, &elem(&1, 1))
+        Enum.flat_map(pairing_matrix_entries, & &1.players_played_against)
         |> Enum.reject(&Enum.member?(players_in_pod, &1))
         |> Enum.frequencies()
         |> Enum.reduce(0, fn {_id, repetitions}, acc -> repetitions + acc end)
 
       # Return structure: pairing is list of IDs
-      %{total_repeated_opponents: repeated_opponents, pairing: players_in_pod}
+      %PairingQuality{total_repeated_opponents: repeated_opponents, pairing: players_in_pod}
     end)
   end
 end

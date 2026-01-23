@@ -3,6 +3,19 @@ defmodule MtgFriends.Tournaments do
   The Tournaments context.
   """
 
+  defmodule CardMetadata do
+    @moduledoc """
+    Struct for card metadata extracted from descriptions.
+    """
+    defstruct [:image_uri, :name, :og_name]
+
+    @type t :: %__MODULE__{
+            image_uri: String.t(),
+            name: String.t(),
+            og_name: String.t()
+          }
+  end
+
   import Ecto.Query, warn: false
   alias MtgFriends.Repo
 
@@ -12,6 +25,7 @@ defmodule MtgFriends.Tournaments do
   alias MtgFriends.Rounds.Round
   alias MtgFriends.Participants.Participant
 
+  @spec get_most_recent_tournaments(integer()) :: [Tournament.t()]
   def get_most_recent_tournaments(limit) do
     from(t in Tournament, order_by: [desc: :date], limit: ^limit, preload: [:game]) |> Repo.all()
   end
@@ -25,6 +39,8 @@ defmodule MtgFriends.Tournaments do
       [%Tournament{}, ...]
 
   """
+
+  @spec list_tournaments(String.t() | {}) :: [Tournament.t()]
   def list_tournaments(params \\ {}) do
     case params do
       "filter-inactive" ->
@@ -38,6 +54,7 @@ defmodule MtgFriends.Tournaments do
     end
   end
 
+  @spec list_tournaments_paginated(integer(), integer()) :: [Tournament.t()]
   def list_tournaments_paginated(limit \\ 6, page \\ 1) do
     offset = limit * (page - 1)
 
@@ -51,10 +68,12 @@ defmodule MtgFriends.Tournaments do
     |> Repo.all()
   end
 
+  @spec get_tournament_count() :: integer()
   def get_tournament_count() do
     Repo.aggregate(Tournament, :count, :id)
   end
 
+  @spec list_tournaments_admin() :: [Tournament.t()]
   def list_tournaments_admin() do
     Repo.all(Tournament, order_by: [asc: :id])
     |> Repo.preload([:participants, :rounds])
@@ -80,6 +99,7 @@ defmodule MtgFriends.Tournaments do
   #     Repo.get!(Tournament, id)
   #     |> Repo.preload([:participants])
 
+  @spec get_tournament!(integer()) :: Tournament.t() | no_return()
   def get_tournament!(id) do
     query =
       from(
@@ -100,9 +120,12 @@ defmodule MtgFriends.Tournaments do
     Repo.one!(query)
   end
 
+  @spec get_tournament_simple(integer()) :: Tournament.t() | nil
   def get_tournament_simple(id), do: Repo.get(Tournament, id)
+  @spec get_tournament_simple!(integer()) :: Tournament.t() | no_return()
   def get_tournament_simple!(id), do: Repo.get!(Tournament, id)
 
+  @spec has_enough_participants?(Tournament.t()) :: boolean()
   def has_enough_participants?(%Tournament{participants: participants})
       when is_list(participants) do
     length(participants) >= 4
@@ -113,6 +136,7 @@ defmodule MtgFriends.Tournaments do
     length(tournament.participants) >= 4
   end
 
+  @spec all_participants_named?(Tournament.t()) :: boolean()
   def all_participants_named?(%Tournament{participants: participants}) do
     Enum.all?(participants, fn p -> not is_nil(p.name) and p.name != "" end)
   end
@@ -134,6 +158,8 @@ defmodule MtgFriends.Tournaments do
       {:error, %Ecto.Changeset{}}
 
   """
+
+  @spec create_tournament(map()) :: {:ok, Tournament.t()} | {:error, Ecto.Changeset.t()}
   def create_tournament(attrs \\ %{}) do
     %Tournament{}
     |> Tournament.changeset(
@@ -165,6 +191,9 @@ defmodule MtgFriends.Tournaments do
       {:error, %Ecto.Changeset{}}
 
   """
+
+  @spec update_tournament(Tournament.t(), map()) ::
+          {:ok, Tournament.t()} | {:error, Ecto.Changeset.t()}
   def update_tournament(%Tournament{} = tournament, attrs) do
     with description_raw <- Map.get(attrs, "description_raw"),
          false <- is_nil(description_raw),
@@ -194,6 +223,8 @@ defmodule MtgFriends.Tournaments do
       {:error, %Ecto.Changeset{}}
 
   """
+
+  @spec delete_tournament(Tournament.t()) :: {:ok, Tournament.t()} | {:error, Ecto.Changeset.t()}
   def delete_tournament(%Tournament{} = tournament) do
     Repo.delete(tournament)
   end
@@ -207,10 +238,13 @@ defmodule MtgFriends.Tournaments do
       %Ecto.Changeset{data: %Tournament{}}
 
   """
+
+  @spec change_tournament(Tournament.t(), map()) :: Ecto.Changeset.t()
   def change_tournament(%Tournament{} = tournament, attrs \\ %{}) do
     Tournament.changeset(tournament, attrs)
   end
 
+  @spec validate_description(String.t()) :: String.t()
   defp validate_description(description_raw) do
     try do
       HTTPoison.start()
@@ -253,7 +287,7 @@ defmodule MtgFriends.Tournaments do
                   _ ->
                     img_large = Map.get(image_uris, "large")
                     name = Map.get(body, "name")
-                    %{image_uri: img_large, name: name, og_name: card_raw}
+                    %CardMetadata{image_uri: img_large, name: name, og_name: card_raw}
                 end
               else
                 _ -> nil

@@ -20,10 +20,12 @@ defmodule MtgFriends.Rounds do
       [%Round{}, ...]
 
   """
+  @spec list_rounds() :: [Round.t()]
   def list_rounds do
     Repo.all(Round)
   end
 
+  @spec list_rounds(integer()) :: [Round.t()]
   def list_rounds(tournament_id) do
     Repo.all(from r in Round, where: r.tournament_id == ^tournament_id, order_by: [asc: r.number])
   end
@@ -42,6 +44,8 @@ defmodule MtgFriends.Rounds do
       ** (Ecto.NoResultsError)
 
   """
+
+  @spec get_round!(integer(), boolean()) :: Round.t() | no_return()
   def get_round!(id, preload_all \\ false) do
     if preload_all do
       Repo.get!(Round, id)
@@ -51,6 +55,8 @@ defmodule MtgFriends.Rounds do
     end
   end
 
+  @spec get_round_by_tournament_and_round_id!(integer(), integer(), boolean()) ::
+          Round.t() | no_return()
   def get_round_by_tournament_and_round_id!(tournament_id, id, preload_all \\ false) do
     if preload_all do
       Repo.get_by!(Round, tournament_id: tournament_id, id: id)
@@ -64,6 +70,8 @@ defmodule MtgFriends.Rounds do
     end
   end
 
+  @spec get_round_by_tournament_and_round_number!(integer(), integer(), boolean()) ::
+          Round.t() | no_return()
   def get_round_by_tournament_and_round_number!(tournament_id, round_number, preload_all \\ false) do
     if preload_all do
       Repo.get_by!(Round, tournament_id: tournament_id, number: round_number)
@@ -77,6 +85,7 @@ defmodule MtgFriends.Rounds do
     end
   end
 
+  @spec get_round_from_round_number_str!(integer(), String.t()) :: Round.t() | no_return()
   def get_round_from_round_number_str!(tournament_id, number_str) do
     {number, ""} = Integer.parse(number_str)
 
@@ -99,12 +108,16 @@ defmodule MtgFriends.Rounds do
       {:error, %Ecto.Changeset{}}
 
   """
+
+  @spec create_round(map()) :: {:ok, Round.t()} | {:error, Ecto.Changeset.t()}
   def create_round(attrs \\ %{}) do
     %Round{}
     |> Round.changeset(attrs)
     |> Repo.insert()
   end
 
+  @spec start_round(Tournament.t()) ::
+          {:ok, Round.t()} | {:error, String.t()} | {:error, Ecto.Changeset.t()}
   def start_round(tournament) do
     # Preload necessary associations if not already loaded
     tournament = Repo.preload(tournament, [:participants, :rounds])
@@ -167,6 +180,8 @@ defmodule MtgFriends.Rounds do
       {:error, %Ecto.Changeset{}}
 
   """
+
+  @spec update_round(Round.t(), map()) :: {:ok, Round.t()} | {:error, Ecto.Changeset.t()}
   def update_round(%Round{} = round, attrs) do
     round
     |> Round.changeset(attrs)
@@ -185,6 +200,8 @@ defmodule MtgFriends.Rounds do
       {:error, %Ecto.Changeset{}}
 
   """
+
+  @spec delete_round(Round.t()) :: {:ok, Round.t()} | {:error, Ecto.Changeset.t()}
   def delete_round(%Round{} = round) do
     Repo.delete(round)
   end
@@ -198,14 +215,20 @@ defmodule MtgFriends.Rounds do
       %Ecto.Changeset{data: %Round{}}
 
   """
+
+  @spec change_round(Round.t(), map()) :: Ecto.Changeset.t()
   def change_round(%Round{} = round, attrs \\ %{}) do
     Round.changeset(round, attrs)
   end
 
+  @spec is_round_complete?(Round.t()) :: boolean()
   def is_round_complete?(%Round{} = round) do
     round.status == :finished
   end
 
+  @spec check_and_finalize(Round.t(), Tournament.t()) ::
+          {:ok, Round.t(), :active | :round_finished | :tournament_finished}
+          | {:error, any()}
   def check_and_finalize(round, tournament) do
     # Force reload pairings to ensure we have latest state
     round = Repo.preload(round, [:pairings], force: true)
@@ -243,6 +266,8 @@ defmodule MtgFriends.Rounds do
     end
   end
 
+  @spec finalize_tournament(Tournament.t(), [Pairing.t()]) ::
+          {:ok, Tournament.t()} | {:error, Ecto.Changeset.t()}
   defp finalize_tournament(tournament, pairings) do
     winning_participant = get_winning_participant(tournament, pairings)
 
@@ -256,6 +281,7 @@ defmodule MtgFriends.Rounds do
     Tournaments.update_tournament(tournament, %{"status" => :finished})
   end
 
+  @spec get_winning_participant(Tournament.t(), [Pairing.t()]) :: Participant.t() | nil
   defp get_winning_participant(tournament, pairings)
        when length(pairings) == 1 and tournament.is_top_cut_4 do
     pairing = Repo.preload(pairings, winner: :participant) |> hd()

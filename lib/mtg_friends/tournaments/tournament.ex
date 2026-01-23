@@ -27,6 +27,30 @@ defmodule MtgFriends.Tournaments.Tournament do
     timestamps()
   end
 
+  @type t :: %__MODULE__{
+          id: integer() | nil,
+          name: String.t() | nil,
+          location: String.t() | nil,
+          date: NaiveDateTime.t() | nil,
+          description_raw: String.t() | nil,
+          description_html: String.t() | nil,
+          round_length_minutes: integer() | nil,
+          is_top_cut_4: boolean() | nil,
+          round_count: integer() | nil,
+          status: :inactive | :active | :finished | nil,
+          format: :edh | :standard | nil,
+          subformat: :bubble_rounds | :swiss | nil,
+          user_id: integer() | nil,
+          user: MtgFriends.Accounts.User.t() | Ecto.Association.NotLoaded.t() | nil,
+          game_id: integer() | nil,
+          game: MtgFriends.Games.Game.t() | Ecto.Association.NotLoaded.t() | nil,
+          participants:
+            [MtgFriends.Participants.Participant.t()] | Ecto.Association.NotLoaded.t(),
+          rounds: [MtgFriends.Rounds.Round.t()] | Ecto.Association.NotLoaded.t(),
+          inserted_at: NaiveDateTime.t() | nil,
+          updated_at: NaiveDateTime.t() | nil
+        }
+
   @doc false
   def changeset(tournament, attrs) do
     tournament

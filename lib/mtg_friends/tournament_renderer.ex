@@ -17,6 +17,7 @@ defmodule MtgFriends.TournamentRenderer do
       iex> MtgFriends.TournamentRenderer.render_status(:active)
       "In progress"
   """
+  @spec render_status(atom()) :: String.t()
   def render_status(status) do
     case status do
       :inactive -> "Open"
@@ -28,6 +29,7 @@ defmodule MtgFriends.TournamentRenderer do
   @doc """
   Renders tournament status with emoji decoration.
   """
+  @spec render_status_with_emoji(atom()) :: String.t()
   def render_status_with_emoji(status) do
     case status do
       :inactive -> "Open 🟢"
@@ -39,6 +41,7 @@ defmodule MtgFriends.TournamentRenderer do
   @doc """
   Renders round status as text.
   """
+  @spec render_round_status(atom()) :: String.t()
   def render_round_status(status) do
     case status do
       :inactive -> "Pairing players"
@@ -51,6 +54,7 @@ defmodule MtgFriends.TournamentRenderer do
   @doc """
   Renders round status with emoji decoration.
   """
+  @spec render_round_status_with_emoji(atom()) :: String.t()
   def render_round_status_with_emoji(status) do
     case status do
       :inactive -> "Pairing players 🟩"
@@ -62,6 +66,7 @@ defmodule MtgFriends.TournamentRenderer do
   @doc """
   Renders tournament format as display text.
   """
+  @spec render_format(atom() | nil) :: String.t()
   def render_format(format) do
     case format do
       :edh -> "Commander (EDH)"
@@ -73,6 +78,7 @@ defmodule MtgFriends.TournamentRenderer do
   @doc """
   Renders tournament subformat as display text.
   """
+  @spec render_subformat(atom() | nil) :: String.t()
   def render_subformat(subformat) do
     case subformat do
       :bubble_rounds -> "Bubble Rounds"
@@ -84,6 +90,7 @@ defmodule MtgFriends.TournamentRenderer do
   @doc """
   Renders description of tournament subformat.
   """
+  @spec render_subformat_description(atom() | nil) :: String.t()
   def render_subformat_description(subformat) do
     case subformat do
       :bubble_rounds ->
@@ -100,6 +107,7 @@ defmodule MtgFriends.TournamentRenderer do
   @doc """
   Validates if a string is a valid URL.
   """
+  @spec validate_url(String.t()) :: boolean()
   def validate_url(url) do
     uri = URI.parse(url)
     uri.scheme != nil && uri.host =~ "."
