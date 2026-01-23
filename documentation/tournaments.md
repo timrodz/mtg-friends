@@ -10,49 +10,33 @@ The tournament system in MTG Friends is the core component that manages Magic: T
 
 The tournament system is built around several interconnected modules:
 
-- **Tournaments Context** (`lib/mtg_friends/tournaments.ex`) - Main business logic and CRUD operations
-- **Tournament Schema** (`lib/mtg_friends/tournaments/tournament.ex`) - Database schema and validation
-- **Tournament LiveView** (`lib/mtg_friends_web/live/tournament_live/`) - User interface and real-time updates
-- **Tournament Utils** (`lib/mtg_friends/tournament_utils.ex`) - Core utilities and scoring functions
-- **Tournament Renderer** (`lib/mtg_friends/tournament_renderer.ex`) - Display logic and formatting
+- **Tournaments Context** - Main business logic and CRUD operations
+- **Tournament Schema** - Database schema and validation
+- **Tournament LiveView** - User interface and real-time updates
+- **Tournament LiveView** - User interface and real-time updates
+- **Tournament Renderer** - Display logic and formatting
 
 ### Database Schema
 
-```elixir
-schema "tournaments" do
-  field :name, :string
-  field :location, :string
-  field :date, :naive_datetime
-  field :description_raw, :string      # Raw markdown-like content
-  field :description_html, :string     # Processed HTML with card links
-  field :round_length_minutes, :integer, default: 60
-  field :is_top_cut_4, :boolean, default: false
-  field :round_count, :integer, default: 4
-  field :status, Ecto.Enum, values: [:inactive, :active, :finished], default: :inactive
-  field :format, Ecto.Enum, values: [:edh, :standard], default: :edh
-  field :subformat, Ecto.Enum, values: [:bubble_rounds, :swiss], default: :bubble_rounds
+Tournaments track essential details about the event, its configuration, and its lifecycle.
 
-  belongs_to :user, MtgFriends.Accounts.User
-  belongs_to :game, MtgFriends.Games.Game
-  has_many :participants, MtgFriends.Participants.Participant
-  has_many :rounds, MtgFriends.Rounds.Round
-end
-```
+- **Basic Info**: Name, location, date, and descriptions (raw markdown and processed HTML).
+- **Configuration**:
+  - **Round Length**: Default 60 minutes.
+  - **Top Cut**: Optional top-4 elimination.
+  - **Round Count**: Default 4 rounds.
+  - **Format**: EDH (default) or Standard.
+  - **Subformat**: Bubble Rounds (default) or Swiss.
+- **State**: Current status (inactive, active, finished).
+- **Relationships**:
+  - Belongs to a User (organizer) and a Game type.
+  - Has many Participants and Rounds.
 
 ## Tournament Lifecycle
 
 ### 1. Creation Phase
 
-**Location:** `Tournaments.create_tournament/1`
-
-```elixir
-def create_tournament(attrs \\ %{}) do
-  %Tournament{}
-  |> Tournament.changeset(attrs)
-  |> validate_description(attrs)  # Processes [[Card Name]] syntax
-  |> Repo.insert()
-end
-```
+**Location**: `Tournaments.create_tournament`
 
 **Key Features:**
 
@@ -83,75 +67,38 @@ end
 
 **Registration Process:**
 
-```elixir
-# Individual participant creation
-Participants.create_participant(%{
-  name: "Player Name",
-  tournament_id: tournament.id,
-  user_id: user.id,
-  decklist: "Optional decklist"
-})
-
-# Bulk participant creation
-Participants.create_x_participants(tournament_id, count)
-```
+Participants can be added individually or in bulk. They are linked to the tournament and optionally to a registered user account.
 
 **Participant Features:**
 
 - **Name & Decklist**: Player identification and deck information
-- **Drop System**: Players can be marked as dropped (`is_dropped: true`)
+- **Drop System**: Players can be marked as dropped
 - **Points Tracking**: Cumulative points across all rounds
-- **Winner Designation**: Tournament winner flag (`is_tournament_winner`)
+- **Winner Designation**: Tournament winner flag
 - **User Association**: Optional link to registered user accounts
 
 ### 4. Tournament Execution
 
 **Status Progression:**
 
-1. **`:inactive`** - Setup phase, adding participants
-2. **`:active`** - Tournament running, rounds being played
-3. **`:finished`** - Tournament completed, winner declared
+1.  **Inactive** - Setup phase, adding participants
+2.  **Active** - Tournament running, rounds being played
+3.  **Finished** - Tournament completed, winner declared
 
 **Round Creation Process:**
 
-```elixir
-# Create new round
-{:ok, round} = Rounds.create_round_for_tournament(tournament.id, round_number)
-
-# Generate pairings using sophisticated algorithms
-{:ok, %{insert_all: {pairing_count, _}}} =
-  TournamentUtils.create_pairings(tournament, round)
-```
+Rounds are created sequentially. As each round initializes, pairings are generated using the tournament's selected pairing algorithm (Swiss, Random, etc.).
 
 ### 5. Scoring System
 
-**Score Calculation:** `TournamentUtils.get_overall_scores/2`
+**Score Calculation:**
 
 The scoring system uses a sophisticated algorithm that considers:
 
-1. **Base Points**: Direct points earned in each round (0-3 typically)
-2. **Positional Bonuses**: Small decimal bonuses based on pod/pairing position
-3. **Win Rate**: Percentage of rounds won for tiebreaking
-4. **Decimal Precision**: Scores calculated to 3 decimal places for fine-grained ranking
-
-```elixir
-def get_overall_scores(rounds, num_pairings) do
-  rounds
-  |> Enum.flat_map(fn round -> round.pairings end)
-  |> Enum.group_by(&Map.get(&1, :participant_id))
-  |> Enum.map(fn {id, pairings} ->
-    total_score = calculate_participant_total_score(pairings, rounds, num_pairings)
-    total_wins = count_wins(pairings)
-
-    %{
-      id: id,
-      total_score: total_score |> Decimal.from_float() |> Decimal.round(3),
-      win_rate: (total_wins / length(rounds) * 100) |> Decimal.from_float()
-    }
-  end)
-  |> Enum.sort_by(&{&1.total_score, &1.win_rate}, :desc)
-end
-```
+1.  **Base Points**: Direct points earned in each round (typically 0-3).
+2.  **Positional Bonuses**: Small decimal bonuses based on pod/pairing position to break ties.
+3.  **Win Rate**: The percentage of rounds won. This is a key tiebreaker.
+4.  **Decimal Precision**: Scores calculated to 3 decimal places for fine-grained ranking.
 
 ## Tournament Formats
 
@@ -166,11 +113,7 @@ end
 
 **Pod Calculation:**
 
-```elixir
-def calculate_num_pairings(participant_count, :edh) do
-  round(Float.ceil(participant_count / 4))  # 4 players per pod typically
-end
-```
+The system attempts to group players into pods of 4. If that's not possible, it mixes 3-player and 4-player pods to ensure everyone plays.
 
 ### Standard Format
 
@@ -183,32 +126,13 @@ end
 
 **Match Calculation:**
 
-```elixir
-def calculate_num_pairings(participant_count, :standard) do
-  round(Float.ceil(participant_count / 2))  # 2 players per match
-end
-```
+For standard format, players are simply paired off. If there's an odd number of players, bye logic applies.
 
 ## Advanced Features
 
 ### Scryfall Card Integration
 
-The tournament description system integrates with Scryfall API to enhance card references:
-
-```elixir
-defp validate_description(description_raw) do
-  cards_to_search = Regex.scan(~r/\[\[(.*?)\]\]/, description_raw)
-
-  # Fetch card data from Scryfall API
-  cards_data = fetch_card_data_from_scryfall(cards_to_search)
-
-  # Convert [[Card Name]] to clickable links with images
-  String.replace(description_raw, cards_names_to_search, fn og_name ->
-    metadata = find_card_metadata(cards_data, og_name)
-    "<a class=\"underline\" target=\"_blank\" href=\"#{metadata.image_uri}\">#{metadata.name}</a>"
-  end)
-end
-```
+The tournament description system integrates with Scryfall API to enhance card references. When a description is saved, the system detects `[[Card Name]]` patterns, fetches metadata from Scryfall, and replaces the text with rich HTML links that show card images on hover/click.
 
 ### Real-time Updates
 
@@ -238,51 +162,16 @@ The tournament system uses Phoenix LiveView for real-time updates:
 
 ### Creating a Tournament
 
-```elixir
-# 1. Create tournament
-{:ok, tournament} = Tournaments.create_tournament(%{
-  name: "FNM Commander Night",
-  date: ~N[2024-01-15 19:00:00],
-  location: "Local Game Store",
-  description_raw: "Casual EDH tournament featuring [[Sol Ring]] and other classics!",
-  game_id: game.id,
-  user_id: user.id,
-  format: :edh,
-  subformat: :swiss,
-  round_count: 3,
-  is_top_cut_4: false
-})
-
-# 2. Add participants
-participants = add_participants(tournament, 12)
-
-# 3. Start tournament
-Tournaments.update_tournament(tournament, %{status: :active})
-
-# 4. Create and run rounds
-for round_num <- 0..(tournament.round_count - 1) do
-  {:ok, round} = Rounds.create_round_for_tournament(tournament.id, round_num)
-  {:ok, _pairings} = TournamentUtils.create_pairings(tournament, round)
-  # ... collect scores and update pairings
-end
-
-# 5. Finish tournament
-Tournaments.update_tournament(tournament, %{status: :finished})
-```
+1.  **Define Details**: Set name, date, location, and description.
+2.  **Configure Rules**: Choose format (EDH/Standard), subformat (Swiss/Bubble), and round count.
+3.  **Add Players**: Register participants.
+4.  **Start**: Activate the tournament.
+5.  **Run Rounds**: Iterate through rounds, generating pairings and recording scores.
+6.  **Conclude**: Finish the tournament and declare winners.
 
 ### Retrieving Tournament Data
 
-```elixir
-# Get full tournament with all associations
-tournament = Tournaments.get_tournament!(id)
-# Includes: participants, rounds with pairings, game info
-
-# Get tournament scores and rankings
-scores = TournamentUtils.get_overall_scores(
-  tournament.rounds,
-  TournamentUtils.get_num_pairings(length(tournament.participants), tournament.format)
-)
-```
+The system allows retrieval of comprehensive tournament data, including full participant lists, round histories, and calculated standings. Standings are sorted by total score and win rate.
 
 ## Error Handling and Edge Cases
 

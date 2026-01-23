@@ -17,7 +17,13 @@ defmodule MtgFriendsWeb.UserLoginLive do
         </:subtitle>
       </.header>
 
-      <.simple_form for={@form} id="login_form" action={~p"/users/log_in"} phx-update="ignore">
+      <.simple_form
+        for={@form}
+        id="login_form"
+        action={~p"/users/log_in"}
+        phx-update="ignore"
+        csrf_token={Plug.CSRFProtection.get_csrf_token()}
+      >
         <.input field={@form[:email]} type="email" label="Email" required />
         <.input field={@form[:password]} type="password" label="Password" required />
 
@@ -38,8 +44,6 @@ defmodule MtgFriendsWeb.UserLoginLive do
   end
 
   def mount(_params, _session, socket) do
-    # Deprecated: use `Flash.get/2` instead of `live_flash/2`
-    # email = live_flash(socket.assigns.flash, :email)
     email = Flash.get(socket.assigns.flash, :email)
     form = to_form(%{"email" => email}, as: "user")
     {:ok, assign(socket, form: form), temporary_assigns: [form: form]}

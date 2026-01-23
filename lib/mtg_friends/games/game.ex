@@ -7,6 +7,15 @@ defmodule MtgFriends.Games.Game do
     field :code, Ecto.Enum, values: [:mtg, :yugioh, :pokemon], default: :mtg
     field :url, :string
 
+    @type t :: %__MODULE__{
+            id: integer() | nil,
+            name: String.t() | nil,
+            code: :mtg | :yugioh | :pokemon | nil,
+            url: String.t() | nil,
+            inserted_at: NaiveDateTime.t() | nil,
+            updated_at: NaiveDateTime.t() | nil
+          }
+
     timestamps()
   end
 

@@ -14,6 +14,19 @@ defmodule MtgFriends.Rounds.Round do
     timestamps()
   end
 
+  @type t :: %__MODULE__{
+          id: integer() | nil,
+          status: :inactive | :active | :finished | nil,
+          number: integer() | nil,
+          started_at: NaiveDateTime.t() | nil,
+          tournament_id: integer() | nil,
+          tournament:
+            MtgFriends.Tournaments.Tournament.t() | Ecto.Association.NotLoaded.t() | nil,
+          pairings: [MtgFriends.Pairings.Pairing.t()] | Ecto.Association.NotLoaded.t(),
+          inserted_at: NaiveDateTime.t() | nil,
+          updated_at: NaiveDateTime.t() | nil
+        }
+
   @doc false
   def changeset(round, attrs) do
     round

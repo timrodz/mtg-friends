@@ -17,6 +17,7 @@ defmodule MtgFriends.Games do
       [%Game{}, ...]
 
   """
+  @spec list_games() :: [Game.t()]
   def list_games do
     Repo.all(Game)
   end
@@ -35,8 +36,11 @@ defmodule MtgFriends.Games do
       ** (Ecto.NoResultsError)
 
   """
+  @spec get_game!(integer()) :: Game.t() | no_return()
   def get_game!(id), do: Repo.get!(Game, id)
+  @spec get_game_by_code!(String.t()) :: Game.t() | no_return()
   def get_game_by_code!(code), do: Repo.get_by!(Game, code: code)
+  @spec get_game_by_code(String.t()) :: Game.t() | nil
   def get_game_by_code(code), do: Repo.get_by(Game, code: code)
 
   @doc """
@@ -51,6 +55,7 @@ defmodule MtgFriends.Games do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec create_game(map()) :: {:ok, Game.t()} | {:error, Ecto.Changeset.t()}
   def create_game(attrs \\ %{}) do
     %Game{}
     |> Game.changeset(attrs)
@@ -69,6 +74,7 @@ defmodule MtgFriends.Games do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec update_game(Game.t(), map()) :: {:ok, Game.t()} | {:error, Ecto.Changeset.t()}
   def update_game(%Game{} = game, attrs) do
     game
     |> Game.changeset(attrs)
@@ -87,6 +93,7 @@ defmodule MtgFriends.Games do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec delete_game(Game.t()) :: {:ok, Game.t()} | {:error, Ecto.Changeset.t()}
   def delete_game(%Game{} = game) do
     Repo.delete(game)
   end
@@ -100,6 +107,7 @@ defmodule MtgFriends.Games do
       %Ecto.Changeset{data: %Game{}}
 
   """
+  @spec change_game(Game.t(), map()) :: Ecto.Changeset.t()
   def change_game(%Game{} = game, attrs \\ %{}) do
     Game.changeset(game, attrs)
   end

@@ -4,7 +4,7 @@ defmodule MtgFriends.MixProject do
   def project do
     [
       app: :mtg_friends,
-      version: "0.1.0",
+      version: "1.0.0",
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -33,6 +33,7 @@ defmodule MtgFriends.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:usage_rules, "~> 0.1", only: [:dev]},
       {:igniter, "~> 0.6", only: [:dev, :test]},
       {:bcrypt_elixir, "~> 3.0"},
       {:phoenix, "~> 1.8.0"},
@@ -64,7 +65,12 @@ defmodule MtgFriends.MixProject do
       {:poison, "~> 5.0"},
       {:tzdata, "~> 1.1.2"},
       {:calendar, "~> 1.0.0"},
-      {:gen_smtp, "~> 1.1"}
+      {:gen_smtp, "~> 1.1"},
+      {:hammer, "~> 7.0"},
+      {:open_api_spex, "~> 3.18"},
+      {:expletive, "~> 0.1.0"},
+      {:remote_ip, "~> 1.1"},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
     ]
   end
 

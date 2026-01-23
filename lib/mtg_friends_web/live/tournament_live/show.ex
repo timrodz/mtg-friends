@@ -1,7 +1,7 @@
 defmodule MtgFriendsWeb.TournamentLive.Show do
   use MtgFriendsWeb, :live_view
 
-  alias MtgFriends.{TournamentUtils, TournamentRenderer}
+  alias MtgFriends.TournamentRenderer
   alias MtgFriendsWeb.UserAuth
   alias MtgFriends.Tournaments
   alias MtgFriends.Participants
@@ -16,13 +16,11 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
 
   @impl true
   def handle_params(%{"id" => id}, _, socket) do
-    tournament = Tournaments.get_tournament!(id)
-
-    num_pairings =
-      TournamentUtils.get_num_pairings(length(tournament.participants), tournament.format)
+    tournament =
+      Tournaments.get_tournament!(id)
 
     participant_score_lookup =
-      TournamentUtils.get_overall_scores(tournament.rounds, num_pairings)
+      Participants.get_participant_standings(tournament.participants)
       |> Map.new(fn %{id: id, total_score: total_score, win_rate: win_rate} ->
         {id,
          %{
@@ -90,7 +88,7 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
       )
       |> assign(
         :has_enough_participants?,
-        length(tournament.participants) >= 4
+        Tournaments.has_enough_participants?(tournament)
       )
       |> assign(:participant_forms, participant_forms)
     }
@@ -103,36 +101,16 @@ defmodule MtgFriendsWeb.TournamentLive.Show do
   @impl true
   def handle_event("create-round", _, socket) do
     tournament = socket.assigns.tournament
-    round_count = length(tournament.rounds)
-    first_round? = round_count == 0
 
-    with {:ok, round} <-
-           Rounds.create_round_for_tournament(
-             tournament.id,
-             round_count
-           ),
-         {:ok, _} <-
-           TournamentUtils.create_pairings(
-             tournament,
-             round
-           ) do
-      if first_round? do
-        {:ok, _} = Tournaments.update_tournament(tournament, %{"status" => :active})
-      end
+    case Rounds.start_round(tournament) do
+      {:ok, round} ->
+        {:noreply,
+         socket
+         |> put_flash(:success, "Round #{round.number + 1} created successfully")
+         |> push_navigate(to: ~p"/tournaments/#{tournament.id}/rounds/#{round.number + 1}")}
 
-      {:noreply,
-       socket
-       |> put_flash(:success, "Round #{round.number + 1} created successfully")
-       |> push_navigate(to: ~p"/tournaments/#{tournament.id}/rounds/#{round.number + 1}")}
-    else
-      {:error, _} ->
-        {:noreply, put_flash(socket, :error, "Something wrong happened when creating a round")}
-
-      {:error, %Ecto.Changeset{} = _} ->
-        {:noreply, put_flash(socket, :error, "Something wrong happened when creating a round")}
-
-      _ ->
-        nil
+      {:error, reason} ->
+        {:noreply, put_flash(socket, :error, reason)}
     end
   end
 

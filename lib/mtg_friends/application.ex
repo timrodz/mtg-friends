@@ -17,7 +17,9 @@ defmodule MtgFriends.Application do
       # Start Finch
       {Finch, name: MtgFriends.Finch},
       # Start the Endpoint (http/https)
-      MtgFriendsWeb.Endpoint
+      MtgFriendsWeb.Endpoint,
+      # Start the RateLimiter
+      MtgFriendsWeb.RateLimit
       # Start a worker by calling: MtgFriends.Worker.start_link(arg)
       # {MtgFriends.Worker, arg}
     ]

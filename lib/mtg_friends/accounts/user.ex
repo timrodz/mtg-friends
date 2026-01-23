@@ -10,6 +10,18 @@ defmodule MtgFriends.Accounts.User do
     field :confirmed_at, :naive_datetime
     has_many :tournaments, MtgFriends.Tournaments.Tournament
 
+    @type t :: %__MODULE__{
+            id: integer() | nil,
+            admin: boolean() | nil,
+            email: String.t() | nil,
+            password: String.t() | nil,
+            hashed_password: String.t() | nil,
+            confirmed_at: NaiveDateTime.t() | nil,
+            tournaments: [MtgFriends.Tournaments.Tournament.t()] | Ecto.Association.NotLoaded.t(),
+            inserted_at: NaiveDateTime.t() | nil,
+            updated_at: NaiveDateTime.t() | nil
+          }
+
     timestamps()
   end
 
