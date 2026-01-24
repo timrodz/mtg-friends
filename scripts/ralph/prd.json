@@ -100,8 +100,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added :round_robin to render_subformat/1 and render_subformat_description/1"
     },
     {
       "id": "US-008",
@@ -115,8 +115,8 @@
         "Tests pass"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Also fixed a bug in build_round_robin_pods where remainder participants weren't properly distributed across pods"
     }
   ]
 }

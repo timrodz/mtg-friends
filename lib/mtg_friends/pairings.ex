@@ -441,17 +441,26 @@ defmodule MtgFriends.Pairings do
 
   @spec build_round_robin_pods([PlayerPairing.t()], integer(), atom()) :: [[integer()]]
   defp build_round_robin_pods(player_pairing_matrix, num_pairings, tournament_format) do
-    pod_size = determine_pod_size(length(player_pairing_matrix), num_pairings, tournament_format)
+    participant_count = length(player_pairing_matrix)
+    base_pod_size = determine_pod_size(participant_count, num_pairings, tournament_format)
+    remainder = rem(participant_count, num_pairings)
 
     {pods, _remaining} =
-      Enum.reduce(1..num_pairings, {[], player_pairing_matrix}, fn _i, {acc_pods, remaining} ->
+      Enum.reduce(1..num_pairings, {[], player_pairing_matrix}, fn pod_index, {acc_pods, remaining} ->
         case remaining do
           [] ->
             {acc_pods, []}
 
           _ ->
+            current_pod_size =
+              if remainder > 0 and pod_index <= remainder do
+                base_pod_size + 1
+              else
+                min(base_pod_size, length(remaining))
+              end
+
             {pod, updated_remaining} =
-              find_optimal_pod(remaining, pod_size, player_pairing_matrix, tournament_format)
+              find_optimal_pod(remaining, current_pod_size, player_pairing_matrix, tournament_format)
 
             {acc_pods ++ [pod], updated_remaining}
         end

@@ -5,6 +5,9 @@
 - The `PlayerPairing` struct tracks `players_played_against` and `players_not_played_with` for opponent variety calculations
 - Use `@spec` without `@doc` for private functions (Elixir discards `@doc` on private functions)
 - `TournamentEditFormComponent` receives tournament with preloaded associations (game, participants) when editing
+- When adding a new subformat, update both `render_subformat/1` and `render_subformat_description/1` in `lib/mtg_friends/tournament_renderer.ex`
+- When building pods for algorithms, use remainder logic to distribute all participants evenly (e.g., 10 players with 3 pods = 4,3,3 not 3,3,3 with 1 leftover)
+- Use `Pairings.list_pairings(tournament_id, round_id)` to get pairings for a round, `Pairings.update_pairings/3` to finalize results
 
 ---
 
@@ -54,5 +57,34 @@
   - The `tournament.participants` is preloaded when editing via the show page
   - For new tournaments, participant_count is nil since participants aren't created yet
   - The `get_subformat_options/3` now accepts participant_count as third argument for conditional labels
+
+---
+
+## 2026-01-24 - US-007
+- What was implemented: Added Round Robin rendering support in tournament_renderer.ex
+  - Added `:round_robin` case to `render_subformat/1` returning "Round Robin"
+  - Added `:round_robin` case to `render_subformat_description/1` returning "Maximizes opponent variety for small tournaments (8-12 participants)"
+- Files changed: `lib/mtg_friends/tournament_renderer.ex`
+- **Learnings for future iterations:**
+  - The `TournamentRenderer` module is in `lib/mtg_friends/` (not `lib/mtg_friends_web/`)
+  - Both `render_subformat/1` and `render_subformat_description/1` need to be updated together for new subformats
+
+---
+
+## 2026-01-24 - US-008
+- What was implemented: Comprehensive test suite for Round Robin pairing algorithm
+  - Created `test/mtg_friends/round_robin_pairings_test.exs` with 14 tests
+  - Test cases for 8, 9, 10, 11, and 12 participants
+  - Tests verify opponent variety across multiple rounds
+  - Edge case tests for dropped participants and mid-tournament drops
+  - Fixed bug in `build_round_robin_pods/3` where remainder participants weren't distributed to pods
+- Files changed:
+  - `test/mtg_friends/round_robin_pairings_test.exs` (new file)
+  - `lib/mtg_friends/pairings.ex` (bug fix for remainder distribution)
+- **Learnings for future iterations:**
+  - When testing multi-round scenarios, use `finalize_round_with_results/2` to properly set points via `update_pairings/3`
+  - The `build_round_robin_pods` now distributes remainder participants across earlier pods (e.g., 10 players → 4,3,3)
+  - Tests should verify actual participant count in pairings, not just pairing structure
+  - All 254 tests pass including the 14 new round robin tests
 
 ---
