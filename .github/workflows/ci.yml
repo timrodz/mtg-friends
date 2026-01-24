@@ -1,0 +1,81 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: mtg_friends_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Erlang/OTP and Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: "26.0"
+          elixir-version: "1.15.7"
+
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            deps
+            _build
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compile dependencies
+        run: mix deps.compile
+
+      - name: Compile application
+        run: mix compile
+
+      - name: Setup database
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mtg_friends_test
+          MIX_ENV: test
+        run: |
+          mix ecto.create
+          mix ecto.migrate
+
+      - name: Run tests
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mtg_friends_test
+          MIX_ENV: test
+        run: mix test --cover
+
+      - name: Run formatter check
+        run: mix format --check-formatted
+
+      - name: Run dialyzer
+        run: mix dialyzer --format short

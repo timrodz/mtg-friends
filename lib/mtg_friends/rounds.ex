@@ -4,6 +4,7 @@ defmodule MtgFriends.Rounds do
   """
 
   import Ecto.Query, warn: false
+  alias MtgFriends.Pairings.Pairing
   alias MtgFriends.Repo
 
   alias MtgFriends.Participants.Participant

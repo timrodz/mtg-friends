@@ -29,6 +29,8 @@ defmodule MtgFriends.Pairings do
   end
 
   import Ecto.Query, warn: false
+  alias MtgFriends.Rounds.Round
+  alias MtgFriends.Tournaments.Tournament
   alias MtgFriends.Repo
 
   alias MtgFriends.Pairings.Pairing

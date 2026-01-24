@@ -10,7 +10,7 @@ defmodule MtgFriends.GamesFixtures do
   def game_fixture(attrs \\ %{}) do
     # Use existing seeded games to avoid duplicates
     code = Map.get(attrs, :code, :mtg)
-    
+
     # Try to get existing game first, create only if it doesn't exist
     case MtgFriends.Games.get_game_by_code(code) do
       nil ->
@@ -22,8 +22,9 @@ defmodule MtgFriends.GamesFixtures do
             code: code
           })
           |> MtgFriends.Games.create_game()
+
         game
-        
+
       game ->
         game
     end

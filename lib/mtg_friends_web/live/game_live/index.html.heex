@@ -12,8 +12,8 @@
   rows={@streams.games}
   row_click={fn {_id, game} -> JS.navigate(~p"/admin/games/#{game}") end}
 >
-  <:col :let={{_id, game}} label="Name"><%= game.name %></:col>
-  <:col :let={{_id, game}} label="Url"><%= game.url %></:col>
+  <:col :let={{_id, game}} label="Name">{game.name}</:col>
+  <:col :let={{_id, game}} label="Url">{game.url}</:col>
   <:action :let={{_id, game}}>
     <div class="sr-only">
       <.link navigate={~p"/admin/games/#{game}"}>Show</.link>

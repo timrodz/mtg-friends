@@ -1,16 +1,16 @@
 defmodule MtgFriends.TournamentRenderer do
   @moduledoc """
   Handles rendering and display functions for tournaments.
-  
+
   This module contains all the rendering logic that was previously scattered
   in TournamentUtils, following the principle of separation of concerns.
   """
 
   @doc """
   Renders tournament status as text.
-  
+
   ## Examples
-  
+
       iex> MtgFriends.TournamentRenderer.render_status(:inactive)
       "Open"
       

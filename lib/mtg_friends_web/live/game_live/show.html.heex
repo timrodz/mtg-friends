@@ -1,5 +1,5 @@
 <.header>
-  Game <%= @game.id %>
+  Game {@game.id}
   <:subtitle>This is a game record from your database.</:subtitle>
   <:actions>
     <.link patch={~p"/admin/games/#{@game}/show/edit"} phx-click={JS.push_focus()}>
@@ -9,8 +9,8 @@
 </.header>
 
 <.list>
-  <:item title="Name"><%= @game.name %></:item>
-  <:item title="Url"><%= @game.url %></:item>
+  <:item title="Name">{@game.name}</:item>
+  <:item title="Url">{@game.url}</:item>
 </.list>
 
 <.back navigate={~p"/admin/games"}>Back to games</.back>
