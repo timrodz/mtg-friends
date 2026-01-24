@@ -10,7 +10,17 @@ defmodule MtgFriends.MixProject do
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
-      compilers: [:phoenix_live_view] ++ Mix.compilers()
+      compilers: [:phoenix_live_view] ++ Mix.compilers(),
+      test_coverage: [
+        summary: [threshold: 72],
+        ignore_modules: [
+          MtgFriendsWeb.Schemas,
+          Poison.Encoder.MtgFriendsWeb.Schemas,
+          MtgFriendsWeb.LandingHTML,
+          MtgFriends.Release,
+          ~r/Poison.Encoder.MtgFriendsWeb.Schemas\./
+        ]
+      ]
     ]
   end
 
