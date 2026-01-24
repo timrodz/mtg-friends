@@ -40,7 +40,8 @@
           id={"tournament-#{@tournament_id}-round-#{@round_id}-pairing-#{pairing.id}-participant-#{pp.participant.id}"}
           class={[
             "flex justify-between items-center gap-2 py-1 px-2 rounded-md",
-             (pairing.winner_id == pp.participant_id && "font-bold bg-success text-success-content") || ""
+            (pairing.winner_id == pp.participant_id && "font-bold bg-success text-success-content") ||
+              ""
           ]}
         >
           <p class="flex gap-1 items-center">
@@ -86,10 +87,9 @@
     action={@live_action}
     tournament_id={@tournament_id}
     round_id={@round_id}
-    form={@forms[@selected_pairing_id] }
+    form={@forms[@selected_pairing_id]}
     navigate={~p"/tournaments/#{@tournament_id}/rounds/#{@round_number + 1}"}
   />
 </.modal>
-
 
 <.back navigate={~p"/tournaments/#{@tournament_id}"}>Tournament</.back>

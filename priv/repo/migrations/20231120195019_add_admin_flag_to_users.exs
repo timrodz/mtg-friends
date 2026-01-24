@@ -12,7 +12,10 @@ defmodule MtgFriends.Repo.Migrations.AddAdminFlagToUsers do
     flush()
 
     case Repo.get_by(MtgFriends.Accounts.User, email: "timrodz@icloud.com") do
-      nil -> :ok  # User doesn't exist, skip
+      # User doesn't exist, skip
+      nil ->
+        :ok
+
       user ->
         user
         |> Ecto.Changeset.change(%{admin: true})

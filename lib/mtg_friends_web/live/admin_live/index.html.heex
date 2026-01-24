@@ -22,13 +22,13 @@
   rows={@streams.tournaments}
   row_click={fn {_id, tournament} -> JS.navigate(~p"/tournaments/#{tournament}") end}
 >
-  <:col :let={{_id, tournament}} label="ID"><%= tournament.id %></:col>
-  <:col :let={{_id, tournament}} label="Name"><%= tournament.name %></:col>
+  <:col :let={{_id, tournament}} label="ID">{tournament.id}</:col>
+  <:col :let={{_id, tournament}} label="Name">{tournament.name}</:col>
   <:col :let={{_id, tournament}} label="Participants">
-    <%= length(tournament.participants) %>
+    {length(tournament.participants)}
   </:col>
   <:col :let={{_id, tournament}} label="Rounds">
-    <%= length(tournament.rounds) %>
+    {length(tournament.rounds)}
   </:col>
   <:action :let={{id, tournament}}>
     <%= if @current_user_admin do %>
