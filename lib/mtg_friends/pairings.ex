@@ -294,6 +294,10 @@ defmodule MtgFriends.Pairings do
               create_bubble_round_pairings(tournament.id, round.number)
               |> partition_participants_into_pairings(num_pairings, tournament.format)
 
+            :round_robin ->
+              Logger.info("Creating Round Robin pairings for tournament #{tournament.id}")
+              create_round_robin_pairings(tournament, num_pairings, tournament.format)
+
             :swiss ->
               Logger.info("Creating Swiss pairings for tournament #{tournament.id}")
               create_swiss_pairings(tournament, num_pairings)
@@ -409,6 +413,116 @@ defmodule MtgFriends.Pairings do
     end)
     # Re-map to participant structs for consistency with other functions
     |> Enum.map(fn p -> %{id: p.id} end)
+  end
+
+  # Creates round robin pairings that maximize opponent variety.
+  # Unlike Swiss, this ignores player scores and treats all players equally.
+  # Designed for small tournaments (8-12 participants) where variety matters more than rankings.
+  @spec create_round_robin_pairings(Tournament.t(), integer(), atom()) :: [[%{id: integer()}]]
+  defp create_round_robin_pairings(tournament, num_pairings, tournament_format) do
+    active_participant_ids =
+      tournament.participants
+      |> Enum.filter(fn p -> not p.is_dropped end)
+      |> Enum.map(& &1.id)
+
+    Logger.info(
+      "Generating Round Robin pairings for #{length(active_participant_ids)} participants"
+    )
+
+    player_pairing_matrix = build_player_pairing_matrix(tournament, active_participant_ids)
+
+    pods = build_round_robin_pods(player_pairing_matrix, num_pairings, tournament_format)
+
+    pods
+    |> Enum.map(fn pod_ids ->
+      Enum.map(pod_ids, fn id -> %{id: id} end)
+    end)
+  end
+
+  @spec build_round_robin_pods([PlayerPairing.t()], integer(), atom()) :: [[integer()]]
+  defp build_round_robin_pods(player_pairing_matrix, num_pairings, tournament_format) do
+    pod_size = determine_pod_size(length(player_pairing_matrix), num_pairings, tournament_format)
+
+    {pods, _remaining} =
+      Enum.reduce(1..num_pairings, {[], player_pairing_matrix}, fn _i, {acc_pods, remaining} ->
+        case remaining do
+          [] ->
+            {acc_pods, []}
+
+          _ ->
+            {pod, updated_remaining} =
+              find_optimal_pod(remaining, pod_size, player_pairing_matrix, tournament_format)
+
+            {acc_pods ++ [pod], updated_remaining}
+        end
+      end)
+
+    pods
+  end
+
+  @spec determine_pod_size(integer(), integer(), atom()) :: integer()
+  defp determine_pod_size(participant_count, num_pairings, tournament_format) do
+    case tournament_format do
+      :edh ->
+        if participant_count / num_pairings >= 4, do: 4, else: 3
+
+      :standard ->
+        2
+    end
+  end
+
+  # Finds the optimal pod composition that minimizes repeat opponents.
+  # Greedily selects players who have played against each other the least.
+  # Works with both EDH (pods of 3-4) and Standard (pairs of 2) formats.
+  @spec find_optimal_pod([PlayerPairing.t()], integer(), [PlayerPairing.t()], atom()) ::
+          {[integer()], [PlayerPairing.t()]}
+  defp find_optimal_pod([], _pod_size, _full_matrix, _tournament_format), do: {[], []}
+
+  defp find_optimal_pod(remaining_players, pod_size, _full_matrix, _tournament_format) do
+    actual_pod_size = min(pod_size, length(remaining_players))
+
+    sorted_by_unplayed =
+      remaining_players
+      |> Enum.sort_by(fn player -> length(player.players_not_played_with) end, :desc)
+
+    case sorted_by_unplayed do
+      [] ->
+        {[], []}
+
+      [first | rest] ->
+        pod_members = select_pod_members(first, rest, actual_pod_size - 1, [first])
+        pod_ids = Enum.map(pod_members, & &1.id)
+
+        updated_remaining =
+          remaining_players
+          |> Enum.reject(fn p -> p.id in pod_ids end)
+
+        {pod_ids, updated_remaining}
+    end
+  end
+
+  @spec select_pod_members(PlayerPairing.t(), [PlayerPairing.t()], integer(), [PlayerPairing.t()]) ::
+          [PlayerPairing.t()]
+  defp select_pod_members(_first, _candidates, 0, acc), do: acc
+
+  defp select_pod_members(_first, [], _needed, acc), do: acc
+
+  defp select_pod_members(first, candidates, needed, acc) do
+    current_pod_ids = Enum.map(acc, & &1.id)
+
+    best_candidate =
+      candidates
+      |> Enum.max_by(fn candidate ->
+        unplayed_with_current =
+          Enum.count(current_pod_ids, fn pod_id ->
+            pod_id in candidate.players_not_played_with
+          end)
+
+        unplayed_with_current
+      end)
+
+    remaining_candidates = Enum.reject(candidates, &(&1.id == best_candidate.id))
+    select_pod_members(first, remaining_candidates, needed - 1, acc ++ [best_candidate])
   end
 
   defp create_swiss_pairings(tournament, num_pairings) do
