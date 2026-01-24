@@ -83,6 +83,7 @@ defmodule MtgFriends.TournamentRenderer do
     case subformat do
       :bubble_rounds -> "Bubble Rounds"
       :swiss -> "Swiss Rounds"
+      :round_robin -> "Round Robin"
       nil -> ""
     end
   end
@@ -98,6 +99,9 @@ defmodule MtgFriends.TournamentRenderer do
 
       :swiss ->
         "Pods are determined by trying to make sure each participant plays every opponent at least once"
+
+      :round_robin ->
+        "Maximizes opponent variety for small tournaments (8-12 participants)"
 
       nil ->
         ""

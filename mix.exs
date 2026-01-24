@@ -12,7 +12,7 @@ defmodule MtgFriends.MixProject do
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
       test_coverage: [
-        summary: [threshold: 72],
+        summary: [threshold: 73.50],
         ignore_modules: [
           MtgFriendsWeb.Schemas,
           Poison.Encoder.MtgFriendsWeb.Schemas,
@@ -80,7 +80,8 @@ defmodule MtgFriends.MixProject do
       {:open_api_spex, "~> 3.18"},
       {:expletive, "~> 0.1.0"},
       {:remote_ip, "~> 1.1"},
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:pre_commit, "~> 0.3.4", only: :dev}
     ]
   end
 

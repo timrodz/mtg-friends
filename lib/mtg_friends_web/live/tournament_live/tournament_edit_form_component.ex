@@ -111,15 +111,18 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
 
     selected_format = tournament.format || :edh
 
+    participant_count = get_participant_count(tournament)
+
     {:ok,
      socket
      |> assign(assigns)
      |> assign(:game_codes, get_game_codes())
      |> assign(:selected_game_code, selected_game_code)
+     |> assign(:participant_count, participant_count)
      |> assign(:format_options, get_format_options(selected_game_code))
      |> assign(
        :subformat_options,
-       get_subformat_options(selected_game_code, selected_format)
+       get_subformat_options(selected_game_code, selected_format, participant_count)
      )
      |> assign(:initial_participants, "")
      |> assign_form(changeset)}
@@ -143,7 +146,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
       end
 
     subformat_options =
-      get_subformat_options(selected_game_code, selected_format)
+      get_subformat_options(selected_game_code, selected_format, socket.assigns.participant_count)
 
     changeset =
       socket.assigns.tournament
@@ -244,15 +247,23 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
     end
   end
 
-  defp get_subformat_options(game_code, format) do
-    # This can expand later on, keep it somewhat "complex" for now
+  defp get_subformat_options(game_code, format, participant_count) do
     case game_code do
       :mtg ->
         case format do
           :edh ->
+            round_robin_label =
+              if is_number(participant_count) and participant_count > 0 and
+                   participant_count < 12 do
+                "Round Robin (Maximize opponent variety) - Recommended"
+              else
+                "Round Robin (Maximize opponent variety for small tournaments)"
+              end
+
             [
               {"Bubble Rounds (Pods are determined by last round standings)", :bubble_rounds},
-              {"Swiss Rounds", :swiss}
+              {"Swiss Rounds", :swiss},
+              {round_robin_label, :round_robin}
             ]
 
           _ ->
@@ -266,6 +277,13 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do
     assign(socket, :form, to_form(changeset))
+  end
+
+  defp get_participant_count(tournament) do
+    case Map.get(tournament, :participants) do
+      participants when is_list(participants) -> length(participants)
+      _ -> nil
+    end
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
