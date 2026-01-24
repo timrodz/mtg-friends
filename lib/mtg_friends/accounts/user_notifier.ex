@@ -14,13 +14,10 @@ defmodule MtgFriends.Accounts.UserNotifier do
       |> subject(subject)
       |> text_body(body)
 
-    case Mailer.deliver(email) do
-      {:ok, _metadata} ->
-        {:ok, email}
-
-      _err ->
-        Logger.error("Error sending email")
-        {:error}
+    with {:ok, _metadata} <- Mailer.deliver(email) do
+      {:ok, email}
+    else
+      err -> IO.inspect(err, label: "Error sending email")
     end
   end
 
