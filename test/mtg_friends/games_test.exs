@@ -14,7 +14,7 @@ defmodule MtgFriends.GamesTest do
       game = game_fixture()
       games = Games.list_games()
       assert game in games
-      assert length(games) >= 1
+      assert not Enum.empty?(games)
     end
 
     test "get_game!/1 returns the game with given id" do

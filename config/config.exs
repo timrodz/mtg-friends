@@ -65,7 +65,8 @@ import_config "#{config_env()}.exs"
 config :pre_commit,
   commands: [
     "format",
-    "test --cover",
-    "dialyzer --format short"
+    "test",
+    "credo",
+    "dialyzer"
   ],
   verbose: true
