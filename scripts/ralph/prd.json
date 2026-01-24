@@ -86,8 +86,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Round Robin option shows 'Recommended' label when editing tournaments with <12 participants"
     },
     {
       "id": "US-007",

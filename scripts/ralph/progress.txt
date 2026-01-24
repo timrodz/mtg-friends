@@ -4,6 +4,7 @@
 - The `create_regular_pairings/4` function routes to different pairing algorithms based on `tournament.subformat` (for rounds > 0)
 - The `PlayerPairing` struct tracks `players_played_against` and `players_not_played_with` for opponent variety calculations
 - Use `@spec` without `@doc` for private functions (Elixir discards `@doc` on private functions)
+- `TournamentEditFormComponent` receives tournament with preloaded associations (game, participants) when editing
 
 ---
 
@@ -40,5 +41,18 @@
   - The algorithm greedily selects players with the most unplayed opponents first
   - Pod size is determined by format: EDH uses 3-4 players, Standard uses 2
   - All 240 existing tests still pass after adding the new algorithm
+
+---
+
+## 2026-01-24 - US-006
+- What was implemented: Added Round Robin option to tournament edit form subformat dropdown
+  - Added "Round Robin (Maximize opponent variety for small tournaments)" option for EDH format
+  - Dynamically shows "Recommended" label when tournament has <12 participants
+  - Added `get_participant_count/1` helper to safely get participant count from tournament
+- Files changed: `lib/mtg_friends_web/live/tournament_live/tournament_edit_form_component.ex`
+- **Learnings for future iterations:**
+  - The `tournament.participants` is preloaded when editing via the show page
+  - For new tournaments, participant_count is nil since participants aren't created yet
+  - The `get_subformat_options/3` now accepts participant_count as third argument for conditional labels
 
 ---
