@@ -3,6 +3,8 @@ defmodule MtgFriends.Accounts.UserNotifier do
 
   alias MtgFriends.Mailer
 
+  require Logger
+
   # Delivers the email using the application mailer.
   defp deliver(recipient, subject, body) do
     email =

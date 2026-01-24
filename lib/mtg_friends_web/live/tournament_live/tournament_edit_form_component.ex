@@ -180,16 +180,16 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         notify_parent({:saved, updated_tournament})
 
         {:noreply,
-         cond do
-           path = Map.get(socket.assigns, :navigate) ->
-             socket
-             |> put_flash(:success, "Tournament updated successfully")
-             |> push_navigate(to: path)
-
-           true ->
+         case Map.get(socket.assigns, :navigate) do
+           nil ->
              socket
              |> put_flash(:success, "Tournament updated successfully")
              |> push_navigate(to: ~p"/tournaments/#{updated_tournament}")
+
+           path ->
+             socket
+             |> put_flash(:success, "Tournament updated successfully")
+             |> push_navigate(to: path)
          end}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -247,32 +247,24 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
     end
   end
 
-  defp get_subformat_options(game_code, format, participant_count) do
-    case game_code do
-      :mtg ->
-        case format do
-          :edh ->
-            round_robin_label =
-              if is_number(participant_count) and participant_count > 0 and
-                   participant_count < 12 do
-                "Round Robin (Maximize opponent variety) - Recommended"
-              else
-                "Round Robin (Maximize opponent variety for small tournaments)"
-              end
+  defp get_subformat_options(:mtg, :edh, participant_count) do
+    round_robin_label =
+      if is_number(participant_count) and participant_count > 0 and
+           participant_count < 12 do
+        "Round Robin (Maximize opponent variety) - Recommended"
+      else
+        "Round Robin (Maximize opponent variety for small tournaments)"
+      end
 
-            [
-              {"Bubble Rounds (Pods are determined by last round standings)", :bubble_rounds},
-              {"Swiss Rounds", :swiss},
-              {round_robin_label, :round_robin}
-            ]
+    [
+      {round_robin_label, :round_robin},
+      {"Bubble Rounds (Pods are determined by last round standings)", :bubble_rounds},
+      {"Swiss Rounds", :swiss}
+    ]
+  end
 
-          _ ->
-            [{"Swiss Rounds", :swiss}]
-        end
-
-      _ ->
-        [{"Swiss Rounds", :swiss}]
-    end
+  defp get_subformat_options(_, _, _) do
+    [{"Swiss Rounds", :swiss}]
   end
 
   defp assign_form(socket, %Ecto.Changeset{} = changeset) do

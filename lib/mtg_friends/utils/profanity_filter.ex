@@ -7,11 +7,11 @@ defmodule MtgFriends.Utils.ProfanityFilter do
   @blacklist ~w(admin staff root )
   @config Expletive.configure(blacklist: Expletive.Blacklist.english() ++ @blacklist)
 
-  def is_text_safe?(text) do
+  def text_safe?(text) do
     not Expletive.profane?(text, @config)
   end
 
-  def is_text_profane?(text) do
+  def text_profane?(text) do
     Expletive.profane?(text, @config)
   end
 end

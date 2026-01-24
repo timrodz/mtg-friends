@@ -115,40 +115,6 @@ defmodule MtgFriendsWeb.API.PairingController do
   def update(conn, %{"tournament_id" => _tournament_id, "id" => id} = pairing_params) do
     pairing = Pairings.get_pairing!(id) |> MtgFriends.Repo.preload(:pairing_participants)
 
-    # Legacy support: if points/winner passed at top level and pairing has one participant
-    pairing_params =
-      if (Map.has_key?(pairing_params, "points") or Map.has_key?(pairing_params, "winner")) and
-           not Map.has_key?(pairing_params, "pairing_participants") and
-           length(pairing.pairing_participants) == 1 do
-        [pp] = pairing.pairing_participants
-
-        Map.put(pairing_params, "pairing_participants", [
-          %{
-            "id" => pp.id,
-            "points" => pairing_params["points"] || pp.points,
-            "participant_id" => pp.participant_id
-          }
-        ])
-      else
-        pairing_params
-      end
-
-    # Legacy support: winner (boolean) -> winner_id
-    pairing_params =
-      if Map.has_key?(pairing_params, "winner") and is_boolean(pairing_params["winner"]) and
-           not Map.has_key?(pairing_params, "winner_id") and
-           length(pairing.pairing_participants) == 1 do
-        [pp] = pairing.pairing_participants
-
-        if pairing_params["winner"] do
-          Map.put(pairing_params, "winner_id", pp.participant_id)
-        else
-          pairing_params
-        end
-      else
-        pairing_params
-      end
-
     with {:ok, updated_pairing} <- Pairings.update_pairing(pairing, pairing_params) do
       conn
       |> put_status(:ok)

@@ -86,7 +86,7 @@ defmodule MtgFriends.Tournaments.Tournament do
 
   defp validate_name(changeset) do
     validate_change(changeset, :name, fn :name, name ->
-      if ProfanityFilter.is_text_profane?(name) do
+      if ProfanityFilter.text_profane?(name) do
         [name: "contains restricted words"]
       else
         []

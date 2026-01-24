@@ -125,7 +125,7 @@ defmodule MtgFriends.Rounds do
 
     with true <- Tournaments.has_enough_participants?(tournament),
          true <- Tournaments.all_participants_named?(tournament),
-         false <- is_any_round_active?(tournament.rounds) do
+         false <- any_round_active?(tournament.rounds) do
       Repo.transaction(fn ->
         round_number = length(tournament.rounds)
 
@@ -165,7 +165,7 @@ defmodule MtgFriends.Rounds do
     end
   end
 
-  defp is_any_round_active?(rounds) do
+  defp any_round_active?(rounds) do
     Enum.any?(rounds, fn r -> r.status == :active end)
   end
 
@@ -222,8 +222,8 @@ defmodule MtgFriends.Rounds do
     Round.changeset(round, attrs)
   end
 
-  @spec is_round_complete?(Round.t()) :: boolean()
-  def is_round_complete?(%Round{} = round) do
+  @spec round_complete?(Round.t()) :: boolean()
+  def round_complete?(%Round{} = round) do
     round.status == :finished
   end
 
