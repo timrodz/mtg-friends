@@ -81,7 +81,6 @@ defmodule MtgFriends.MixProject do
       {:expletive, "~> 0.1.0"},
       {:remote_ip, "~> 1.1"},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:pre_commit, "~> 0.3.4", only: :dev},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
