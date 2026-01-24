@@ -446,7 +446,8 @@ defmodule MtgFriends.Pairings do
     remainder = rem(participant_count, num_pairings)
 
     {pods, _remaining} =
-      Enum.reduce(1..num_pairings, {[], player_pairing_matrix}, fn pod_index, {acc_pods, remaining} ->
+      Enum.reduce(1..num_pairings, {[], player_pairing_matrix}, fn pod_index,
+                                                                   {acc_pods, remaining} ->
         case remaining do
           [] ->
             {acc_pods, []}
@@ -460,7 +461,12 @@ defmodule MtgFriends.Pairings do
               end
 
             {pod, updated_remaining} =
-              find_optimal_pod(remaining, current_pod_size, player_pairing_matrix, tournament_format)
+              find_optimal_pod(
+                remaining,
+                current_pod_size,
+                player_pairing_matrix,
+                tournament_format
+              )
 
             {acc_pods ++ [pod], updated_remaining}
         end

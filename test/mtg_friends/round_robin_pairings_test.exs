@@ -1,7 +1,7 @@
 defmodule MtgFriends.RoundRobinPairingsTest do
   @moduledoc """
   Tests for the Round Robin pairing algorithm.
-  
+
   Round Robin is designed for small tournaments (8-12 participants) where
   maximizing opponent variety is more important than rankings.
   """
@@ -37,7 +37,8 @@ defmodule MtgFriends.RoundRobinPairingsTest do
 
   defp create_participants(tournament, count) do
     Enum.map(1..count, fn i ->
-      user = user_fixture(%{email: "user#{i}_#{tournament.id}_#{System.unique_integer()}@example.com"})
+      user =
+        user_fixture(%{email: "user#{i}_#{tournament.id}_#{System.unique_integer()}@example.com"})
 
       {:ok, participant} =
         Participants.create_participant(%{
@@ -148,7 +149,8 @@ defmodule MtgFriends.RoundRobinPairingsTest do
       tournament = Tournaments.get_tournament!(tournament.id)
       round1 = Rounds.get_round!(round1.id, true)
 
-      {:ok, %{insert_pairings: pairings1}} = Pairings.create_pairings_for_round(tournament, round1)
+      {:ok, %{insert_pairings: pairings1}} =
+        Pairings.create_pairings_for_round(tournament, round1)
 
       # Verify all participants are paired
       all_paired_r1 =
@@ -165,7 +167,8 @@ defmodule MtgFriends.RoundRobinPairingsTest do
       tournament = Tournaments.get_tournament!(tournament.id)
       round2 = Rounds.get_round!(round2.id, true)
 
-      {:ok, %{insert_pairings: pairings2}} = Pairings.create_pairings_for_round(tournament, round2)
+      {:ok, %{insert_pairings: pairings2}} =
+        Pairings.create_pairings_for_round(tournament, round2)
 
       all_paired_r2 =
         pairings2
@@ -408,7 +411,9 @@ defmodule MtgFriends.RoundRobinPairingsTest do
       tournament = Tournaments.get_tournament!(tournament.id)
       round1 = Rounds.get_round!(round1.id, true)
 
-      {:ok, %{insert_pairings: pairings1}} = Pairings.create_pairings_for_round(tournament, round1)
+      {:ok, %{insert_pairings: pairings1}} =
+        Pairings.create_pairings_for_round(tournament, round1)
+
       pairing_count = pairings1 |> Enum.flat_map(& &1.pairing_participants) |> length()
 
       # Only 7 active participants should be paired
@@ -451,7 +456,8 @@ defmodule MtgFriends.RoundRobinPairingsTest do
       tournament = Tournaments.get_tournament!(tournament.id)
       round1 = Rounds.get_round!(round1.id, true)
 
-      {:ok, %{insert_pairings: pairings1}} = Pairings.create_pairings_for_round(tournament, round1)
+      {:ok, %{insert_pairings: pairings1}} =
+        Pairings.create_pairings_for_round(tournament, round1)
 
       all_paired =
         pairings1

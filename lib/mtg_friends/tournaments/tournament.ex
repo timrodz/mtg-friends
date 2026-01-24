@@ -16,7 +16,10 @@ defmodule MtgFriends.Tournaments.Tournament do
     field :round_count, :integer, default: 4
     field :status, Ecto.Enum, values: [:inactive, :active, :finished], default: :inactive
     field :format, Ecto.Enum, values: [:edh, :standard], default: :edh
-    field :subformat, Ecto.Enum, values: [:bubble_rounds, :swiss, :round_robin], default: :bubble_rounds
+
+    field :subformat, Ecto.Enum,
+      values: [:bubble_rounds, :swiss, :round_robin],
+      default: :bubble_rounds
 
     belongs_to :user, MtgFriends.Accounts.User
     belongs_to :game, MtgFriends.Games.Game
