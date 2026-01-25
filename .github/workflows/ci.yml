@@ -52,7 +52,7 @@ jobs:
       - name: Compile application
         run: mix compile
 
-      - name: Setup database
+      - name: Setup application
         env:
           POSTGRES_HOST: localhost
           POSTGRES_PORT: 5432
@@ -60,9 +60,10 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: mtg_friends_test
           MIX_ENV: test
-        run: |
-          mix ecto.create
-          mix ecto.migrate
+        run: mix setup
+
+      - name: Run formatter check
+        run: mix format --check-formatted
 
       - name: Run tests
         env:
@@ -73,9 +74,6 @@ jobs:
           POSTGRES_DB: mtg_friends_test
           MIX_ENV: test
         run: mix test --cover
-
-      - name: Run formatter check
-        run: mix format --check-formatted
 
       - name: Run dialyzer
         run: mix dialyzer --format short
