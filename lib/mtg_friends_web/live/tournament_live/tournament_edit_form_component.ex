@@ -20,6 +20,7 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
         phx-change="validate"
         phx-submit="save"
       >
+        <.input field={@form[:name]} type="text" label="Title" min="4" />
         <.input
           field={@form[:game_code]}
           type="select"
@@ -28,7 +29,12 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           value={@selected_game_code}
         />
         <.input field={@form[:format]} type="select" options={@format_options} label="Format" />
-        <.input field={@form[:name]} type="text" label="Name" min="4" />
+        <.input
+          field={@form[:subformat]}
+          type="select"
+          options={@subformat_options}
+          label="Round pairing algorithm"
+        />
         <.input field={@form[:location]} type="text" label="Location" min="4" />
         <.input field={@form[:date]} type="datetime-local" label="Date" />
 
@@ -62,23 +68,17 @@ defmodule MtgFriendsWeb.TournamentLive.TournamentEditFormComponent do
           :if={@action == :new}
           required
           type="textarea"
-          label="Participants (One per line)"
+          label="Starting Participants (One per line; you can edit this later)"
           field={@form[:initial_participants]}
           placeholder="John Doe
     Jane Doe
     ---"
         />
         <.input
-          field={@form[:subformat]}
-          type="select"
-          options={@subformat_options}
-          label="Round pairing algorithm"
-        />
-        <.input
           :if={@selected_game_code == :mtg}
           field={@form[:is_top_cut_4]}
           type="checkbox"
-          label="Top Cut 4 (Has a final round decided by the top 4 players)"
+          label="Enable top cut 4 (Has a final round decided by the top 4 players)"
           class="mt-2"
         />
         <:actions>
