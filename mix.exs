@@ -12,7 +12,7 @@ defmodule MtgFriends.MixProject do
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
       test_coverage: [
-        summary: [threshold: 74.00],
+        summary: [threshold: 74.09],
         ignore_modules: [
           MtgFriendsWeb.Schemas,
           Poison.Encoder.MtgFriendsWeb.Schemas,

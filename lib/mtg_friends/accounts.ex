@@ -176,7 +176,7 @@ defmodule MtgFriends.Accounts do
 
   """
   @spec deliver_user_update_email_instructions(User.t(), String.t(), (String.t() -> String.t())) ::
-          {:ok, %{to: String.t(), body: String.t()}} | {:error, any()}
+          {:ok, Swoosh.Email.t()} | {:error, any()}
   def deliver_user_update_email_instructions(%User{} = user, current_email, update_email_url_fun)
       when is_function(update_email_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "change:#{current_email}")
@@ -274,7 +274,7 @@ defmodule MtgFriends.Accounts do
 
   """
   @spec deliver_user_confirmation_instructions(User.t(), (String.t() -> String.t())) ::
-          {:ok, %{to: String.t(), body: String.t()}} | {:error, :already_confirmed}
+          {:ok, Swoosh.Email.t()} | {:error, :already_confirmed}
   def deliver_user_confirmation_instructions(%User{} = user, confirmation_url_fun)
       when is_function(confirmation_url_fun, 1) do
     if user.confirmed_at do
@@ -321,7 +321,7 @@ defmodule MtgFriends.Accounts do
 
   """
   @spec deliver_user_reset_password_instructions(User.t(), (String.t() -> String.t())) ::
-          {:ok, %{to: String.t(), body: String.t()}}
+          {:ok, Swoosh.Email.t()} | {:error, any()}
   def deliver_user_reset_password_instructions(%User{} = user, reset_password_url_fun)
       when is_function(reset_password_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "reset_password")

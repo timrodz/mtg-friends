@@ -15,7 +15,7 @@ defmodule MtgFriends.Accounts.UserNotifier do
       |> text_body(body)
 
     case Mailer.deliver(email) do
-      {:ok, email} ->
+      {:ok, _metadata} ->
         {:ok, email}
 
       {:error, err} ->
