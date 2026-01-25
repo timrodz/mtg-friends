@@ -4,7 +4,7 @@ defmodule MtgFriends.MixProject do
   def project do
     [
       app: :mtg_friends,
-      version: "1.0.0",
+      version: "1.0.1",
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -12,7 +12,7 @@ defmodule MtgFriends.MixProject do
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
       test_coverage: [
-        summary: [threshold: 73.50],
+        summary: [threshold: 74.09],
         ignore_modules: [
           MtgFriendsWeb.Schemas,
           Poison.Encoder.MtgFriendsWeb.Schemas,

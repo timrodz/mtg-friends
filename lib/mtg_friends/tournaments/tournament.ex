@@ -19,7 +19,7 @@ defmodule MtgFriends.Tournaments.Tournament do
 
     field :subformat, Ecto.Enum,
       values: [:bubble_rounds, :swiss, :round_robin],
-      default: :bubble_rounds
+      default: :round_robin
 
     belongs_to :user, MtgFriends.Accounts.User
     belongs_to :game, MtgFriends.Games.Game
